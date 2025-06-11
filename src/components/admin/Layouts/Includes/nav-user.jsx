@@ -1,10 +1,9 @@
 import {
-  BadgeCheck,
   Bell,
   ChevronsUpDown,
-  CreditCard,
+  CogIcon,
   LogOut,
-  Sparkles,
+  User2Icon,
 } from "lucide-react"
 
 import {
@@ -27,9 +26,21 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { getUser, logout } from "@/stores/features/authFeature"
+import { useDispatch } from "react-redux"
+import { useAuthContext } from "@/contexts/AuthContext"
+import { Link } from "react-router-dom"
 
 export function NavUser({ user }) {
   const { isMobile } = useSidebar()
+  const dispatch = useDispatch()
+  const context = useAuthContext()
+
+
+  const handleLogout = () => {
+    dispatch(logout(context))
+    if (!user) dispatch(getUser())
+  };
 
   return (
     <SidebarMenu>
@@ -71,28 +82,27 @@ export function NavUser({ user }) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <Sparkles />
-                Upgrade to Pro
-              </DropdownMenuItem>
+              <Link to="/setting">
+                <DropdownMenuItem>
+                  {" "}
+                  <CogIcon className=" mr-1" />
+                  Settings
+                </DropdownMenuItem>
+              </Link>{" "}
+              <Link to="/profile">
+                <DropdownMenuItem>
+                  <User2Icon className=" mr-1" /> Profile
+                </DropdownMenuItem>
+              </Link>
+              <Link to="/notifications">
+                <DropdownMenuItem>
+                  <Bell className=" mr-1" />
+                  Notifications
+                </DropdownMenuItem>
+              </Link>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <BadgeCheck />
-                Account
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <CreditCard />
-                Billing
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Bell />
-                Notifications
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>
               <LogOut />
               Log out
             </DropdownMenuItem>

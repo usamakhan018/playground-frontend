@@ -98,3 +98,14 @@
       @apply bg-background text-foreground;
     }
   }
+
+  /* RTL Support */
+  @layer base {
+    [dir="rtl"] {
+      direction: rtl;
+    }
+    
+    [dir="rtl"] * {
+      text-align: inherit;
+    }
+  }

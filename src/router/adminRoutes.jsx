@@ -5,7 +5,8 @@ import PermissionIndex from "@/components/admin/Permissions/Index"
 import RoleCreate from "@/components/admin/Roles/Create"
 import RoleEdit from "@/components/admin/Roles/Edit"
 import RoleIndex from "@/components/admin/Roles/Index"
-import RoomTypeIndex from "@/components/admin/RoomType/Index"
+import ExpenseCategoryIndex from "@/components/admin/ExpenesCategory/Index"
+import UserIndex from "@/components/admin/Users/Index"
 
 const adminRoutes = [
     {
@@ -39,14 +40,19 @@ const adminRoutes = [
         element: <RoleEdit />
     },
     {
-        name: 'roomTypes',
-        path: 'room/types',
-        element: <RoomTypeIndex />
+        name: 'expenseCategories',
+        path: 'expense/categories',
+        element: <ExpenseCategoryIndex />
     },
     {
         name: 'permissions',
         path: 'permissions',
         element: <PermissionIndex />
+    },
+    {
+        name: 'users',
+        path: 'users',
+        element: <UserIndex />
     },
 ]
 

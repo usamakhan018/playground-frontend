@@ -6,7 +6,7 @@ import axiosClient from "@/axios";
 import { toast } from 'react-hot-toast';
 import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Checkbox } from "@/components/ui/checkbox";
 import Loader from "@/components/Loader";
 
@@ -17,14 +17,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { getRoles } from "@/stores/features/ajaxFeature";
 
 function RoleCreate() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectAll, setSelectAll] = useState(false);
+  const [perms, setPerms] = useState(null)
+
   const navigate = useNavigate()
   const dispatch = useDispatch()
-
-  const [perms, setPerms] = useState(null)
+  
+  const roles = useSelector((state) => state.ajax.roles);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -33,6 +36,7 @@ function RoleCreate() {
       const form = new FormData(e.currentTarget);
       const response = await axiosClient.post(`roles/store`, form);
       toast.success(response.data.message);
+      dispatch(getRoles())
       navigate('/roles');
     } catch (error) {
       handleError(error)
@@ -44,6 +48,7 @@ function RoleCreate() {
 
   useEffect(() => {
     fetchPermissions()
+    if (!roles) dispatch(getRoles())
   }, [])
 
   const handleSelectAll = () => {
@@ -130,7 +135,7 @@ function RoleCreate() {
                 {isLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  "Save Changes"
+                  "Create Role"
                 )}
               </Button>}
           </CardFooter>

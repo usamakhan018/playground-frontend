@@ -9,7 +9,6 @@ export default function LanguageChange() {
   const languages = [
     { code: "en", label: "English" },
     { code: "ar", label: "العربیۃ" },
-    { code: "zh", label: "Chineese" },
   ];
 
   return (

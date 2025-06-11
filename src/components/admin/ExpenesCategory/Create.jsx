@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogClose,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -12,34 +11,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import axiosClient from "@/axios";
 import { toast } from 'react-hot-toast';
-import { Loader, Loader2 } from "lucide-react";
-import { useDispatch, useSelector } from "react-redux";
-import { useTranslation } from "react-i18next";
-import { getCountries } from "@/stores/features/ajaxFeature";
+import { Loader, Plus } from "lucide-react";
 import { handleError } from "@/utils/helpers";
+import { useTranslation } from "react-i18next";
 
-function Edit({ onSubmitSuccess, record, onClose }) {
+function Create({ onSubmitSuccess }) {
+  const [showDialog, setShowDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const dispatch = useDispatch();
   const { t } = useTranslation();
-  const countries = useSelector(store => store.ajax.countries);
 
-  useEffect(() => {
-    if (!countries) {
-      dispatch(getCountries());
-    }
-  }, [dispatch, countries]);
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setIsLoading(true);
 
     try {
-      const formData = new FormData(event.currentTarget);
-      const response = await axiosClient.post("shippers/update", formData);
+      const form = new FormData(e.currentTarget);
+      const response = await axiosClient.post("expense_categories/store", form);
       toast.success(response.data.message);
       onSubmitSuccess?.();
-      onClose();
+      setShowDialog(false);
     } catch (error) {
       handleError(error);
     } finally {
@@ -48,13 +38,20 @@ function Edit({ onSubmitSuccess, record, onClose }) {
   };
 
   return (
-    <Dialog open={true} onOpenChange={onClose}>
+    <Dialog open={showDialog} onOpenChange={setShowDialog}>
+      <DialogTrigger asChild>
+        <Button variant="default" className="gap-2">
+          <Plus className="w-4 h-4" />
+          <span>{t("Create Expense Category")}</span>
+        </Button>
+      </DialogTrigger>
+
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{t("Update Shipper")}</DialogTitle>
+          <DialogTitle>{t("Create Expense Category")}</DialogTitle>
         </DialogHeader>
 
-        <form id="edit-form" onSubmit={handleSubmit} className="space-y-6">
+        <form id="create-form" onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-4">
             <div className="space-y-2">
               <label htmlFor="name" className="block text-sm font-medium">
@@ -64,12 +61,12 @@ function Edit({ onSubmitSuccess, record, onClose }) {
                 id="name"
                 name="name"
                 type="text"
-                defaultValue={record.name}
                 required
+                autoComplete="off"
               />
             </div>
           </div>
-          <input type="hidden" name="id" defaultValue={record.id} />
+
           <div className="flex justify-end gap-3">
             <DialogClose asChild>
               <Button type="button" variant="outline">
@@ -80,7 +77,7 @@ function Edit({ onSubmitSuccess, record, onClose }) {
               {isLoading ? (
                 <Loader className="h-4 w-4 animate-spin" />
               ) : (
-                t("Save Changes")
+                t("Create")
               )}
             </Button>
           </div>
@@ -90,4 +87,4 @@ function Edit({ onSubmitSuccess, record, onClose }) {
   );
 }
 
-export default Edit;
+export default Create;

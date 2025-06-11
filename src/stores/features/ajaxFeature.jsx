@@ -1,29 +1,49 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axiosClient from '../../axios';
 
-export const getCountries = createAsyncThunk("getCountries", async () => {
-    const res = await axiosClient.get('countries');
+export const getExpenseCategories = createAsyncThunk("getExpenseCategories", async () => {
+    const res = await axiosClient.get('expense_categories/all');
+    return res.data.data;
+});
+
+export const getRoles = createAsyncThunk("getRoles", async () => {
+    const res = await axiosClient.get("roles/all");
     return res.data.data;
 });
 
 const ajaxFeature = createSlice({
     name: 'Ajax',
     initialState: {
-        countries: null,
+        expenseCategories: null,
+        roles: null,
         loading: false,
         error: false,
     },
     extraReducers: (builder) => {
-        builder.addCase(getCountries.pending, (state) => {
+        builder.addCase(getExpenseCategories.pending, (state) => {
             state.loading = true;
         });
 
-        builder.addCase(getCountries.fulfilled, (state, action) => {
+        builder.addCase(getExpenseCategories.fulfilled, (state, action) => {
             state.loading = false;
-            state.countries = action.payload;
+            state.expenseCategories = action.payload;
         });
 
-        builder.addCase(getCountries.rejected, (state) => {
+        builder.addCase(getExpenseCategories.rejected, (state) => {
+            state.loading = false;
+        });
+
+        // ROLES
+        builder.addCase(getRoles.pending, (state) => {
+            state.loading = true;
+        });
+
+        builder.addCase(getRoles.fulfilled, (state, action) => {
+            state.loading = false;
+            state.roles = action.payload;
+        });
+
+        builder.addCase(getRoles.rejected, (state) => {
             state.loading = false;
         });
     }

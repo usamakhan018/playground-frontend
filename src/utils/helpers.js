@@ -107,17 +107,27 @@ export const dateFormat = (date, dateFormat) => {
 
 export const handleError = (error) => {
     if (error.response) {
-        const errorMessages = error.response.data.errors || [error.response.data.message || 'An error occurred'];
-        errorMessages.forEach((message) => {
-            console.error(message);
-            toast.error(message);
-        });
+        const { data } = error.response;
+        if (data.errors) {
+            Object.values(data.errors)
+                .flat()
+                .forEach((message) => {
+                    console.error(message);
+                    toast.error(message);
+                });
+        } else if (data.message) {
+            console.error(data.message);
+            toast.error(data.message);
+        } else {
+            console.error("An error occurred:", data);
+            toast.error("An error occurred. Please try again.");
+        }
     } else if (error.request) {
-        console.error('Server is not responding:', error.message);
-        toast.error('The server is not responding. Please try again later.');
+        console.error("Server is not responding:", error.message);
+        toast.error("The server is not responding. Please try again later.");
     } else {
-        console.error('Unexpected error:', error.message);
-        toast.error('Unexpected error:', error.message);
+        console.error("Unexpected error:", error.message);
+        toast.error(`Unexpected error: ${error.message}`);
     }
 };
 
@@ -127,3 +137,40 @@ export async function getSelectData(api) {
     console.log(response.data)
     return response.data
 }
+
+export async function fileDownloader({ url, fileName }) {
+    try {
+        const response = await axiosClient.get(url, {
+            responseType: 'blob'
+        });
+
+        const blob = new Blob([response.data]);
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.setAttribute('download', fileName);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(downloadUrl);
+        
+        return true;
+    } catch (error) {
+        console.error('Download failed:', error);
+        throw error;
+    }
+}
+
+export function humanizeRoom(room) {
+    return `Room #${room.room_no} - ${room.property.name} · ${room.capacity} guests`;
+}
+
+export const humanizeText = (text) => {
+    return text
+        .split("_")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
+};
+
+
+export const sleep = ms => new Promise(res => setTimeout(res, ms));

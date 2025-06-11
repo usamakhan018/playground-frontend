@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 function PageTitle({title}) {
 
   useEffect(() => {
-    document.title = title + ' | ' + "Parcel Express";
+    document.title = title + ' | ' + import.meta.env.VITE_APP_NAME;
   }, [title]);
   
   return (

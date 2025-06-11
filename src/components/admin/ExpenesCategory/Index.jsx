@@ -31,11 +31,11 @@ import Loader from "@/components/Loader";
 import DeleteAlert from "@/components/misc/DeleteAlert";
 import { useTranslation } from "react-i18next";
 
-const RoomTypeIndex = () => {
+const ExpenseCategoryIndex = () => {
   const [loading, setLoading] = useState(true);
   const [links, setLinks] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [roomTypes, setRoomTypes] = useState([]);
+  const [expenseCategories, setExpenseCategories] = useState([]);
   const [search, setSearch] = useState("");
   const [showRefresh, setShowRefresh] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
@@ -45,22 +45,22 @@ const RoomTypeIndex = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  const accessAbility = can("Room Type access");
-  const createAbility = can("Room Type create");
-  const updateAbility = can("Room Type update");
-  const deleteAbility = can("Room Type delete");
+  const accessAbility = can("Expense Category access");
+  const createAbility = can("Expense Category create");
+  const updateAbility = can("Expense Category update");
+  const deleteAbility = can("Expense Category delete");
 
   useEffect(() => {
     if (!accessAbility) navigate("/unauthorized");
-    fetchRoomTypes(currentPage);
+    fetchExpenseCategories(currentPage);
   }, [currentPage]);
 
-  const fetchRoomTypes = async (page = 1) => {
+  const fetchExpenseCategories = async (page = 1) => {
     setLoading(true);
     try {
-      const response = await axiosClient.get(`room_types?page=${page}`);
+      const response = await axiosClient.get(`expense_categories?page=${page}`);
       setLinks(response.data.data.links);
-      setRoomTypes(response.data.data.data);
+      setExpenseCategories(response.data.data.data);
     } catch (error) {
       handleError(error);
     } finally {
@@ -75,8 +75,8 @@ const RoomTypeIndex = () => {
     setLoading(true);
     setShowRefresh(true);
     try {
-      const response = await axiosClient.get(`room_types?query=${search.trim()}`);
-      setRoomTypes(response.data.data);
+      const response = await axiosClient.get(`expense_categories?query=${search.trim()}`);
+      setExpenseCategories(response.data.data);
       setLinks([]);
     } catch (error) {
       handleError(error);
@@ -88,16 +88,16 @@ const RoomTypeIndex = () => {
   const handleRefresh = () => {
     setSearch("");
     setShowRefresh(false);
-    fetchRoomTypes();
+    fetchExpenseCategories();
   };
 
   return (
     <div className="space-y-3">
-      <PageTitle title={t("Room Types")} />
+      <PageTitle title={t("Expense Categories")} />
 
       <div className="flex flex-col sm:flex-row justify-between gap-4">
         <div>
-          {createAbility && <Create onSubmitSuccess={fetchRoomTypes} />}
+          {createAbility && <Create onSubmitSuccess={fetchExpenseCategories} />}
         </div>
 
         <form onSubmit={handleSearch} className="flex gap-2">
@@ -132,7 +132,7 @@ const RoomTypeIndex = () => {
           <TableHeader>
             <TableRow>
               <TableHead className="w-[50px]">#</TableHead>
-              <TableHead>{t("Room Type")}</TableHead>
+              <TableHead>{t("Expense Category")}</TableHead>
               <TableHead className="text-right">{t("Actions")}</TableHead>
             </TableRow>
           </TableHeader>
@@ -143,11 +143,11 @@ const RoomTypeIndex = () => {
                   <Loader />
                 </TableCell>
               </TableRow>
-            ) : roomTypes.length > 0 ? (
-              roomTypes.map((roomType, index) => (
-                <TableRow key={roomType.id}>
+            ) : expenseCategories.length > 0 ? (
+              expenseCategories.map((expenseCategory, index) => (
+                <TableRow key={expenseCategory.id}>
                   <TableCell className="font-medium">{index + 1}</TableCell>
-                  <TableCell>{roomType.name}</TableCell>
+                  <TableCell>{expenseCategory.name}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -161,7 +161,7 @@ const RoomTypeIndex = () => {
                         <DropdownMenuSeparator />
                         {updateAbility && (
                           <DropdownMenuItem onClick={() => {
-                            setSelectedRecord(roomType);
+                            setSelectedRecord(expenseCategory);
                             setEditDialogOpen(true);
                           }}>
                             <EditIcon className="mr-2 h-4 w-4" />
@@ -170,7 +170,7 @@ const RoomTypeIndex = () => {
                         )}
                         {deleteAbility && (
                           <DropdownMenuItem onClick={() => {
-                            setSelectedRecord(roomType);
+                            setSelectedRecord(expenseCategory);
                             setDeleteAlertOpen(true);
                           }}>
                             <Trash2Icon className="mr-2 h-4 w-4" />
@@ -205,9 +205,9 @@ const RoomTypeIndex = () => {
         <DeleteAlert
           open={deleteAlertOpen}
           onClose={setDeleteAlertOpen}
-          onSubmitSuccess={fetchRoomTypes}
+          onSubmitSuccess={fetchExpenseCategories}
           record={selectedRecord}
-          api="room_types/delete"
+          api="expense_categories/delete"
         />
       )}
 
@@ -215,7 +215,7 @@ const RoomTypeIndex = () => {
         <Edit
           open={editDialogOpen}
           onClose={() => setEditDialogOpen(false)}
-          onSubmitSuccess={fetchRoomTypes}
+          onSubmitSuccess={fetchExpenseCategories}
           record={selectedRecord}
         />
       )}
@@ -223,4 +223,4 @@ const RoomTypeIndex = () => {
   );
 };
 
-export default RoomTypeIndex;
+export default ExpenseCategoryIndex;
