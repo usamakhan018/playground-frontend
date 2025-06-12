@@ -143,6 +143,74 @@ const englishTranslations = {
     "Unable to open print window. Please allow popups.": "Unable to open print window. Please allow popups.",
     "Validation failed": "Validation failed",
     "Created": "Created",
+
+    // Sales Dashboard
+    "Sales Dashboard": "Sales Dashboard",
+    "Total Sales Today": "Total Sales Today",
+    "Revenue": "Revenue",
+    "Active Games": "Active Games",
+    "Currently Running": "Currently Running",
+    "Completed Games": "Completed Games",
+    "Finished Today": "Finished Today",
+    "Quick Actions": "Quick Actions",
+    "Fast game start": "Fast game start",
+    "New Game": "New Game",
+    "Quick Game Start": "Quick Game Start",
+    "Select Game": "Select Game",
+    "Choose a game": "Choose a game",
+    "Select Asset": "Select Asset",
+    "Choose game asset": "Choose game asset",
+    "Scan or enter barcode": "Scan or enter barcode",
+    "Please fill all fields": "Please fill all fields",
+    "Starting...": "Starting...",
+    "Start Game": "Start Game",
+    "No active games at the moment": "No active games at the moment",
+    "Start a new game to see it here": "Start a new game to see it here",
+    "Completed Games Today": "Completed Games Today",
+    
+    // Game States
+    "EXPIRED": "EXPIRED",
+    "EXPIRING": "EXPIRING",
+    "ACTIVE": "ACTIVE",
+    "COMPLETED": "COMPLETED",
+    "TIME UP!": "TIME UP!",
+    "Remaining": "Remaining",
+    "Complete Game": "Complete Game",
+    "Force Complete": "Force Complete",
+    "Started": "Started",
+    "Started by": "Started by",
+    "Sale ID": "Sale ID",
+    "remaining": "remaining",
+    
+    // Start Game Dialog
+    "Start New Game": "Start New Game",
+    "Select a game, game asset, and scan the ticket barcode to start a new game session.": "Select a game, game asset, and scan the ticket barcode to start a new game session.",
+    "Select Game Asset": "Select Game Asset",
+    "Scan or enter ticket barcode": "Scan or enter ticket barcode",
+    "Game Details": "Game Details",
+    "Asset": "Asset",
+    "Cancel": "Cancel",
+    
+    // Completed Games
+    "Actual Duration": "Actual Duration",
+    "Expected Duration": "Expected Duration",
+    "minutes": "minutes",
+    "Completed": "Completed",
+    "Completed Early": "Completed Early",
+    "Handled by": "Handled by",
+    "Early Finish": "Early Finish",
+    
+    // Asset Availability
+    "No available assets": "No available assets",
+    "All assets for this game are currently in use": "All assets for this game are currently in use",
+    
+    // Statistics
+    "Average Revenue": "Average Revenue",
+    "Per Game Today": "Per Game Today",
+    
+    // Interface
+    "Refresh": "Refresh",
+    "completed": "completed",
 }
 
 export default englishTranslations

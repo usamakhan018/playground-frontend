@@ -11,12 +11,18 @@ import GameIndex from "@/components/admin/Games/Index"
 import GameAssetIndex from "@/components/admin/GameAssets/Index"
 import UserAccount from "@/components/admin/Users/Account"
 import TicketIndex from "@/components/admin/Tickets/Index"
+import { Analytics } from "@/components/admin/Analytics"
 
 const adminRoutes = [
     {
         name: 'Dashboard',
         path: 'dashboard',
         element: <AdminDashboard />
+    },
+    {
+        name: 'sales',
+        path: 'sales',
+        element: <Analytics />
     },
     {
         name: 'setting',

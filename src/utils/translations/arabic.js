@@ -144,6 +144,73 @@ const arabicTranslations = {
     "Unable to open print window. Please allow popups.": "غير قادر على فتح نافذة الطباعة. يرجى السماح بالنوافذ المنبثقة.",
     "Validation failed": "فشل التحقق",
     "Created": "تم الإنشاء",
+
+    // Sales Dashboard
+    "Sales Dashboard": "لوحة المبيعات",
+    "Total Sales Today": "إجمالي المبيعات اليوم",
+    "Revenue": "الإيرادات",
+    "Active Games": "الألعاب النشطة",
+    "Currently Running": "تعمل حاليا",
+    "Completed Games": "الألعاب المكتملة",
+    "Finished Today": "انتهت اليوم",
+    "Quick Actions": "إجراءات سريعة",
+    "Fast game start": "بداية لعبة سريعة",
+    "New Game": "لعبة جديدة",
+    "Quick Game Start": "بداية لعبة سريعة",
+    "Choose a game": "اختر لعبة",
+    "Select Asset": "اختر الأصل",
+    "Choose game asset": "اختر أصل اللعبة",
+    "Scan or enter barcode": "امسح أو أدخل الباركود",
+    "Please fill all fields": "يرجى ملء جميع الحقول",
+    "Starting...": "جاري البدء...",
+    "Start Game": "بدء اللعبة",
+    "No active games at the moment": "لا توجد ألعاب نشطة في الوقت الحالي",
+    "Start a new game to see it here": "ابدأ لعبة جديدة لرؤيتها هنا",
+    "Completed Games Today": "الألعاب المكتملة اليوم",
+    
+    // Game States
+    "EXPIRED": "منتهية الصلاحية",
+    "EXPIRING": "تنتهي قريبا",
+    "ACTIVE": "نشطة",
+    "COMPLETED": "مكتملة",
+    "TIME UP!": "انتهى الوقت!",
+    "Remaining": "المتبقي",
+    "Complete Game": "إنهاء اللعبة",
+    "Force Complete": "إنهاء قسري",
+    "Started": "بدأت",
+    "Started by": "بدأت بواسطة",
+    "Sale ID": "معرف البيع",
+    "remaining": "متبقي",
+    
+    // Start Game Dialog
+    "Start New Game": "بدء لعبة جديدة",
+    "Select a game, game asset, and scan the ticket barcode to start a new game session.": "اختر لعبة وأصل اللعبة وامسح باركود التذكرة لبدء جلسة لعب جديدة.",
+    "Select Game Asset": "اختر أصل اللعبة",
+    "Scan or enter ticket barcode": "امسح أو أدخل باركود التذكرة",
+    "Game Details": "تفاصيل اللعبة",
+    "Asset": "الأصل",
+    "Cancel": "إلغاء",
+    
+    // Completed Games
+    "Actual Duration": "المدة الفعلية",
+    "Expected Duration": "المدة المتوقعة",
+    "minutes": "دقائق",
+    "Completed": "مكتمل",
+    "Completed Early": "اكتمل مبكرا",
+    "Handled by": "تم التعامل معها بواسطة",
+    "Early Finish": "إنهاء مبكر",
+    
+    // Asset Availability
+    "No available assets": "لا توجد أصول متاحة",
+    "All assets for this game are currently in use": "جميع أصول هذه اللعبة قيد الاستخدام حاليا",
+    
+    // Statistics
+    "Average Revenue": "متوسط الإيرادات",
+    "Per Game Today": "لكل لعبة اليوم",
+    
+    // Interface
+    "Refresh": "تحديث",
+    "completed": "مكتمل",
 }
 
 export default arabicTranslations;

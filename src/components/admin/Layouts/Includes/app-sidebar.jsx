@@ -10,6 +10,7 @@ import {
     Home,
     HomeIcon,
     Settings,
+    ShoppingCart,
     Ticket,
     User2Icon,
     UserCheck,
@@ -54,6 +55,12 @@ export function AppSidebar({ ...props }) {
                         path: "/dashboard",
                         icon: Home,
                         permission: can("Dashboard access"),
+                    },
+                    {
+                        label: t("Sales Dashboard"),
+                        path: "/sales",
+                        icon: ShoppingCart,
+                        permission: can("Sale access"),
                     },
                     {
                         label: t("Expense Categories"),
