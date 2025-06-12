@@ -7,6 +7,8 @@ import RoleEdit from "@/components/admin/Roles/Edit"
 import RoleIndex from "@/components/admin/Roles/Index"
 import ExpenseCategoryIndex from "@/components/admin/ExpenesCategory/Index"
 import UserIndex from "@/components/admin/Users/Index"
+import GameIndex from "@/components/admin/Games/Index"
+import GameAssetIndex from "@/components/admin/GameAssets/Index"
 
 const adminRoutes = [
     {
@@ -53,6 +55,16 @@ const adminRoutes = [
         name: 'users',
         path: 'users',
         element: <UserIndex />
+    },
+    {
+        name: 'games',
+        path: 'games',
+        element: <GameIndex />
+    },
+    {
+        name: 'gameAssets',
+        path: 'game-assets',
+        element: <GameAssetIndex />
     },
 ]
 

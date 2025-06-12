@@ -50,6 +50,36 @@ const englishTranslations = {
     "Cell Phone": "Cell Phone",
     "Create Shipper": "Create Shipper",
     "Close": "Close",
+
+    // Games
+    "Games": "Games",
+    "Game Name": "Game Name",
+    "Price": "Price",
+    "Duration": "Duration",
+    "Game Image": "Game Image",
+    "Create Game": "Create Game",
+    "Update Game": "Update Game",
+    "Image": "Image",
+    "Current Image:": "Current Image:",
+    "New Image Preview:": "New Image Preview:",
+    "No image uploaded": "No image uploaded",
+    "e.g., 60 minutes": "e.g., 60 minutes",
+    "N/A": "N/A",
+    "Create": "Create",
+    "Refresh": "Refresh",
+    "Open menu": "Open menu",
+
+    // Game Assets
+    "Game Assets": "Game Assets",
+    "Asset Name": "Asset Name",
+    "Asset Image": "Asset Image",
+    "Create Game Asset": "Create Game Asset",
+    "Update Game Asset": "Update Game Asset",
+    "Game": "Game",
+    "Select Game": "Select Game",
+    "Games Management": "Games Management",
+    "View Assets": "View Assets",
+    "Assets for this game": "Assets for this game",
 }
 
 export default englishTranslations

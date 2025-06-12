@@ -11,11 +11,23 @@ export const getRoles = createAsyncThunk("getRoles", async () => {
     return res.data.data;
 });
 
+export const getGames = createAsyncThunk("getGames", async () => {
+    const res = await axiosClient.get("games/all");
+    return res.data.data;
+});
+
+export const getGameAssets = createAsyncThunk("getGameAssets", async () => {
+    const res = await axiosClient.get("game_assets/all");
+    return res.data.data;
+});
+
 const ajaxFeature = createSlice({
     name: 'Ajax',
     initialState: {
         expenseCategories: null,
         roles: null,
+        games: null,
+        gameAssets: null,
         loading: false,
         error: false,
     },
@@ -46,8 +58,35 @@ const ajaxFeature = createSlice({
         builder.addCase(getRoles.rejected, (state) => {
             state.loading = false;
         });
-    }
 
+        // GAMES
+        builder.addCase(getGames.pending, (state) => {
+            state.loading = true;
+        });
+
+        builder.addCase(getGames.fulfilled, (state, action) => {
+            state.loading = false;
+            state.games = action.payload;
+        });
+
+        builder.addCase(getGames.rejected, (state) => {
+            state.loading = false;
+        });
+
+        // GAME ASSETS
+        builder.addCase(getGameAssets.pending, (state) => {
+            state.loading = true;
+        });
+
+        builder.addCase(getGameAssets.fulfilled, (state, action) => {
+            state.loading = false;
+            state.gameAssets = action.payload;
+        });
+
+        builder.addCase(getGameAssets.rejected, (state) => {
+            state.loading = false;
+        });
+    }
 });
 
 export default ajaxFeature.reducer;

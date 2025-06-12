@@ -50,7 +50,37 @@ const arabicTranslations = {
     "Cell Phone": "رقم الهاتف المحمول",
     "Create Shipper": "إنشاء شاحن",
     "Update Shipper": "تحديث شاحن",
-    "Close": "إغلاق"
+    "Close": "إغلاق",
+
+    // Games
+    "Games": "الألعاب",
+    "Game Name": "اسم اللعبة",
+    "Price": "السعر",
+    "Duration": "المدة",
+    "Game Image": "صورة اللعبة",
+    "Create Game": "إنشاء لعبة",
+    "Update Game": "تحديث اللعبة",
+    "Image": "الصورة",
+    "Current Image:": "الصورة الحالية:",
+    "New Image Preview:": "معاينة الصورة الجديدة:",
+    "No image uploaded": "لم يتم رفع صورة",
+    "e.g., 60 minutes": "مثل، 60 دقيقة",
+    "N/A": "غير متوفر",
+    "Create": "إنشاء",
+    "Refresh": "تحديث",
+    "Open menu": "فتح القائمة",
+
+    // Game Assets
+    "Game Assets": "أصول الألعاب",
+    "Asset Name": "اسم الأصل",
+    "Asset Image": "صورة الأصل",
+    "Create Game Asset": "إنشاء أصل لعبة",
+    "Update Game Asset": "تحديث أصل اللعبة",
+    "Game": "اللعبة",
+    "Select Game": "اختر اللعبة",
+    "Games Management": "إدارة الألعاب",
+    "View Assets": "عرض الأصول",
+    "Assets for this game": "أصول هذه اللعبة"
 }
 
 export default arabicTranslations;

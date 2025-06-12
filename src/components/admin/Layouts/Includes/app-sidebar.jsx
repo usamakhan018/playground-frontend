@@ -6,6 +6,7 @@ import {
     Building,
     DoorOpen,
     GalleryVerticalEnd,
+    Gamepad2,
     Home,
     HomeIcon,
     Settings,
@@ -82,6 +83,24 @@ export function AppSidebar({ ...props }) {
                         path: "/profile",
                         icon: User2Icon,
                         permission: can("Profile access"),
+                    },
+                ],
+            },
+            {
+                label: t("Games Management"),
+                icon: Gamepad2,
+                items: [
+                    {
+                        label: t("Games"),
+                        path: "/games",
+                        icon: Gamepad2,
+                        permission: can("Game access"),
+                    },
+                    {
+                        label: t("Game Assets"),
+                        path: "/game-assets",
+                        icon: BookImageIcon,
+                        permission: can("Game Asset access"),
                     },
                 ],
             },

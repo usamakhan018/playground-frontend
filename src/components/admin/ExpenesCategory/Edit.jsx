@@ -26,7 +26,7 @@ function Edit({ onSubmitSuccess, record, onClose }) {
 
     try {
       const formData = new FormData(event.currentTarget);
-      const response = await axiosClient.post("room_types/update", formData);
+      const response = await axiosClient.post("expense_categories/update", formData);
       toast.success(response.data.message);
       onSubmitSuccess?.();
       onClose();
@@ -56,6 +56,7 @@ function Edit({ onSubmitSuccess, record, onClose }) {
                 type="text"
                 defaultValue={record.name}
                 required
+                autoComplete="off"
               />
             </div>
           </div>
