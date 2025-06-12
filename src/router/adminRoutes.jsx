@@ -9,6 +9,8 @@ import ExpenseCategoryIndex from "@/components/admin/ExpenesCategory/Index"
 import UserIndex from "@/components/admin/Users/Index"
 import GameIndex from "@/components/admin/Games/Index"
 import GameAssetIndex from "@/components/admin/GameAssets/Index"
+import UserAccount from "@/components/admin/Users/Account"
+import TicketIndex from "@/components/admin/Tickets/Index"
 
 const adminRoutes = [
     {
@@ -65,6 +67,16 @@ const adminRoutes = [
         name: 'gameAssets',
         path: 'game-assets',
         element: <GameAssetIndex />
+    },
+    {
+        name: 'userAccount',
+        path: 'users/:userId/account',
+        element: <UserAccount />
+    },
+    {
+        name: 'tickets',
+        path: 'tickets',
+        element: <TicketIndex />
     },
 ]
 

@@ -26,7 +26,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Pagination from "@/components/Pagination";
 import { Input } from "@/components/ui/input";
 import { toast } from 'react-hot-toast';
-import { EditIcon, EyeIcon, MoreHorizontal, RefreshCcw, Trash2Icon } from "lucide-react";
+import { EditIcon, EyeIcon, MoreHorizontal, RefreshCcw, Trash2Icon, Wallet } from "lucide-react";
 import Edit from "./Edit";
 import Create from "./Create";
 import Password from "./Password";
@@ -214,12 +214,20 @@ const UserIndex = () => {
                   <TableCell>{user.phone}</TableCell>
                   <TableCell>{user.roles[0]?.name}</TableCell>
                   <TableCell>
-                    <button
-                      onClick={() => openViewDialog(user)}
-                      className="mr-2 py-[4px] px-2 border hover:opacity-50 rounded"
-                    >
-                      <EyeIcon></EyeIcon>{" "}
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => openViewDialog(user)}
+                        className="py-[4px] px-2 border hover:opacity-50 rounded"
+                      >
+                        <EyeIcon className="h-4 w-4" />
+                      </button>
+                      <Link
+                        to={`/users/${user.id}/account`}
+                        className="py-[4px] px-2 border hover:opacity-50 rounded flex items-center"
+                      >
+                        <Wallet className="h-4 w-4" />
+                      </Link>
+                    </div>
                   </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>

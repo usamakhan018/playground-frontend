@@ -153,7 +153,7 @@ export async function fileDownloader({ url, fileName }) {
         link.click();
         link.remove();
         window.URL.revokeObjectURL(downloadUrl);
-        
+
         return true;
     } catch (error) {
         console.error('Download failed:', error);

@@ -1,0 +1,466 @@
+import axiosClient from "@/axios";
+import React, { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import PageTitle from "../Layouts/PageTitle";
+import NoRecordFound from "@/components/NoRecordFound";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import { useNavigate, useParams } from "react-router-dom";
+import Pagination from "@/components/Pagination";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { 
+  ArrowLeft, 
+  User, 
+  Wallet, 
+  TrendingUp, 
+  TrendingDown, 
+  RefreshCw, 
+  SearchIcon,
+  CreditCard,
+  ShoppingCart
+} from "lucide-react";
+import { can, handleError } from "@/utils/helpers";
+import Loader from "@/components/Loader";
+import { useTranslation } from "react-i18next";
+
+const UserAccount = () => {
+  const [loading, setLoading] = useState(true);
+  const [accountData, setAccountData] = useState(null);
+  const [transactionLinks, setTransactionLinks] = useState([]);
+  const [salesLinks, setSalesLinks] = useState([]);
+  const [transactionPage, setTransactionPage] = useState(1);
+  const [salesPage, setSalesPage] = useState(1);
+  const [transactionSearch, setTransactionSearch] = useState("");
+  const [salesSearch, setSalesSearch] = useState("");
+  const [showTransactionRefresh, setShowTransactionRefresh] = useState(false);
+  const [showSalesRefresh, setShowSalesRefresh] = useState(false);
+
+  const navigate = useNavigate();
+  const { userId } = useParams();
+  const { t } = useTranslation();
+
+  const accessAbility = can("User access");
+
+  useEffect(() => {
+    if (!accessAbility) navigate("/unauthorized");
+    fetchAccountData();
+  }, [userId]);
+
+  const fetchAccountData = async () => {
+    setLoading(true);
+    try {
+      const response = await axiosClient.get(`accounts/user/${userId}`);
+      setAccountData(response.data.data);
+      setTransactionLinks(response.data.data.transactions.links || []);
+      setSalesLinks(response.data.data.sales.links || []);
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchTransactions = async (page = 1, query = "") => {
+    try {
+      const url = query 
+        ? `accounts/user/${userId}/transactions?query=${query.trim()}`
+        : `accounts/user/${userId}/transactions?page=${page}`;
+      
+      const response = await axiosClient.get(url);
+      setAccountData(prev => ({
+        ...prev,
+        transactions: response.data.data
+      }));
+      setTransactionLinks(response.data.data.links || []);
+    } catch (error) {
+      handleError(error);
+    }
+  };
+
+  const fetchSales = async (page = 1, query = "") => {
+    try {
+      const url = query 
+        ? `accounts/user/${userId}/sales?query=${query.trim()}`
+        : `accounts/user/${userId}/sales?page=${page}`;
+      
+      const response = await axiosClient.get(url);
+      setAccountData(prev => ({
+        ...prev,
+        sales: response.data.data
+      }));
+      setSalesLinks(response.data.data.links || []);
+    } catch (error) {
+      handleError(error);
+    }
+  };
+
+  const handleTransactionSearch = async (e) => {
+    e.preventDefault();
+    if (!transactionSearch.trim()) return;
+
+    setShowTransactionRefresh(true);
+    await fetchTransactions(1, transactionSearch);
+    setTransactionLinks([]);
+  };
+
+  const handleSalesSearch = async (e) => {
+    e.preventDefault();
+    if (!salesSearch.trim()) return;
+
+    setShowSalesRefresh(true);
+    await fetchSales(1, salesSearch);
+    setSalesLinks([]);
+  };
+
+  const handleTransactionRefresh = () => {
+    setTransactionSearch("");
+    setShowTransactionRefresh(false);
+    fetchTransactions();
+  };
+
+  const handleSalesRefresh = () => {
+    setSalesSearch("");
+    setShowSalesRefresh(false);
+    fetchSales();
+  };
+
+  const handleTransactionPageChange = (page) => {
+    setTransactionPage(page);
+    fetchTransactions(page);
+  };
+
+  const handleSalesPageChange = (page) => {
+    setSalesPage(page);
+    fetchSales(page);
+  };
+
+  const getTransactionTypeColor = (type) => {
+    return type === 'credit' ? 'text-green-600' : 'text-red-600';
+  };
+
+  const getTransactionIcon = (type) => {
+    return type === 'credit' ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />;
+  };
+
+  const getStatusBadge = (status) => {
+    const colors = {
+      completed: 'bg-green-100 text-green-800',
+      pending: 'bg-yellow-100 text-yellow-800',
+      failed: 'bg-red-100 text-red-800',
+      available: 'bg-blue-100 text-blue-800',
+      sold: 'bg-purple-100 text-purple-800'
+    };
+    
+    return (
+      <Badge className={colors[status] || 'bg-gray-100 text-gray-800'}>
+        {t(status?.charAt(0).toUpperCase() + status?.slice(1) || 'Unknown')}
+      </Badge>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader />
+      </div>
+    );
+  }
+
+  if (!accountData) {
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center gap-4">
+          <Button variant="outline" onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            {t("Back")}
+          </Button>
+          <PageTitle title={t("Account Details")} />
+        </div>
+        <NoRecordFound />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <Button variant="outline" onClick={() => navigate(-1)}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          {t("Back")}
+        </Button>
+        <PageTitle title={`${accountData.user.name} - ${t("Account Details")}`} />
+      </div>
+
+      {/* User Info Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {t("User Information")}
+            </CardTitle>
+            <User className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-1">
+              <div className="text-2xl font-bold">{accountData.user.name}</div>
+              <p className="text-xs text-muted-foreground">
+                {accountData.user.email}
+              </p>
+              {accountData.user.phone && (
+                <p className="text-xs text-muted-foreground">
+                  {accountData.user.phone}
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {t("Account Balance")}
+            </CardTitle>
+            <Wallet className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">
+              ${accountData.account.balance || '0.00'}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {t("Current available balance")}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              {t("Quick Stats")}
+            </CardTitle>
+            <CreditCard className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-1">
+              <div className="text-sm">
+                <span className="font-medium">{t("Transactions")}: </span>
+                {Array.isArray(accountData.transactions.data) ? accountData.transactions.data.length : accountData.transactions.total || 0}
+              </div>
+              <div className="text-sm">
+                <span className="font-medium">{t("Sales")}: </span>
+                {Array.isArray(accountData.sales.data) ? accountData.sales.data.length : accountData.sales.total || 0}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Tabs for Transactions and Sales */}
+      <Tabs defaultValue="transactions" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="transactions" className="flex items-center gap-2">
+            <CreditCard className="h-4 w-4" />
+            {t("Transactions")}
+          </TabsTrigger>
+          <TabsTrigger value="sales" className="flex items-center gap-2">
+            <ShoppingCart className="h-4 w-4" />
+            {t("Sales")}
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Transactions Tab */}
+        <TabsContent value="transactions" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex flex-col sm:flex-row justify-between gap-4">
+                <div>
+                  <CardTitle>{t("Transaction History")}</CardTitle>
+                  <CardDescription>
+                    {t("View all transactions for this user")}
+                  </CardDescription>
+                </div>
+                <form onSubmit={handleTransactionSearch} className="flex gap-2">
+                  <Input
+                    value={transactionSearch}
+                    placeholder={t("Search transactions")}
+                    onChange={(e) => setTransactionSearch(e.target.value)}
+                    className="w-48"
+                  />
+                  <Button type="submit" aria-label={t("Search")}>
+                    <SearchIcon className="h-4 w-4" />
+                  </Button>
+                  {showTransactionRefresh && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleTransactionRefresh}
+                      aria-label={t("Refresh")}
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                    </Button>
+                  )}
+                </form>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[50px]">#</TableHead>
+                    <TableHead>{t("Amount")}</TableHead>
+                    <TableHead>{t("Type")}</TableHead>
+                    <TableHead>{t("Description")}</TableHead>
+                    <TableHead>{t("Date")}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {accountData.transactions?.data?.length > 0 ? (
+                    accountData.transactions.data.map((transaction, index) => (
+                      <TableRow key={transaction.id}>
+                        <TableCell className="font-medium">{index + 1}</TableCell>
+                        <TableCell className={`font-medium ${getTransactionTypeColor(transaction.type)}`}>
+                          <div className="flex items-center gap-2">
+                            {getTransactionIcon(transaction.type)}
+                            ${transaction.amount}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={transaction.type === 'credit' ? 'default' : 'destructive'}>
+                            {t(transaction.type?.charAt(0).toUpperCase() + transaction.type?.slice(1))}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{transaction.description}</TableCell>
+                        <TableCell>
+                          {new Date(transaction.created_at).toLocaleDateString()}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center h-24">
+                        <NoRecordFound />
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+              {transactionLinks.length > 0 && (
+                <Pagination
+                  links={transactionLinks}
+                  currentPage={transactionPage}
+                  onPageChange={handleTransactionPageChange}
+                  className="p-4"
+                />
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Sales Tab */}
+        <TabsContent value="sales" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex flex-col sm:flex-row justify-between gap-4">
+                <div>
+                  <CardTitle>{t("Sales History")}</CardTitle>
+                  <CardDescription>
+                    {t("View all sales for this user")}
+                  </CardDescription>
+                </div>
+                <form onSubmit={handleSalesSearch} className="flex gap-2">
+                  <Input
+                    value={salesSearch}
+                    placeholder={t("Search sales")}
+                    onChange={(e) => setSalesSearch(e.target.value)}
+                    className="w-48"
+                  />
+                  <Button type="submit" aria-label={t("Search")}>
+                    <SearchIcon className="h-4 w-4" />
+                  </Button>
+                  {showSalesRefresh && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleSalesRefresh}
+                      aria-label={t("Refresh")}
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                    </Button>
+                  )}
+                </form>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[50px]">#</TableHead>
+                    <TableHead>{t("Game")}</TableHead>
+                    <TableHead>{t("Game Asset")}</TableHead>
+                    <TableHead>{t("Status")}</TableHead>
+                    <TableHead>{t("Transaction ID")}</TableHead>
+                    <TableHead>{t("Date")}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {accountData.sales?.data?.length > 0 ? (
+                    accountData.sales.data.map((sale, index) => (
+                      <TableRow key={sale.id}>
+                        <TableCell className="font-medium">{index + 1}</TableCell>
+                        <TableCell>{sale.game?.name || t("N/A")}</TableCell>
+                        <TableCell>{sale.game_asset?.name || t("N/A")}</TableCell>
+                        <TableCell>{getStatusBadge(sale.status)}</TableCell>
+                        <TableCell>
+                          {sale.transaction_id ? `#${sale.transaction_id}` : t("N/A")}
+                        </TableCell>
+                        <TableCell>
+                          {new Date(sale.created_at).toLocaleDateString()}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center h-24">
+                        <NoRecordFound />
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+              {salesLinks.length > 0 && (
+                <Pagination
+                  links={salesLinks}
+                  currentPage={salesPage}
+                  onPageChange={handleSalesPageChange}
+                  className="p-4"
+                />
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
+export default UserAccount; 
