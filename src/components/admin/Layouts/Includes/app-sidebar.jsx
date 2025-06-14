@@ -47,7 +47,7 @@ export function AppSidebar({ ...props }) {
         headers: [],
         navMain: [
             {
-                label: "Main",
+                label: t("Main"),
                 icon: Home,
                 items: [
                     {
@@ -61,6 +61,12 @@ export function AppSidebar({ ...props }) {
                         path: "/sales",
                         icon: ShoppingCart,
                         permission: can("Sale access"),
+                    },
+                    {
+                        label: t("Charts"),
+                        path: "/charts",
+                        icon: BarChart,
+                        permission: can("Charts access"),
                     },
                     {
                         label: t("Expense Categories"),
@@ -80,12 +86,12 @@ export function AppSidebar({ ...props }) {
                         icon: DoorOpen,
                         permission: can("Permission access"),
                     },
-                    {
-                        label: t("Settings"),
-                        path: "/settings",
-                        icon: Settings,
-                        permission: can("Setting access"),
-                    },
+                    // {
+                    //     label: t("Settings"),
+                    //     path: "/settings",
+                    //     icon: Settings,
+                    //     permission: can("Setting access"),
+                    // },
                     {
                         label: t("Profile"),
                         path: "/profile",

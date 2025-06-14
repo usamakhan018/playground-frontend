@@ -12,18 +12,23 @@ import {
 import { Label } from "@/components/ui/label";
 import Select from "@/components/misc/Select";
 import { useTranslation } from "react-i18next";
+import { useSelector } from "react-redux";
 import axiosClient from "@/axios";
 import { toast } from 'react-hot-toast';
 import { handleError } from "@/utils/helpers";
 import { Play } from "lucide-react";
 import Loader from "@/components/Loader";
 
-const StartGameDialog = ({ open, onOpenChange, games, onGameStarted }) => {
+const StartGameDialog = ({ open, onOpenChange, onGameStarted }) => {
   const { t } = useTranslation();
+  
+  // Redux state
+  const games = useSelector((state) => state.ajax.games);
+  const gameAssets = useSelector((state) => state.ajax.gameAssets);
   
   const [selectedGame, setSelectedGame] = useState(null);
   const [selectedGameAsset, setSelectedGameAsset] = useState(null);
-  const [gameAssets, setGameAssets] = useState([]);
+  const [availableGameAssets, setAvailableGameAssets] = useState([]);
   const [barcode, setBarcode] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -32,36 +37,56 @@ const StartGameDialog = ({ open, onOpenChange, games, onGameStarted }) => {
       // Reset form when dialog closes
       setSelectedGame(null);
       setSelectedGameAsset(null);
-      setGameAssets([]);
+      setAvailableGameAssets([]);
       setBarcode('');
     }
   }, [open]);
 
-  const fetchGameAssets = async (gameId) => {
+  const filterAvailableAssets = async (gameId) => {
+    if (!gameAssets || !gameId) {
+      setAvailableGameAssets([]);
+      return;
+    }
+
     try {
-      const response = await axiosClient.get(`/game_assets/available-by-game/${gameId}`);
-      setGameAssets(response.data.data);
+      // Get current active games to determine which assets are in use
+      const response = await axiosClient.get('/sales/dashboard-data');
+      const activeGames = response.data.data.active_games;
+      
+      // Get assets that belong to the selected game
+      const gameSpecificAssets = gameAssets.filter(asset => asset.game_id === parseInt(gameId));
+      
+      // Get assets that are currently in use (from active games)
+      const assetsInUse = activeGames.map(sale => sale.game_asset_id);
+      
+      // Filter out assets that are currently in use
+      const availableAssets = gameSpecificAssets.filter(asset => !assetsInUse.includes(asset.id));
+      
+      setAvailableGameAssets(availableAssets);
     } catch (error) {
-      console.error('Error fetching game assets:', error);
+      console.error('Error filtering game assets:', error);
+      // Fallback: show all assets for the game
+      const gameSpecificAssets = gameAssets.filter(asset => asset.game_id === parseInt(gameId));
+      setAvailableGameAssets(gameSpecificAssets);
     }
   };
 
   const handleGameSelect = (selectedOption) => {
-    if (selectedOption) {
+    if (selectedOption && games) {
       const game = games.find(g => g.id === parseInt(selectedOption.value));
       setSelectedGame(game);
       setSelectedGameAsset(null);
-      fetchGameAssets(selectedOption.value);
+      filterAvailableAssets(selectedOption.value);
     } else {
       setSelectedGame(null);
       setSelectedGameAsset(null);
-      setGameAssets([]);
+      setAvailableGameAssets([]);
     }
   };
 
   const handleGameAssetSelect = (selectedOption) => {
     if (selectedOption) {
-      const asset = gameAssets.find(a => a.id === parseInt(selectedOption.value));
+      const asset = availableGameAssets.find(a => a.id === parseInt(selectedOption.value));
       setSelectedGameAsset(asset);
     } else {
       setSelectedGameAsset(null);
@@ -90,7 +115,7 @@ const StartGameDialog = ({ open, onOpenChange, games, onGameStarted }) => {
       setSelectedGame(null);
       setSelectedGameAsset(null);
       setBarcode('');
-      setGameAssets([]);
+      setAvailableGameAssets([]);
       onOpenChange(false);
       
       // Notify parent component
@@ -128,10 +153,10 @@ const StartGameDialog = ({ open, onOpenChange, games, onGameStarted }) => {
                 label: `${selectedGame.name} - $${selectedGame.price} (${selectedGame.duration})`
               } : null}
               onChange={handleGameSelect}
-              options={games.map(game => ({
+              options={games ? games.map(game => ({
                 value: game.id,
                 label: `${game.name} - $${game.price} (${game.duration})`
-              }))}
+              })) : []}
               isClearable
             />
           </div>
@@ -146,7 +171,7 @@ const StartGameDialog = ({ open, onOpenChange, games, onGameStarted }) => {
                   label: selectedGameAsset.name
                 } : null}
                 onChange={handleGameAssetSelect}
-                options={gameAssets.map(asset => ({
+                options={availableGameAssets.map(asset => ({
                   value: asset.id,
                   label: asset.name
                 }))}

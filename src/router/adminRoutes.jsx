@@ -12,6 +12,7 @@ import GameAssetIndex from "@/components/admin/GameAssets/Index"
 import UserAccount from "@/components/admin/Users/Account"
 import TicketIndex from "@/components/admin/Tickets/Index"
 import { Analytics } from "@/components/admin/Analytics"
+import Charts from "@/components/admin/Charts"
 
 const adminRoutes = [
     {
@@ -83,6 +84,11 @@ const adminRoutes = [
         name: 'tickets',
         path: 'tickets',
         element: <TicketIndex />
+    },
+    {
+        name: 'charts',
+        path: 'charts',
+        element: <Charts />
     },
 ]
 

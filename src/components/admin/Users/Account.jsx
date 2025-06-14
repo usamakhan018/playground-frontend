@@ -54,6 +54,7 @@ const UserAccount = () => {
   const [salesSearch, setSalesSearch] = useState("");
   const [showTransactionRefresh, setShowTransactionRefresh] = useState(false);
   const [showSalesRefresh, setShowSalesRefresh] = useState(false);
+  const [refreshingBalance, setRefreshingBalance] = useState(false);
 
   const navigate = useNavigate();
   const { userId } = useParams();
@@ -154,6 +155,28 @@ const UserAccount = () => {
     fetchSales(page);
   };
 
+  const handleRefreshBalance = async () => {
+    setRefreshingBalance(true);
+    try {
+      const response = await axiosClient.post(`accounts/user/${userId}/refresh-balance`);
+      
+      // Update the account data with new balance information
+      setAccountData(prev => ({
+        ...prev,
+        account: {
+          ...prev.account,
+          balance: response.data.data.balance,
+          raw_balance: response.data.data.raw_balance
+        },
+        summary: response.data.data.summary
+      }));
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setRefreshingBalance(false);
+    }
+  };
+
   const getTransactionTypeColor = (type) => {
     return type === 'credit' ? 'text-green-600' : 'text-red-600';
   };
@@ -241,15 +264,46 @@ const UserAccount = () => {
             <CardTitle className="text-sm font-medium">
               {t("Account Balance")}
             </CardTitle>
-            <Wallet className="h-4 w-4 text-muted-foreground" />
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleRefreshBalance}
+                disabled={refreshingBalance}
+                className="h-8 w-8 p-0"
+              >
+                <RefreshCw className={`h-4 w-4 ${refreshingBalance ? 'animate-spin' : ''}`} />
+              </Button>
+              <Wallet className="h-4 w-4 text-muted-foreground" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              ${accountData.account.balance || '0.00'}
+            <div className="space-y-2">
+              <div className={`text-2xl font-bold ${
+                accountData.account.raw_balance >= 0 ? 'text-green-600' : 'text-red-600'
+              }`}>
+                ${accountData.account.balance || '0.00'}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t("Current available balance")}
+              </p>
+              {accountData.summary && (
+                <div className="text-xs space-y-1 pt-2 border-t">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t("Total Credits")}:</span>
+                    <span className="text-green-600 font-medium">
+                      +${accountData.summary.total_credits || '0.00'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{t("Total Debits")}:</span>
+                    <span className="text-red-600 font-medium">
+                      -${accountData.summary.total_debits || '0.00'}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
-            <p className="text-xs text-muted-foreground">
-              {t("Current available balance")}
-            </p>
           </CardContent>
         </Card>
 
@@ -261,15 +315,31 @@ const UserAccount = () => {
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="space-y-1">
-              <div className="text-sm">
-                <span className="font-medium">{t("Transactions")}: </span>
-                {Array.isArray(accountData.transactions.data) ? accountData.transactions.data.length : accountData.transactions.total || 0}
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">{t("Total Transactions")}:</span>
+                <span className="font-medium">
+                  {accountData.summary?.transactions_count || accountData.transactions.total || 0}
+                </span>
               </div>
-              <div className="text-sm">
-                <span className="font-medium">{t("Sales")}: </span>
-                {Array.isArray(accountData.sales.data) ? accountData.sales.data.length : accountData.sales.total || 0}
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">{t("Total Sales")}:</span>
+                <span className="font-medium">
+                  {accountData.summary?.sales_count || accountData.sales.total || 0}
+                </span>
               </div>
+              {accountData.account.raw_balance !== undefined && (
+                <div className="pt-2 border-t">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">{t("Net Balance")}:</span>
+                    <span className={`font-bold ${
+                      accountData.account.raw_balance >= 0 ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      ${Math.abs(accountData.account.raw_balance).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
