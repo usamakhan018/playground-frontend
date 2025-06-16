@@ -37,24 +37,39 @@ import {
   RefreshCw, 
   SearchIcon,
   CreditCard,
-  ShoppingCart
+  ShoppingCart,
+  FileText,
+  CheckCircle,
+  Eye,
+  DollarSign
 } from "lucide-react";
 import { can, handleError } from "@/utils/helpers";
 import Loader from "@/components/Loader";
 import { useTranslation } from "react-i18next";
+import ViewReportDialog from "../DailyReports/ViewReportDialog";
+import ConfirmPaymentDialog from "../DailyReports/ConfirmPaymentDialog";
 
 const UserAccount = () => {
   const [loading, setLoading] = useState(true);
   const [accountData, setAccountData] = useState(null);
   const [transactionLinks, setTransactionLinks] = useState([]);
   const [salesLinks, setSalesLinks] = useState([]);
+  const [dailyReports, setDailyReports] = useState({ data: [], links: [] });
+  const [completedReports, setCompletedReports] = useState({ data: [], links: [] });
   const [transactionPage, setTransactionPage] = useState(1);
   const [salesPage, setSalesPage] = useState(1);
+  const [reportsPage, setReportsPage] = useState(1);
+  const [completedPage, setCompletedPage] = useState(1);
   const [transactionSearch, setTransactionSearch] = useState("");
   const [salesSearch, setSalesSearch] = useState("");
   const [showTransactionRefresh, setShowTransactionRefresh] = useState(false);
   const [showSalesRefresh, setShowSalesRefresh] = useState(false);
   const [refreshingBalance, setRefreshingBalance] = useState(false);
+  const [selectedReport, setSelectedReport] = useState(null);
+  const [showReportDialog, setShowReportDialog] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [confirmAmount, setConfirmAmount] = useState("");
+  const [confirmNotes, setConfirmNotes] = useState("");
 
   const navigate = useNavigate();
   const { userId } = useParams();
@@ -65,6 +80,8 @@ const UserAccount = () => {
   useEffect(() => {
     if (!accessAbility) navigate("/unauthorized");
     fetchAccountData();
+    fetchDailyReports();
+    fetchCompletedReports();
   }, [userId]);
 
   const fetchAccountData = async () => {
@@ -175,6 +192,70 @@ const UserAccount = () => {
     } finally {
       setRefreshingBalance(false);
     }
+  };
+
+  const fetchDailyReports = async (page = 1) => {
+    try {
+      const response = await axiosClient.get(`daily-reports/user/${userId}?page=${page}`);
+      setDailyReports(response.data.data);
+    } catch (error) {
+      handleError(error);
+    }
+  };
+
+  const fetchCompletedReports = async (page = 1) => {
+    try {
+      const response = await axiosClient.get(`daily-reports/user/${userId}/completed?page=${page}`);
+      setCompletedReports(response.data.data);
+    } catch (error) {
+      handleError(error);
+    }
+  };
+
+  const handleViewReport = async (reportId) => {
+    try {
+      const response = await axiosClient.get(`daily-reports/show/${reportId}`);
+      setSelectedReport(response.data.data);
+      setShowReportDialog(true);
+    } catch (error) {
+      handleError(error);
+    }
+  };
+
+  const handleConfirmPayment = async () => {
+    if (!selectedReport || !confirmAmount) return;
+    
+    try {
+      const response = await axiosClient.post('daily-reports/confirm-payment', {
+        report_id: selectedReport.report.id,
+        amount_received: parseFloat(confirmAmount),
+        notes: confirmNotes
+      });
+      
+      // Refresh the reports
+      fetchDailyReports();
+      fetchCompletedReports();
+      
+      // Close dialogs and reset form
+      setShowConfirmDialog(false);
+      setShowReportDialog(false);
+      setConfirmAmount("");
+      setConfirmNotes("");
+      setSelectedReport(null);
+      
+    } catch (error) {
+      handleError(error);
+    }
+  };
+
+  const handleReportsPageChange = (page) => {
+    setReportsPage(page);
+    fetchDailyReports(page);
+  };
+
+  const handleCompletedPageChange = (page) => {
+    setCompletedPage(page);
+    fetchCompletedReports(page);
   };
 
   const getTransactionTypeColor = (type) => {
@@ -345,9 +426,9 @@ const UserAccount = () => {
         </Card>
       </div>
 
-      {/* Tabs for Transactions and Sales */}
+      {/* Tabs for Transactions, Sales, and Reports */}
       <Tabs defaultValue="transactions" className="space-y-4">
-        <TabsList>
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="transactions" className="flex items-center gap-2">
             <CreditCard className="h-4 w-4" />
             {t("Transactions")}
@@ -355,6 +436,14 @@ const UserAccount = () => {
           <TabsTrigger value="sales" className="flex items-center gap-2">
             <ShoppingCart className="h-4 w-4" />
             {t("Sales")}
+          </TabsTrigger>
+          <TabsTrigger value="reports" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            {t("Daily Reports")}
+          </TabsTrigger>
+          <TabsTrigger value="completed" className="flex items-center gap-2">
+            <CheckCircle className="h-4 w-4" />
+            {t("Completed Reports")}
           </TabsTrigger>
         </TabsList>
 
@@ -528,7 +617,184 @@ const UserAccount = () => {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Daily Reports Tab */}
+        <TabsContent value="reports" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t("Daily Reports")}</CardTitle>
+              <CardDescription>
+                {t("View all daily reports for this user")}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[50px]">#</TableHead>
+                    <TableHead>{t("Date")}</TableHead>
+                    <TableHead>{t("Total Sales")}</TableHead>
+                    <TableHead>{t("Total Revenue")}</TableHead>
+                    <TableHead>{t("Status")}</TableHead>
+                    <TableHead>{t("Actions")}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {dailyReports?.data?.length > 0 ? (
+                    dailyReports.data.map((report, index) => (
+                      <TableRow key={report.id}>
+                        <TableCell className="font-medium">{index + 1}</TableCell>
+                        <TableCell>{new Date(report.date).toLocaleDateString()}</TableCell>
+                        <TableCell>{report.total_transactions}</TableCell>
+                        <TableCell>${(report.total_revenue || report.actual_revenue)?.toFixed(2) || '0.00'}</TableCell>
+                        <TableCell>
+                          <Badge variant={
+                            report.status === 'settled' ? 'default' :
+                            report.status === 'submitted' ? 'secondary' : 'outline'
+                          }>
+                            {t(report.status?.charAt(0).toUpperCase() + report.status?.slice(1))}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleViewReport(report.id)}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              {t("View")}
+                            </Button>
+                            {report.status !== 'settled' && (
+                              <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedReport({ report });
+                                  setConfirmAmount((report.total_revenue || report.actual_revenue)?.toString() || '');
+                                  setShowConfirmDialog(true);
+                                }}
+                              >
+                                <DollarSign className="h-4 w-4 mr-1" />
+                                {t("Confirm Payment")}
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center h-24">
+                        <NoRecordFound />
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+              {dailyReports?.links?.length > 0 && (
+                <Pagination
+                  links={dailyReports.links}
+                  currentPage={reportsPage}
+                  onPageChange={handleReportsPageChange}
+                  className="p-4"
+                />
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Completed Reports Tab */}
+        <TabsContent value="completed" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t("Completed Reports")}</CardTitle>
+              <CardDescription>
+                {t("View all completed and settled reports")}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[50px]">#</TableHead>
+                    <TableHead>{t("Date")}</TableHead>
+                    <TableHead>{t("Total Sales")}</TableHead>
+                    <TableHead>{t("Total Revenue")}</TableHead>
+                    <TableHead>{t("Amount Collected")}</TableHead>
+                    <TableHead>{t("Settled Date")}</TableHead>
+                    <TableHead>{t("Actions")}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {completedReports?.data?.length > 0 ? (
+                    completedReports.data.map((report, index) => (
+                      <TableRow key={report.id}>
+                        <TableCell className="font-medium">{index + 1}</TableCell>
+                        <TableCell>{new Date(report.date).toLocaleDateString()}</TableCell>
+                        <TableCell>{report.total_transactions}</TableCell>
+                        <TableCell>${(report.total_revenue || report.actual_revenue)?.toFixed(2) || '0.00'}</TableCell>
+                        <TableCell>
+                          ${parseFloat(report.money_collection?.amount)?.toFixed(2) || '0.00'}
+                        </TableCell>
+                        <TableCell>
+                          {report.settled_at ? new Date(report.settled_at).toLocaleDateString() : t("N/A")}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleViewReport(report.id)}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            {t("View")}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center h-24">
+                        <NoRecordFound />
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+              {completedReports?.links?.length > 0 && (
+                <Pagination
+                  links={completedReports.links}
+                  currentPage={completedPage}
+                  onPageChange={handleCompletedPageChange}
+                  className="p-4"
+                />
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
+
+      {/* Dialogs */}
+      <ViewReportDialog
+        open={showReportDialog}
+        onOpenChange={setShowReportDialog}
+        reportData={selectedReport}
+        onConfirmPayment={() => {
+          setShowReportDialog(false);
+          setShowConfirmDialog(true);
+        }}
+      />
+
+      <ConfirmPaymentDialog
+        open={showConfirmDialog}
+        onOpenChange={setShowConfirmDialog}
+        reportData={selectedReport}
+        amount={confirmAmount}
+        setAmount={setConfirmAmount}
+        notes={confirmNotes}
+        setNotes={setConfirmNotes}
+        onConfirm={handleConfirmPayment}
+      />
     </div>
   );
 };

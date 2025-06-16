@@ -282,7 +282,7 @@ export const Analytics = () => {
       <StartGameDialog
         open={startGameDialogOpen}
         onOpenChange={setStartGameDialogOpen}
-        onGameStarted={() => {
+        onSaleCreated={() => {
           fetchDashboardData();
         }}
       />

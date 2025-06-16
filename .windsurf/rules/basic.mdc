@@ -1,0 +1,15 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Always use the rules in [Index.jsx](mdc:frontend/src/components/admin/ExpenesCategory/Index.jsx) . Okay like the pagination the requests, how I get them from the server and the way how I set up dialogues translations. You need to add translation for each word which you add into page in [english.js](mdc:frontend/src/utils/translations/english.js) and in [arabic.js](mdc:frontend/src/utils/translations/arabic.js) . then after this create an a route if dones't exists in [adminRoutes.jsx](mdc:frontend/src/router/adminRoutes.jsx) and after that create a link in [app-sidebar.jsx](mdc:frontend/src/components/admin/Layouts/Includes/app-sidebar.jsx) with unique Icon.
+And always remove the dummy data which I have used to showcase it showcase the page to the admins, remove that dummy data and use real data from the server. Make the request to do everything according to the conventions.
+
+if a page has a dialog please create it in a seperate file don't create a lot of clutter in the same file. it reduces the readability
+
+always make the date fields so that if I click everywhere on the input it needs to open the calender to select the data currently it's wokring when I click on the small calender Icon.
+
+use the select as it's custom and made for project [Select.jsx](mdc:frontend/src/components/misc/Select.jsx).
+
+and for status colors. make changes in the variants of [badge.jsx](mdc:frontend/src/components/ui/badge.jsx)

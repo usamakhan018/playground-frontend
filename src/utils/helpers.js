@@ -174,3 +174,36 @@ export const humanizeText = (text) => {
 
 
 export const sleep = ms => new Promise(res => setTimeout(res, ms));
+
+export const printReceipt = (data) => {
+    const iframe = document.createElement("iframe");
+    iframe.style.position = "absolute";
+    iframe.style.width = "0px";
+    iframe.style.height = "0px";
+    iframe.style.border = "none";
+    document.body.appendChild(iframe);
+
+    const iframeDoc = iframe.contentWindow.document;
+    iframeDoc.open();
+    iframeDoc.write(data);
+    iframeDoc.close();
+
+    const image = iframeDoc.querySelector("img");
+    image.onload = () => {
+        setTimeout(() => {
+            iframe.contentWindow.print();
+        }, 500);
+    };
+
+    image.onerror = () => {
+        setTimeout(() => {
+            iframe.contentWindow.print();
+        }, 500);
+    };
+
+    iframe.onload = () => {
+        setTimeout(() => {
+            document.body.removeChild(iframe);
+        }, 1000);
+    };
+};

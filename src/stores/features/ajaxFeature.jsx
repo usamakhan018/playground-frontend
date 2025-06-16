@@ -21,6 +21,11 @@ export const getGameAssets = createAsyncThunk("getGameAssets", async () => {
     return res.data.data;
 });
 
+export const getUsers = createAsyncThunk("getUsers", async () => {
+    const res = await axiosClient.get("users/all");
+    return res.data.data;
+});
+
 const ajaxFeature = createSlice({
     name: 'Ajax',
     initialState: {
@@ -28,6 +33,7 @@ const ajaxFeature = createSlice({
         roles: null,
         games: null,
         gameAssets: null,
+        users: null,
         loading: false,
         error: false,
     },
@@ -84,6 +90,20 @@ const ajaxFeature = createSlice({
         });
 
         builder.addCase(getGameAssets.rejected, (state) => {
+            state.loading = false;
+        });
+
+        // USERS
+        builder.addCase(getUsers.pending, (state) => {
+            state.loading = true;
+        });
+
+        builder.addCase(getUsers.fulfilled, (state, action) => {
+            state.loading = false;
+            state.users = action.payload;
+        });
+
+        builder.addCase(getUsers.rejected, (state) => {
             state.loading = false;
         });
     }

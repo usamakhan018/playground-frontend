@@ -9,6 +9,7 @@ import {
     Gamepad2,
     Home,
     HomeIcon,
+    ReceiptIcon,
     Settings,
     ShoppingCart,
     Ticket,
@@ -17,7 +18,6 @@ import {
     Users,
     Wrench,
 } from "lucide-react";
-
 
 import {
     Sidebar,
@@ -35,13 +35,13 @@ import { SearchForm } from "./search-form";
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
 import { useLanguage } from "@/contexts/LanguageProvider";
+import { NavLink } from "react-router-dom";
 
 export function AppSidebar({ ...props }) {
     const user = useSelector((store) => store.auth.user);
 
     const { t } = useTranslation();
     const { language } = useLanguage();
-
 
     const data = {
         headers: [],
@@ -148,6 +148,18 @@ export function AppSidebar({ ...props }) {
                     },
                 ],
             },
+            {
+                label: t("Expenses"),
+                icon: ReceiptIcon,
+                items: [
+                    {
+                        label: t("Expenses"),
+                        path: "/expenses",
+                        icon: ReceiptIcon,
+                        permission: can("Expense access"),
+                    },
+                ],
+            },
         ],
     };
 
@@ -177,7 +189,6 @@ export function AppSidebar({ ...props }) {
             })
             .filter(Boolean);
     };
-
 
     const filteredNavItems = React.useMemo(() => {
         const query = search.trim().toLowerCase();
@@ -219,6 +230,13 @@ export function AppSidebar({ ...props }) {
                     items={filteredNavItems}
                     searchQuery={search}
                 />
+                <NavLink
+                    to="/expenses"
+                    className="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100"
+                >
+                    <ReceiptIcon className="w-5 h-5" />
+                    <span className="ms-3">{t('expenses.title')}</span>
+                </NavLink>
             </SidebarContent>
             <SidebarFooter>
                 <NavUser user={user} />
@@ -226,31 +244,4 @@ export function AppSidebar({ ...props }) {
             <SidebarRail />
         </Sidebar>
     );
-    // return (
-    //     <Sidebar collapsible="icon" {...props} side="left">
-    //         <SidebarHeader>
-    //             <SiderBarHeader user={user} />
-    //         </SidebarHeader>
-    //         <SidebarContent>
-    //             <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-    //                 {/* <SidebarMenuButton asChild>
-    //         <Link to="/dashboard">
-    //           <Home />
-    //           <span>Dashboard</span>
-    //         </Link>
-    //       </SidebarMenuButton> */}
-    //                 <SearchForm
-    //                     value={search}
-    //                     onChange={(e) => setSearch(e.target.value)}
-    //                 />
-    //             </SidebarGroup>
-
-    //             <NavMain items={data.navMain} />
-    //         </SidebarContent>
-    //         <SidebarFooter>
-    //             <NavUser user={user} />
-    //         </SidebarFooter>
-    //         <SidebarRail />
-    //     </Sidebar>
-    // );
 }

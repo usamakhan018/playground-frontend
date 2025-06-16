@@ -1,6 +1,7 @@
 import axiosClient from "@/axios";
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import PageTitle from "../Layouts/PageTitle";
 import NoRecordFound from "@/components/NoRecordFound";
 import {
@@ -23,7 +24,7 @@ import { useNavigate } from "react-router-dom";
 import Pagination from "@/components/Pagination";
 import { Input } from "@/components/ui/input";
 import { toast } from 'react-hot-toast';
-import { EditIcon, MoreHorizontal, RefreshCw, Trash2Icon, SearchIcon, Eye, Package } from "lucide-react";
+import { EditIcon, MoreHorizontal, RefreshCw, Trash2Icon, SearchIcon, Eye, Package, Clock, Infinity, DollarSign } from "lucide-react";
 import Edit from "./Edit";
 import Create from "./Create";
 import { can, handleError } from "@/utils/helpers";
@@ -138,6 +139,60 @@ const GameIndex = () => {
     fetchGameAssets(selectedGameForAssets.id);
   };
 
+  const renderGameType = (game) => {
+    if (game.type === 'limited') {
+      return (
+        <Badge variant="outline" className="text-orange-600 border-orange-200 bg-orange-50">
+          <Clock className="h-3 w-3 mr-1" />
+          {t("Limited")}
+        </Badge>
+      );
+    } else {
+      return (
+        <Badge variant="outline" className="text-blue-600 border-blue-200 bg-blue-50">
+          <Infinity className="h-3 w-3 mr-1" />
+          {t("Unlimited")}
+        </Badge>
+      );
+    }
+  };
+
+  const renderPricing = (game) => {
+    if (game.type === 'unlimited') {
+      return (
+        <div className="flex items-center text-sm">
+          <DollarSign className="h-3 w-3 mr-1" />
+          {game.price}
+        </div>
+      );
+    } else if (game.type === 'limited' && game.pricings && game.pricings.length > 0) {
+      return (
+        <div className="space-y-1">
+          {game.pricings.slice(0, 2).map((pricing, index) => (
+            <div key={index} className="flex items-center text-xs bg-gray-50 rounded px-2 py-1">
+              <Clock className="h-3 w-3 mr-1 text-muted-foreground" />
+              <span className="mr-2">{pricing.duration}:</span>
+              <DollarSign className="h-3 w-3 mr-1 text-green-600" />
+              <span className="font-medium">{pricing.price}</span>
+            </div>
+          ))}
+          {game.pricings.length > 2 && (
+            <div className="text-xs text-muted-foreground">
+              +{game.pricings.length - 2} {t("more")}
+            </div>
+          )}
+        </div>
+      );
+    } else {
+      return (
+        <div className="flex items-center text-sm text-muted-foreground">
+          <DollarSign className="h-3 w-3 mr-1" />
+          {game.price || t("N/A")}
+        </div>
+      );
+    }
+  };
+
   return (
     <div className="space-y-3">
       <PageTitle title={t("Games")} />
@@ -181,7 +236,8 @@ const GameIndex = () => {
               <TableHead className="w-[50px]">#</TableHead>
               <TableHead>{t("Image")}</TableHead>
               <TableHead>{t("Game Name")}</TableHead>
-              <TableHead>{t("Price")}</TableHead>
+              <TableHead>{t("Type")}</TableHead>
+              <TableHead>{t("Pricing")}</TableHead>
               <TableHead>{t("Duration")}</TableHead>
               <TableHead className="text-right">{t("Actions")}</TableHead>
             </TableRow>
@@ -189,7 +245,7 @@ const GameIndex = () => {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center h-24">
+                <TableCell colSpan={7} className="text-center h-24">
                   <Loader />
                 </TableCell>
               </TableRow>
@@ -210,9 +266,19 @@ const GameIndex = () => {
                       </div>
                     )}
                   </TableCell>
-                  <TableCell>{game.name}</TableCell>
-                  <TableCell>${game.price}</TableCell>
-                  <TableCell>{game.duration || t("N/A")}</TableCell>
+                  <TableCell className="font-medium">{game.name}</TableCell>
+                  <TableCell>{renderGameType(game)}</TableCell>
+                  <TableCell>{renderPricing(game)}</TableCell>
+                  <TableCell>
+                    {game.type === 'unlimited' ? (
+                      game.duration || t("N/A")
+                    ) : (
+                      <Badge variant="secondary" className="text-xs">
+                        <Clock className="h-3 w-3 mr-1" />
+                        {t("Variable")}
+                      </Badge>
+                    )}
+                  </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -221,7 +287,7 @@ const GameIndex = () => {
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                                              <DropdownMenuContent align="end">
+                      <DropdownMenuContent align="end">
                         <DropdownMenuLabel>{t("Actions")}</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => handleViewAssets(game)}>
@@ -254,7 +320,7 @@ const GameIndex = () => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="text-center h-24">
+                <TableCell colSpan={7} className="text-center h-24">
                   <NoRecordFound />
                 </TableCell>
               </TableRow>
@@ -315,13 +381,14 @@ const GameIndex = () => {
                       <TableHead className="w-[50px]">#</TableHead>
                       <TableHead>{t("Image")}</TableHead>
                       <TableHead>{t("Asset Name")}</TableHead>
+                      <TableHead>{t("Barcode")}</TableHead>
                       <TableHead className="text-right">{t("Actions")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {assetsLoading ? (
                       <TableRow>
-                        <TableCell colSpan={4} className="text-center h-24">
+                        <TableCell colSpan={5} className="text-center h-24">
                           <Loader />
                         </TableCell>
                       </TableRow>
@@ -343,6 +410,11 @@ const GameIndex = () => {
                             )}
                           </TableCell>
                           <TableCell>{asset.name}</TableCell>
+                          <TableCell>
+                            <code className="bg-gray-100 px-2 py-1 rounded text-xs">
+                              {asset.barcode || t("N/A")}
+                            </code>
+                          </TableCell>
                           <TableCell className="text-right">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
@@ -379,7 +451,7 @@ const GameIndex = () => {
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={4} className="text-center h-24">
+                        <TableCell colSpan={5} className="text-center h-24">
                           <NoRecordFound />
                         </TableCell>
                       </TableRow>

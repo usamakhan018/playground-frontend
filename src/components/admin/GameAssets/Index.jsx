@@ -134,6 +134,7 @@ const GameAssetIndex = () => {
                         <TableRow>
                             <TableHead className="w-[50px]">#</TableHead>
                             <TableHead>{t("Image")}</TableHead>
+                            <TableHead>{t("Barcode")}</TableHead>
                             <TableHead>{t("Asset Name")}</TableHead>
                             <TableHead>{t("Game")}</TableHead>
                             <TableHead className="text-right">{t("Actions")}</TableHead>
@@ -163,6 +164,7 @@ const GameAssetIndex = () => {
                                             </div>
                                         )}
                                     </TableCell>
+                                    <TableCell>{gameAsset.barcode}</TableCell>
                                     <TableCell>{gameAsset.name}</TableCell>
                                     <TableCell>{gameAsset.game?.name || t("N/A")}</TableCell>
                                     <TableCell className="text-right">

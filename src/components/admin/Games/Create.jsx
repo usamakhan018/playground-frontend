@@ -9,9 +9,10 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import Select from "@/components/misc/Select";
 import axiosClient from "@/axios";
 import { toast } from 'react-hot-toast';
-import { Loader, Plus, Upload } from "lucide-react";
+import { Loader, Plus, Upload, X, DollarSign, Clock } from "lucide-react";
 import { handleError } from "@/utils/helpers";
 import { useTranslation } from "react-i18next";
 import { useDispatch } from "react-redux";
@@ -21,8 +22,15 @@ function Create({ onSubmitSuccess }) {
   const [showDialog, setShowDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
+  const [gameType, setGameType] = useState('unlimited');
+  const [pricings, setPricings] = useState([]);
   const { t } = useTranslation();
   const dispatch = useDispatch();
+
+  const gameTypeOptions = [
+    { value: 'unlimited', label: t("Unlimited Duration") },
+    { value: 'limited', label: t("Limited Duration") }
+  ];
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -35,21 +43,68 @@ function Create({ onSubmitSuccess }) {
     }
   };
 
+  const handleGameTypeChange = (selectedOption) => {
+    setGameType(selectedOption.value);
+    if (selectedOption.value === 'unlimited') {
+      setPricings([]);
+    } else {
+      // Initialize with one pricing option for limited games
+      if (pricings.length === 0) {
+        setPricings([{ duration: '', price: '' }]);
+      }
+    }
+  };
+
+  const addPricing = () => {
+    setPricings([...pricings, { duration: '', price: '' }]);
+  };
+
+  const removePricing = (index) => {
+    const newPricings = pricings.filter((_, i) => i !== index);
+    setPricings(newPricings);
+  };
+
+  const updatePricing = (index, field, value) => {
+    const newPricings = [...pricings];
+    newPricings[index][field] = value;
+    setPricings(newPricings);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const form = new FormData(e.currentTarget);
-      const response = await axiosClient.post("games/store", form);
+      const formData = new FormData(e.currentTarget);
+
+      // Add game type
+      formData.append('type', gameType);
+
+      // For limited games, validate and add pricings
+      if (gameType === 'limited') {
+        const validPricings = pricings.filter(p => p.duration && p.price);
+        if (validPricings.length === 0) {
+          toast.error(t("Please add at least one pricing option for limited duration games"));
+          setIsLoading(false);
+          return;
+        }
+
+        // Add pricings to form data
+        validPricings.forEach((pricing, index) => {
+          formData.append(`pricings[${index}][duration]`, pricing.duration);
+          formData.append(`pricings[${index}][price]`, pricing.price);
+        });
+      }
+
+      const response = await axiosClient.post("games/store", formData);
       toast.success(response.data.message);
-      
+
       // Update games in Redux store
       dispatch(getGames());
-      
+
       onSubmitSuccess?.();
       setShowDialog(false);
-      setImagePreview(null);
+      resetForm();
     } catch (error) {
       handleError(error);
     } finally {
@@ -57,10 +112,16 @@ function Create({ onSubmitSuccess }) {
     }
   };
 
+  const resetForm = () => {
+    setImagePreview(null);
+    setGameType('unlimited');
+    setPricings([]);
+  };
+
   const handleDialogChange = (open) => {
     setShowDialog(open);
     if (!open) {
-      setImagePreview(null);
+      resetForm();
     }
   };
 
@@ -73,7 +134,7 @@ function Create({ onSubmitSuccess }) {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t("Create Game")}</DialogTitle>
         </DialogHeader>
@@ -94,32 +155,128 @@ function Create({ onSubmitSuccess }) {
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="price" className="block text-sm font-medium">
-                {t("Price")}
+              <label htmlFor="type" className="block text-sm font-medium">
+                {t("Game Type")}
               </label>
-              <Input
-                id="price"
-                name="price"
-                type="number"
-                step="0.01"
-                min="0"
-                required
-                autoComplete="off"
+              <Select
+                placeholder={t("Select game type")}
+                value={gameTypeOptions.find(option => option.value === gameType)}
+                onChange={handleGameTypeChange}
+                options={gameTypeOptions}
               />
             </div>
+            {gameType === 'unlimited' && (  
+              <div className="space-y-2">
+                <label htmlFor="price" className="block text-sm font-medium">
+                  {gameType === 'unlimited' ? t("Price") : t("Base Price (Optional)")}
+                </label>
+                <Input
+                  id="price"
+                  name="price"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  required={gameType === 'unlimited'}
+                  autoComplete="off"
+                />
+                {gameType === 'limited' && (
+                  <p className="text-xs text-muted-foreground">
+                    {t("This will be used as fallback price. Main pricing comes from duration options below.")}
+                  </p>
+                )}
+              </div>
+            )}
 
-            <div className="space-y-2">
-              <label htmlFor="duration" className="block text-sm font-medium">
-                {t("Duration")}
-              </label>
-              <Input
-                id="duration"
-                name="duration"
-                type="text"
-                placeholder={t("e.g., 60 minutes")}
-                autoComplete="off"
-              />
-            </div>
+            {/* {gameType === 'unlimited' && (
+              <div className="space-y-2">
+                <label htmlFor="duration" className="block text-sm font-medium">
+                  {t("Duration")}
+                </label>
+                <Input
+                  id="duration"
+                  name="duration"
+                  type="text"
+                  placeholder={t("e.g., 60 minutes")}
+                  autoComplete="off"
+                />
+              </div>
+            )} */}
+
+            {gameType === 'limited' && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="block text-sm font-medium">
+                    {t("Duration & Pricing Options")}
+                  </label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addPricing}
+                    className="flex items-center gap-1"
+                  >
+                    <Plus className="h-3 w-3" />
+                    {t("Add Pricing")}
+                  </Button>
+                </div>
+
+                {pricings.length === 0 && (
+                  <div className="text-center py-4 border-2 border-dashed border-muted rounded-lg">
+                    <Clock className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                    <p className="text-sm text-muted-foreground">
+                      {t("No pricing options added yet")}
+                    </p>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={addPricing}
+                      className="mt-2"
+                    >
+                      {t("Add your first pricing option")}
+                    </Button>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  {pricings.map((pricing, index) => (
+                    <div key={index} className="flex gap-2 items-center p-3 border rounded-lg">
+                      <div className="flex-1">
+                        <Input
+                          placeholder={t("Duration (e.g., 5 minutes)")}
+                          value={pricing.duration}
+                          onChange={(e) => updatePricing(index, 'duration', e.target.value)}
+                          className="mb-2"
+                        />
+                        <div className="relative">
+                          <DollarSign className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            placeholder={t("Price")}
+                            value={pricing.price}
+                            onChange={(e) => updatePricing(index, 'price', e.target.value)}
+                            className="pl-9"
+                          />
+                        </div>
+                      </div>
+                      {pricings.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removePricing(index)}
+                          className="flex-shrink-0"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="space-y-2">
               <label htmlFor="image" className="block text-sm font-medium">

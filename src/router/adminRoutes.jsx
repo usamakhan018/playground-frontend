@@ -13,6 +13,9 @@ import UserAccount from "@/components/admin/Users/Account"
 import TicketIndex from "@/components/admin/Tickets/Index"
 import { Analytics } from "@/components/admin/Analytics"
 import Charts from "@/components/admin/Charts"
+import ExpenseIndexPage from "@/components/admin/Expenses/Index"
+import ExpenseCreatePage from "@/components/admin/Expenses/Create"
+import ExpenseEditPage from "@/components/admin/Expenses/Edit"
 
 const adminRoutes = [
     {
@@ -90,6 +93,29 @@ const adminRoutes = [
         path: 'charts',
         element: <Charts />
     },
+    {
+        name: 'expenses',
+        path: 'expenses',
+        element: <ExpenseIndexPage />,
+        title: 'Expenses'
+    },
+    {
+        name: 'expensesCreate',
+        path: 'expenses/create',
+        element: <ExpenseCreatePage />,
+        title: 'Create Expense'
+    },
+    {
+        name: 'expensesEdit',
+        path: 'expenses/edit/:id',
+        element: <ExpenseEditPage />,
+        title: 'Edit Expense'
+    },
+    // {
+    //     name: 'dailyReports',
+    //     path: 'daily-reports',
+    //     element: <DailyReportIndex />
+    // },
 ]
 
 export default adminRoutes

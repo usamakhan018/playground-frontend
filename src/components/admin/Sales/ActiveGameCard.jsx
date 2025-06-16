@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "react-i18next";
-import { CheckCircle, Clock, AlertTriangle, Zap } from "lucide-react";
+import { CheckCircle, Clock, AlertTriangle, Zap, Infinity } from "lucide-react";
 
 const ActiveGameCard = ({ sale, onComplete, onExpired }) => {
   const { t } = useTranslation();
   const [currentTime, setCurrentTime] = useState(Date.now());
+
+  // Check if this is an unlimited game
+  const isUnlimitedGame = sale.game?.type === 'unlimited';
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -16,17 +19,31 @@ const ActiveGameCard = ({ sale, onComplete, onExpired }) => {
     return () => clearInterval(interval);
   }, []);
 
-  // Calculate remaining time
-  const startTime = new Date(sale.tickets?.scanned_at);
-  const gameDurationMinutes = sale.game?.duration ? parseInt(sale.game.duration.match(/\d+/)?.[0] || 60) : 60;
-  const endTime = new Date(startTime.getTime() + gameDurationMinutes * 60 * 1000);
-  const remainingTime = Math.max(0, Math.floor((endTime.getTime() - currentTime) / 1000));
-  
-  const isExpired = remainingTime <= 0;
-  const isExpiringSoon = remainingTime <= 300 && remainingTime > 0; // 5 minutes
-  const totalDurationSeconds = gameDurationMinutes * 60;
-  const elapsedTime = totalDurationSeconds - remainingTime;
-  const progressPercentage = Math.min(100, Math.max(0, (elapsedTime / totalDurationSeconds) * 100));
+  // For limited games - calculate remaining time
+  let remainingTime = 0;
+  let isExpired = false;
+  let isExpiringSoon = false;
+  let progressPercentage = 0;
+  let elapsedTime = 0;
+  let startTime = new Date(sale.tickets?.scanned_at || sale.created_at);
+
+  if (!isUnlimitedGame) {
+    const gameDurationMinutes = sale.game_pricing?.duration ? 
+      parseInt(sale.game_pricing.duration.match(/\d+/)?.[0] || 60) : 
+      (sale.game?.duration ? parseInt(sale.game.duration.match(/\d+/)?.[0] || 60) : 60);
+    
+    const endTime = new Date(startTime.getTime() + gameDurationMinutes * 60 * 1000);
+    remainingTime = Math.max(0, Math.floor((endTime.getTime() - currentTime) / 1000));
+    
+    isExpired = remainingTime <= 0;
+    isExpiringSoon = remainingTime <= 300 && remainingTime > 0; // 5 minutes
+    const totalDurationSeconds = gameDurationMinutes * 60;
+    elapsedTime = totalDurationSeconds - remainingTime;
+    progressPercentage = Math.min(100, Math.max(0, (elapsedTime / totalDurationSeconds) * 100));
+  }
+
+  // For unlimited games - calculate elapsed time
+  const elapsedMinutes = Math.floor((currentTime - startTime.getTime()) / (1000 * 60));
 
   // Format time display
   const formatTime = (seconds) => {
@@ -35,16 +52,23 @@ const ActiveGameCard = ({ sale, onComplete, onExpired }) => {
     return `${minutes}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Play expiration sound when game expires
+  // Play expiration sound when limited game expires
   useEffect(() => {
-    if (isExpired && onExpired) {
+    if (isExpired && onExpired && !isUnlimitedGame) {
       onExpired();
     }
-  }, [isExpired, onExpired]);
+  }, [isExpired, onExpired, isUnlimitedGame]);
 
   // Determine card styling based on game state
   const getCardStyling = () => {
-    if (isExpired) {
+    if (isUnlimitedGame) {
+      return {
+        container: 'border-purple-500 bg-purple-50',
+        badge: 'secondary',
+        timer: 'text-purple-600',
+        icon: <Infinity className="h-4 w-4" />
+      };
+    } else if (isExpired) {
       return {
         container: 'border-red-500 bg-red-50 animate-pulse',
         badge: 'destructive',
@@ -83,23 +107,38 @@ const ActiveGameCard = ({ sale, onComplete, onExpired }) => {
             <Badge variant={styling.badge} className="text-xs">
               {styling.icon}
               <span className="ml-1">
-                {isExpired ? t("EXPIRED") : isExpiringSoon ? t("EXPIRING") : t("ACTIVE")}
+                {isUnlimitedGame ? t("UNLIMITED") : 
+                 isExpired ? t("EXPIRED") : 
+                 isExpiringSoon ? t("EXPIRING") : t("ACTIVE")}
               </span>
             </Badge>
           </div>
           <p className="text-sm text-muted-foreground">{sale.game_asset?.name}</p>
           <p className="text-xs text-muted-foreground mt-1">
-            {t("Ticket")}: <span className="font-mono font-medium">{sale.tickets?.barcode}</span>
+            {t("Ticket")}: <span className="font-mono font-medium">{sale.tickets?.barcode || sale.ticket_barcode}</span>
           </p>
         </div>
         
         <div className={`text-right ${styling.timer}`}>
-          <div className="text-2xl font-bold font-mono">
-            {formatTime(remainingTime)}
-          </div>
-          <div className="text-xs font-medium">
-            {isExpired ? t("TIME UP!") : t("Remaining")}
-          </div>
+          {isUnlimitedGame ? (
+            <>
+              <div className="text-2xl font-bold font-mono">
+                {elapsedMinutes}m
+              </div>
+              <div className="text-xs font-medium">
+                {t("Playing")}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="text-2xl font-bold font-mono">
+                {formatTime(remainingTime)}
+              </div>
+              <div className="text-xs font-medium">
+                {isExpired ? t("TIME UP!") : t("Remaining")}
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -107,30 +146,51 @@ const ActiveGameCard = ({ sale, onComplete, onExpired }) => {
       <div className="grid grid-cols-2 gap-3 mb-3 text-sm">
         <div className="bg-white/50 rounded p-2">
           <div className="text-xs text-muted-foreground">{t("Duration")}</div>
-          <div className="font-medium">{sale.game?.duration}</div>
+          <div className="font-medium">
+            {isUnlimitedGame ? t("Unlimited") : 
+             (sale.game_pricing?.duration || sale.game?.duration)}
+          </div>
         </div>
         <div className="bg-white/50 rounded p-2">
           <div className="text-xs text-muted-foreground">{t("Price")}</div>
-          <div className="font-medium text-green-600">${sale.game?.price}</div>
+          <div className="font-medium text-green-600">
+            ${sale.game_pricing?.price || sale.game?.price}
+          </div>
         </div>
       </div>
 
-      {/* Progress Bar */}
-      <div className="mb-4">
-        <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-          <div 
-            className={`h-full transition-all duration-1000 ease-linear ${styling.progress}`}
-            style={{ width: `${progressPercentage}%` }}
-          />
+      {/* Progress Bar - Only for Limited Games */}
+      {!isUnlimitedGame && (
+        <div className="mb-4">
+          <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+            <div 
+              className={`h-full transition-all duration-1000 ease-linear ${styling.progress}`}
+              style={{ width: `${progressPercentage}%` }}
+            />
+          </div>
+          <div className="flex justify-between text-xs text-muted-foreground mt-1">
+            <span>{t("Started")}: {startTime.toLocaleTimeString()}</span>
+            <span>{progressPercentage.toFixed(1)}% {t("completed")}</span>
+          </div>
         </div>
-        <div className="flex justify-between text-xs text-muted-foreground mt-1">
-          <span>{t("Started")}: {startTime.toLocaleTimeString()}</span>
-          <span>{progressPercentage.toFixed(1)}% {t("completed")}</span>
+      )}
+
+      {/* Unlimited Game Info */}
+      {isUnlimitedGame && (
+        <div className="mb-4 bg-white/50 rounded p-3">
+          <div className="flex justify-between text-xs text-muted-foreground mb-1">
+            <span>{t("Started")}: {startTime.toLocaleTimeString()}</span>
+            <span>{t("Duration")}: {elapsedMinutes} {t("minutes")}</span>
+          </div>
+          <div className="text-sm text-center text-purple-600 font-medium">
+            <Infinity className="h-4 w-4 inline mr-1" />
+            {t("No time limit - Play as long as you want!")}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Action Button */}
-      {isExpired ? (
+      {!isUnlimitedGame && isExpired ? (
         <Button
           size="sm"
           variant="destructive"
@@ -148,7 +208,7 @@ const ActiveGameCard = ({ sale, onComplete, onExpired }) => {
           onClick={() => onComplete(sale.id)}
         >
           <CheckCircle className="h-4 w-4 mr-2" />
-          {t("Force Complete")}
+          {isUnlimitedGame ? t("Complete Game") : t("Force Complete")}
         </Button>
       )}
 
