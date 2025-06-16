@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -93,9 +94,12 @@ const ExpenseIndex = () => {
 
   const handleDelete = async () => {
     if (!selectedRecord) return;
-    
+
     try {
-      await axiosClient.delete(`expenses/${selectedRecord.id}`);
+      const formData = new FormData();
+      formData.append('id', selectedRecord.id);
+
+      await axiosClient.post('expenses/delete', formData);
       toast.success(t("Expense deleted successfully"));
       fetchExpenses(currentPage);
       setDeleteAlertOpen(false);
@@ -114,78 +118,87 @@ const ExpenseIndex = () => {
         </div>
 
         <form onSubmit={handleSearch} className="flex gap-2">
-          <Input
-            placeholder={t("Search...")}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <Button type="submit" variant="outline">
-            <SearchIcon className="w-4 h-4" />
-          </Button>
-          {showRefresh && (
-            <Button variant="outline" onClick={handleRefresh}>
-              <RefreshCw className="w-4 h-4" />
+          <div className="flex gap-2">
+            <Input
+              id="search"
+              name="search"
+              value={search}
+              placeholder={t("Search...")}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-48"
+            />
+            <Button type="submit" aria-label={t("Search")}>
+              <SearchIcon className="h-4 w-4" />
             </Button>
-          )}
+            {showRefresh && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleRefresh}
+                aria-label={t("Refresh")}
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </form>
       </div>
 
-      {loading ? (
-        <Loader />
-      ) : expenses.length === 0 ? (
-        <NoRecordFound />
-      ) : (
-        <div className="border rounded-lg">
-          <Table>
-            <TableHeader>
+      <div className="bg-background">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[50px]">#</TableHead>
+              <TableHead>{t("User")}</TableHead>
+              <TableHead>{t("Amount")}</TableHead>
+              <TableHead>{t("Category")}</TableHead>
+              <TableHead>{t("Description")}</TableHead>
+              <TableHead>{t("Date")}</TableHead>
+              <TableHead className="text-right">{t("Actions")}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {loading ? (
               <TableRow>
-                <TableHead>{t("User")}</TableHead>
-                <TableHead>{t("Amount")}</TableHead>
-                <TableHead>{t("Category")}</TableHead>
-                <TableHead>{t("Description")}</TableHead>
-                <TableHead>{t("Date")}</TableHead>
-                <TableHead>{t("Status")}</TableHead>
-                <TableHead className="text-right">{t("Actions")}</TableHead>
+                <TableCell colSpan={7} className="text-center h-24">
+                  <Loader />
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {expenses.map((expense) => (
+            ) : expenses.length > 0 ? (
+              expenses.map((expense, index) => (
                 <TableRow key={expense.id}>
+                  <TableCell className="font-medium">{index + 1}</TableCell>
                   <TableCell>{expense.user?.name}</TableCell>
-                  <TableCell>{expense.amount}</TableCell>
+                  <TableCell>${expense.amount}</TableCell>
                   <TableCell>{expense.category?.name}</TableCell>
-                  <TableCell>{expense.description}</TableCell>
+                  <TableCell className="max-w-32 truncate">{expense.description}</TableCell>
                   <TableCell>{new Date(expense.date).toLocaleDateString()}</TableCell>
-                  <TableCell>{expense.status}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="w-4 h-4" />
+                        <Button variant="outline" className="h-8 w-8 p-0">
+                          <span className="sr-only">{t("Open menu")}</span>
+                          <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>{t("Actions")}</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         {updateAbility && (
-                          <DropdownMenuItem 
-                            onClick={() => {
-                              setSelectedRecord(expense);
-                              setEditDialogOpen(true);
-                            }}
-                          >
-                            <EditIcon className="mr-2 w-4 h-4" />
+                          <DropdownMenuItem onClick={() => {
+                            setSelectedRecord(expense);
+                            setEditDialogOpen(true);
+                          }}>
+                            <EditIcon className="mr-2 h-4 w-4" />
                             {t("Edit")}
                           </DropdownMenuItem>
                         )}
                         {deleteAbility && (
-                          <DropdownMenuItem 
-                            onClick={() => {
-                              setSelectedRecord(expense);
-                              setDeleteAlertOpen(true);
-                            }}
-                          >
-                            <Trash2Icon className="mr-2 w-4 h-4" />
+                          <DropdownMenuItem onClick={() => {
+                            setSelectedRecord(expense);
+                            setDeleteAlertOpen(true);
+                          }}>
+                            <Trash2Icon className="mr-2 h-4 w-4" />
                             {t("Delete")}
                           </DropdownMenuItem>
                         )}
@@ -193,19 +206,29 @@ const ExpenseIndex = () => {
                     </DropdownMenu>
                   </TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
-
-      {links.length > 0 && (
-        <Pagination links={links} onPageChange={setCurrentPage} />
-      )}
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center h-24">
+                  <NoRecordFound />
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+        {links.length > 0 && (
+          <Pagination
+            links={links}
+            currentPage={currentPage}
+            onPageChange={setCurrentPage}
+            className="p-4"
+          />
+        )}
+      </div>
 
       {editDialogOpen && selectedRecord && (
-        <Edit 
-          record={selectedRecord} 
+        <Edit
+          record={selectedRecord}
           onSubmitSuccess={() => {
             fetchExpenses(currentPage);
             setEditDialogOpen(false);
@@ -214,13 +237,15 @@ const ExpenseIndex = () => {
         />
       )}
 
-      <DeleteAlert 
-        open={deleteAlertOpen}
-        onClose={() => setDeleteAlertOpen(false)}
-        onConfirm={handleDelete}
-        title={t("Delete Expense")}
-        message={t("Are you sure you want to delete this expense?")}
-      />
+      {deleteAlertOpen && (
+        <DeleteAlert
+          open={deleteAlertOpen}
+          onClose={setDeleteAlertOpen}
+          onSubmitSuccess={fetchExpenses}
+          record={selectedRecord}
+          api="expenses/delete"
+        />
+      )}
     </div>
   );
 };

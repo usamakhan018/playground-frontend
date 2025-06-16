@@ -7,14 +7,14 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import ExpenseForm from "./ExpenseForm";
+import ProcessSalaryForm from "./ProcessSalaryForm";
 import axiosClient from "@/axios";
 import { toast } from 'react-hot-toast';
 import { Plus } from "lucide-react";
 import { handleError } from "@/utils/helpers";
 import { useTranslation } from "react-i18next";
 
-function Create({ onSubmitSuccess }) {
+function ProcessSalary({ onSubmitSuccess }) {
   const [showDialog, setShowDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { t } = useTranslation();
@@ -23,14 +23,15 @@ function Create({ onSubmitSuccess }) {
     setIsLoading(true);
 
     try {
-      const response = await axiosClient.post("expenses/store", formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const response = await axiosClient.post("salaries/process", formData);
       toast.success(response.data.message);
       onSubmitSuccess?.();
       setShowDialog(false);
+      
+      // Open salary slip in new window
+      if (response.data.data?.slip_url) {
+        window.open(response.data.data.slip_url, '_blank');
+      }
     } catch (error) {
       handleError(error);
     } finally {
@@ -43,16 +44,16 @@ function Create({ onSubmitSuccess }) {
       <DialogTrigger asChild>
         <Button variant="default" className="gap-2">
           <Plus className="w-4 h-4" />
-          <span>{t("Create Expense")}</span>
+          <span>{t("Process Salary")}</span>
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{t("Create Expense")}</DialogTitle>
+          <DialogTitle>{t("Process Salary")}</DialogTitle>
         </DialogHeader>
         
-        <ExpenseForm 
+        <ProcessSalaryForm 
           onSubmit={handleSubmit} 
           isLoading={isLoading}
         />
@@ -61,4 +62,4 @@ function Create({ onSubmitSuccess }) {
   );
 }
 
-export default Create;
+export default ProcessSalary; 

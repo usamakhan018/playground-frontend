@@ -13,9 +13,8 @@ import UserAccount from "@/components/admin/Users/Account"
 import TicketIndex from "@/components/admin/Tickets/Index"
 import { Analytics } from "@/components/admin/Analytics"
 import Charts from "@/components/admin/Charts"
-import ExpenseIndexPage from "@/components/admin/Expenses/Index"
-import ExpenseCreatePage from "@/components/admin/Expenses/Create"
-import ExpenseEditPage from "@/components/admin/Expenses/Edit"
+import ExpenseIndex from "@/components/admin/Expenses/Index"
+import SalaryIndex from "@/components/admin/Salaries/Index"
 
 const adminRoutes = [
     {
@@ -96,20 +95,12 @@ const adminRoutes = [
     {
         name: 'expenses',
         path: 'expenses',
-        element: <ExpenseIndexPage />,
-        title: 'Expenses'
+        element: <ExpenseIndex />,
     },
     {
-        name: 'expensesCreate',
-        path: 'expenses/create',
-        element: <ExpenseCreatePage />,
-        title: 'Create Expense'
-    },
-    {
-        name: 'expensesEdit',
-        path: 'expenses/edit/:id',
-        element: <ExpenseEditPage />,
-        title: 'Edit Expense'
+        name: 'salaries',
+        path: 'salaries',
+        element: <SalaryIndex />,
     },
     // {
     //     name: 'dailyReports',

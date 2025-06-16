@@ -26,6 +26,11 @@ export const getUsers = createAsyncThunk("getUsers", async () => {
     return res.data.data;
 });
 
+export const getDailyReports = createAsyncThunk("getDailyReports", async () => {
+    const res = await axiosClient.get("daily-reports/all");
+    return res.data.data;
+});
+
 const ajaxFeature = createSlice({
     name: 'Ajax',
     initialState: {
@@ -34,6 +39,7 @@ const ajaxFeature = createSlice({
         games: null,
         gameAssets: null,
         users: null,
+        dailyReports: null,
         loading: false,
         error: false,
     },
@@ -104,6 +110,20 @@ const ajaxFeature = createSlice({
         });
 
         builder.addCase(getUsers.rejected, (state) => {
+            state.loading = false;
+        });
+
+        // DAILY REPORTS
+        builder.addCase(getDailyReports.pending, (state) => {
+            state.loading = true;
+        });
+
+        builder.addCase(getDailyReports.fulfilled, (state, action) => {
+            state.loading = false;
+            state.dailyReports = action.payload;
+        });
+
+        builder.addCase(getDailyReports.rejected, (state) => {
             state.loading = false;
         });
     }

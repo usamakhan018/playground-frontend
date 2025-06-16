@@ -69,12 +69,6 @@ export function AppSidebar({ ...props }) {
                         permission: can("Charts access"),
                     },
                     {
-                        label: t("Expense Categories"),
-                        path: "/expense/categories",
-                        icon: Home,
-                        permission: can("Expense Category access"),
-                    },
-                    {
                         label: t("Roles"),
                         path: "/roles",
                         icon: UserCheck,
@@ -158,6 +152,24 @@ export function AppSidebar({ ...props }) {
                         icon: ReceiptIcon,
                         permission: can("Expense access"),
                     },
+                    {
+                        label: t("Expense Categories"),
+                        path: "/expense/categories",
+                        icon: Home,
+                        permission: can("Expense Category access"),
+                    },
+                ],
+            },
+            {
+                label: t("Payroll"),
+                icon: Building,
+                items: [
+                    {
+                        label: t("Salaries"),
+                        path: "/salaries",
+                        icon: Building,
+                        permission: can("Salary access"),
+                    },
                 ],
             },
         ],
@@ -230,13 +242,6 @@ export function AppSidebar({ ...props }) {
                     items={filteredNavItems}
                     searchQuery={search}
                 />
-                <NavLink
-                    to="/expenses"
-                    className="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100"
-                >
-                    <ReceiptIcon className="w-5 h-5" />
-                    <span className="ms-3">{t('expenses.title')}</span>
-                </NavLink>
             </SidebarContent>
             <SidebarFooter>
                 <NavUser user={user} />

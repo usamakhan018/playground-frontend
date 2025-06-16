@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -13,34 +11,22 @@ import axiosClient from "@/axios";
 import { toast } from 'react-hot-toast';
 import { handleError } from "@/utils/helpers";
 
-const ExpenseEdit = () => {
+const Edit = ({ record, onSubmitSuccess, onClose }) => {
   const { t } = useTranslation();
-  const { id } = useParams();
-  const [record, setRecord] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-
-  // Fetch expense data by ID and pass to form
-  const fetchExpenseData = async () => {
-    try {
-      const response = await axiosClient.get(`expenses/${id}`);
-      setRecord(response.data);
-    } catch (error) {
-      handleError(error);
-    }
-  };
-
-  React.useEffect(() => {
-    fetchExpenseData();
-  }, [id]);
 
   const handleSubmit = async (formData) => {
     setIsLoading(true);
 
     try {
-      const response = await axiosClient.put(`expenses/${record.id}`, formData);
+      const response = await axiosClient.post(`expenses/update`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       toast.success(response.data.message);
-      // onSubmitSuccess?.();
-      // onClose();
+      onSubmitSuccess?.();
+      onClose?.();
     } catch (error) {
       handleError(error);
     } finally {
@@ -48,13 +34,11 @@ const ExpenseEdit = () => {
     }
   };
 
-  if (!record) return null;
-
   return (
-    <Dialog open={true} onOpenChange={() => {}}>
-      <DialogContent className="max-w-md">
+    <Dialog open={true} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{t("expenses.edit")}</DialogTitle>
+          <DialogTitle>{t("Edit Expense")}</DialogTitle>
         </DialogHeader>
 
         <ExpenseForm 
@@ -67,4 +51,4 @@ const ExpenseEdit = () => {
   );
 };
 
-export default ExpenseEdit;
+export default Edit;

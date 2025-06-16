@@ -54,16 +54,20 @@ const UserAccount = () => {
   const [accountData, setAccountData] = useState(null);
   const [transactionLinks, setTransactionLinks] = useState([]);
   const [salesLinks, setSalesLinks] = useState([]);
+  const [expensesLinks, setExpensesLinks] = useState([]);
   const [dailyReports, setDailyReports] = useState({ data: [], links: [] });
   const [completedReports, setCompletedReports] = useState({ data: [], links: [] });
   const [transactionPage, setTransactionPage] = useState(1);
   const [salesPage, setSalesPage] = useState(1);
+  const [expensesPage, setExpensesPage] = useState(1);
   const [reportsPage, setReportsPage] = useState(1);
   const [completedPage, setCompletedPage] = useState(1);
   const [transactionSearch, setTransactionSearch] = useState("");
   const [salesSearch, setSalesSearch] = useState("");
+  const [expensesSearch, setExpensesSearch] = useState("");
   const [showTransactionRefresh, setShowTransactionRefresh] = useState(false);
   const [showSalesRefresh, setShowSalesRefresh] = useState(false);
+  const [showExpensesRefresh, setShowExpensesRefresh] = useState(false);
   const [refreshingBalance, setRefreshingBalance] = useState(false);
   const [selectedReport, setSelectedReport] = useState(null);
   const [showReportDialog, setShowReportDialog] = useState(false);
@@ -91,6 +95,7 @@ const UserAccount = () => {
       setAccountData(response.data.data);
       setTransactionLinks(response.data.data.transactions.links || []);
       setSalesLinks(response.data.data.sales.links || []);
+      setExpensesLinks(response.data.data.expenses.links || []);
     } catch (error) {
       handleError(error);
     } finally {
@@ -132,6 +137,23 @@ const UserAccount = () => {
     }
   };
 
+  const fetchExpenses = async (page = 1, query = "") => {
+    try {
+      const url = query 
+        ? `accounts/user/${userId}/expenses?query=${query.trim()}`
+        : `accounts/user/${userId}/expenses?page=${page}`;
+      
+      const response = await axiosClient.get(url);
+      setAccountData(prev => ({
+        ...prev,
+        expenses: response.data.data
+      }));
+      setExpensesLinks(response.data.data.links || []);
+    } catch (error) {
+      handleError(error);
+    }
+  };
+
   const handleTransactionSearch = async (e) => {
     e.preventDefault();
     if (!transactionSearch.trim()) return;
@@ -150,6 +172,15 @@ const UserAccount = () => {
     setSalesLinks([]);
   };
 
+  const handleExpensesSearch = async (e) => {
+    e.preventDefault();
+    if (!expensesSearch.trim()) return;
+
+    setShowExpensesRefresh(true);
+    await fetchExpenses(1, expensesSearch);
+    setExpensesLinks([]);
+  };
+
   const handleTransactionRefresh = () => {
     setTransactionSearch("");
     setShowTransactionRefresh(false);
@@ -162,6 +193,12 @@ const UserAccount = () => {
     fetchSales();
   };
 
+  const handleExpensesRefresh = () => {
+    setExpensesSearch("");
+    setShowExpensesRefresh(false);
+    fetchExpenses();
+  };
+
   const handleTransactionPageChange = (page) => {
     setTransactionPage(page);
     fetchTransactions(page);
@@ -170,6 +207,11 @@ const UserAccount = () => {
   const handleSalesPageChange = (page) => {
     setSalesPage(page);
     fetchSales(page);
+  };
+
+  const handleExpensesPageChange = (page) => {
+    setExpensesPage(page);
+    fetchExpenses(page);
   };
 
   const handleRefreshBalance = async () => {
@@ -409,6 +451,18 @@ const UserAccount = () => {
                   {accountData.summary?.sales_count || accountData.sales.total || 0}
                 </span>
               </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">{t("Total Expenses")}:</span>
+                <span className="font-medium text-red-600">
+                  {accountData.summary?.expenses_count || accountData.expenses?.total || 0}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">{t("Total Expense Amount")}:</span>
+                <span className="font-medium text-red-600">
+                  ${accountData.summary?.total_expenses_amount || '0.00'}
+                </span>
+              </div>
               {accountData.account.raw_balance !== undefined && (
                 <div className="pt-2 border-t">
                   <div className="flex justify-between text-xs">
@@ -428,7 +482,7 @@ const UserAccount = () => {
 
       {/* Tabs for Transactions, Sales, and Reports */}
       <Tabs defaultValue="transactions" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="transactions" className="flex items-center gap-2">
             <CreditCard className="h-4 w-4" />
             {t("Transactions")}
@@ -436,6 +490,10 @@ const UserAccount = () => {
           <TabsTrigger value="sales" className="flex items-center gap-2">
             <ShoppingCart className="h-4 w-4" />
             {t("Sales")}
+          </TabsTrigger>
+          <TabsTrigger value="expenses" className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4" />
+            {t("Expenses")}
           </TabsTrigger>
           <TabsTrigger value="reports" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
@@ -579,6 +637,7 @@ const UserAccount = () => {
                     <TableHead>{t("Status")}</TableHead>
                     <TableHead>{t("Transaction ID")}</TableHead>
                     <TableHead>{t("Date")}</TableHead>
+                    <TableHead>{t("Actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -595,11 +654,23 @@ const UserAccount = () => {
                         <TableCell>
                           {new Date(sale.created_at).toLocaleDateString()}
                         </TableCell>
+                        <TableCell>
+                          {sale.receipt && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => window.open(sale.receipt, '_blank')}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              {t("View Receipt")}
+                            </Button>
+                          )}
+                        </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center h-24">
+                      <TableCell colSpan={7} className="text-center h-24">
                         <NoRecordFound />
                       </TableCell>
                     </TableRow>
@@ -611,6 +682,113 @@ const UserAccount = () => {
                   links={salesLinks}
                   currentPage={salesPage}
                   onPageChange={handleSalesPageChange}
+                  className="p-4"
+                />
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Expenses Tab */}
+        <TabsContent value="expenses" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex flex-col sm:flex-row justify-between gap-4">
+                <div>
+                  <CardTitle>{t("Expense History")}</CardTitle>
+                  <CardDescription>
+                    {t("View all expenses for this user")}
+                  </CardDescription>
+                </div>
+                <form onSubmit={handleExpensesSearch} className="flex gap-2">
+                  <Input
+                    value={expensesSearch}
+                    placeholder={t("Search expenses")}
+                    onChange={(e) => setExpensesSearch(e.target.value)}
+                    className="w-48"
+                  />
+                  <Button type="submit" aria-label={t("Search")}>
+                    <SearchIcon className="h-4 w-4" />
+                  </Button>
+                  {showExpensesRefresh && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleExpensesRefresh}
+                      aria-label={t("Refresh")}
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                    </Button>
+                  )}
+                </form>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[50px]">#</TableHead>
+                    <TableHead>{t("Amount")}</TableHead>
+                    <TableHead>{t("Category")}</TableHead>
+                    <TableHead>{t("Description")}</TableHead>
+                    <TableHead>{t("Daily Report")}</TableHead>
+                    <TableHead>{t("Date")}</TableHead>
+                    <TableHead>{t("Actions")}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {accountData.expenses?.data?.length > 0 ? (
+                    accountData.expenses.data.map((expense, index) => (
+                      <TableRow key={expense.id}>
+                        <TableCell className="font-medium">{index + 1}</TableCell>
+                        <TableCell className="font-medium text-red-600">
+                          <div className="flex items-center gap-2">
+                            <TrendingDown className="h-4 w-4" />
+                            ${expense.amount}
+                          </div>
+                        </TableCell>
+                        <TableCell>{expense.category?.name || t("N/A")}</TableCell>
+                        <TableCell className="max-w-32 truncate">{expense.description}</TableCell>
+                        <TableCell>
+                          {expense.daily_report ? (
+                            <Badge variant="outline">
+                              {new Date(expense.daily_report.date).toLocaleDateString()}
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary">{t("Not linked")}</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {new Date(expense.date).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          {expense.receipt_path && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => window.open(expense.receipt_path, '_blank')}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              {t("View Receipt")}
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center h-24">
+                        <NoRecordFound />
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+              {expensesLinks.length > 0 && (
+                <Pagination
+                  links={expensesLinks}
+                  currentPage={expensesPage}
+                  onPageChange={handleExpensesPageChange}
                   className="p-4"
                 />
               )}
