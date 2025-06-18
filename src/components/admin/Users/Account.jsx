@@ -327,6 +327,17 @@ const UserAccount = () => {
     fetchAccountData();
   };
 
+  const handleViewSalarySlip = async (salaryId) => {
+    try {
+      const response = await axiosClient.get(`salaries/slip/${salaryId}`);
+      if (response.data.data.slip_url) {
+        window.open(response.data.data.slip_url, '_blank');
+      }
+    } catch (error) {
+      handleError(error);
+    }
+  };
+
   const getTransactionTypeColor = (type) => {
     return type === 'credit' ? 'text-green-600' : 'text-red-600';
   };
@@ -1036,6 +1047,7 @@ const UserAccount = () => {
                     <TableHead>{t("Status")}</TableHead>
                     <TableHead>{t("Paid By")}</TableHead>
                     <TableHead>{t("Paid At")}</TableHead>
+                    <TableHead>{t("Actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1062,11 +1074,23 @@ const UserAccount = () => {
                         <TableCell>
                           {salary.paid_at ? new Date(salary.paid_at).toLocaleDateString() : t("N/A")}
                         </TableCell>
+                        <TableCell>
+                          {salary.slip_path && (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleViewSalarySlip(salary.id)}
+                            >
+                              <FileText className="h-4 w-4 mr-1" />
+                              {t('Salary Slip')}
+                            </Button>
+                          )}
+                        </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center h-24">
+                      <TableCell colSpan={9} className="text-center h-24">
                         <NoRecordFound />
                       </TableCell>
                     </TableRow>
