@@ -188,7 +188,11 @@ const SubmitReportDialog = ({
           <Button 
             onClick={handleSubmit}
             disabled={loading || !amount || parseFloat(amount) <= 0}
+            className="flex items-center gap-2"
           >
+            {loading && (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            )}
             {loading ? t("Submitting...") : t("Submit Report")}
           </Button>
         </DialogFooter>

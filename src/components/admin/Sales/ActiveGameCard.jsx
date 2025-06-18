@@ -154,7 +154,7 @@ const ActiveGameCard = ({ sale, onComplete, onExpired }) => {
         <div className="bg-white/50 rounded p-2">
           <div className="text-xs text-muted-foreground">{t("Price")}</div>
           <div className="font-medium text-green-600">
-            ${sale.game_pricing?.price || sale.game?.price}
+            OMR {sale.game_pricing?.price || sale.game?.price}
           </div>
         </div>
       </div>

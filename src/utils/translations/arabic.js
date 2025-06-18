@@ -646,6 +646,15 @@ const arabicTranslations = {
     // General
     "Payroll": "كشوف المرتبات",
     "Salaries": "الرواتب",
+    "Pending Credits": "الائتمانات المعلقة",
+    "Pending Debits": "المدينات المعلقة",
+    "Refresh": "تحديث",
+    "Salary Slip": "قسيمة الراتب",
+    "Print Barcode": "طباعة الباركود",
+    "Generate and print barcode for": "إنشاء وطباعة الباركود لـ",
+    "No barcode value provided": "لم يتم توفير قيمة الباركود",
+    "Print": "طباعة",
+    "Download": "تحميل",
 };
 
 export default arabicTranslations;

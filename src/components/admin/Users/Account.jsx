@@ -388,12 +388,28 @@ const UserAccount = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button variant="outline" onClick={() => navigate(-1)}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          {t("Back")}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button variant="outline" onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            {t("Back")}
+          </Button>
+          <PageTitle title={`${accountData.user.name} - ${t("Account Details")}`} />
+        </div>
+        <Button 
+          onClick={() => {
+            fetchAccountData();
+            fetchDailyReports();
+            fetchCompletedReports();
+            fetchSalaries();
+          }}
+          disabled={loading}
+          size="sm"
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          {t("Refresh")}
         </Button>
-        <PageTitle title={`${accountData.user.name} - ${t("Account Details")}`} />
       </div>
 
       {/* User Info Cards */}
@@ -442,7 +458,7 @@ const UserAccount = () => {
             <div className="space-y-2">
               <div className={`text-2xl font-bold ${accountData.account.raw_balance >= 0 ? 'text-green-600' : 'text-red-600'
                 }`}>
-                ${accountData.account.balance || '0.00'}
+                OMR {accountData.account.balance || '0.00'}
               </div>
               <p className="text-xs text-muted-foreground">
                 {t("Current available balance")}
@@ -452,14 +468,28 @@ const UserAccount = () => {
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t("Total Credits")}:</span>
                     <span className="text-green-600 font-medium">
-                      +${accountData.summary.total_credits || '0.00'}
+                      +OMR {accountData.summary.total_credits || '0.00'}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">{t("Total Debits")}:</span>
                     <span className="text-red-600 font-medium">
-                      -${accountData.summary.total_debits || '0.00'}
+                      -OMR {accountData.summary.total_debits || '0.00'}
                     </span>
+                  </div>
+                  <div className="pt-1 mt-1 border-t border-dashed">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground text-[10px]">{t("Pending Credits")}:</span>
+                      <span className="text-green-500 font-medium text-[10px]">
+                        +OMR {accountData.summary.pending_reports_credits || '0.00'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground text-[10px]">{t("Pending Debits")}:</span>
+                      <span className="text-red-500 font-medium text-[10px]">
+                        -OMR {accountData.summary.pending_reports_debits || '0.00'}
+                      </span>
+                    </div>
                   </div>
                 </div>
               )}
@@ -497,7 +527,7 @@ const UserAccount = () => {
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">{t("Total Expense Amount")}:</span>
                 <span className="font-medium text-red-600">
-                  ${accountData.summary?.total_expenses_amount || '0.00'}
+                  OMR {accountData.summary?.total_expenses_amount || '0.00'}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
@@ -521,7 +551,7 @@ const UserAccount = () => {
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">{t("Total Collections")}:</span>
                 <span className="font-medium text-blue-600">
-                  ${accountData.summary?.total_collections_amount || '0.00'}
+                  OMR {accountData.summary?.total_collections_amount || '0.00'}
                 </span>
               </div>
               {accountData.account.raw_balance !== undefined && (
@@ -530,7 +560,7 @@ const UserAccount = () => {
                     <span className="text-muted-foreground">{t("Net Balance")}:</span>
                     <span className={`font-bold ${accountData.account.raw_balance >= 0 ? 'text-green-600' : 'text-red-600'
                       }`}>
-                      ${Math.abs(accountData.account.raw_balance).toFixed(2)}
+                      OMR {Math.abs(accountData.account.raw_balance).toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -622,7 +652,7 @@ const UserAccount = () => {
                         <TableCell className={`font-medium ${getTransactionTypeColor(transaction.type)}`}>
                           <div className="flex items-center gap-2">
                             {getTransactionIcon(transaction.type)}
-                            ${transaction.amount}
+                            OMR {transaction.amount}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -808,7 +838,7 @@ const UserAccount = () => {
                         <TableCell className="font-medium text-red-600">
                           <div className="flex items-center gap-2">
                             <TrendingDown className="h-4 w-4" />
-                            ${expense.amount}
+                            OMR {expense.amount}
                           </div>
                         </TableCell>
                         <TableCell>{expense.category?.name || t("N/A")}</TableCell>
@@ -899,7 +929,7 @@ const UserAccount = () => {
                         <TableCell className="font-medium">{index + 1}</TableCell>
                         <TableCell>{new Date(report.date).toLocaleDateString()}</TableCell>
                         <TableCell>{report.total_transactions}</TableCell>
-                        <TableCell>${(report.total_revenue || report.actual_revenue)?.toFixed(2) || '0.00'}</TableCell>
+                        <TableCell>OMR {(report.total_revenue || report.actual_revenue)?.toFixed(2) || '0.00'}</TableCell>
                         <TableCell>
                           <Badge variant={
                             report.status === 'settled' ? 'default' :
@@ -986,9 +1016,9 @@ const UserAccount = () => {
                         <TableCell className="font-medium">{index + 1}</TableCell>
                         <TableCell>{new Date(report.date).toLocaleDateString()}</TableCell>
                         <TableCell>{report.total_transactions}</TableCell>
-                        <TableCell>${(report.total_revenue || report.actual_revenue)?.toFixed(2) || '0.00'}</TableCell>
+                        <TableCell>OMR {(report.total_revenue || report.actual_revenue)?.toFixed(2) || '0.00'}</TableCell>
                         <TableCell>
-                          ${parseFloat(report.money_collection?.amount)?.toFixed(2) || '0.00'}
+                          OMR {parseFloat(report.money_collection?.amount)?.toFixed(2) || '0.00'}
                         </TableCell>
                         <TableCell>
                           {report.settled_at ? new Date(report.settled_at).toLocaleDateString() : t("N/A")}
@@ -1057,13 +1087,13 @@ const UserAccount = () => {
                         <TableCell className="font-medium">{index + 1}</TableCell>
                         <TableCell>{new Date(salary.salary_date).toLocaleDateString()}</TableCell>
                         <TableCell className="font-bold text-green-600">
-                          ${parseFloat(salary.final_amount).toFixed(2)}
+                          OMR {parseFloat(salary.final_amount).toFixed(2)}
                         </TableCell>
                         <TableCell className="text-blue-600">
-                          ${parseFloat(salary.gross_amount).toFixed(2)}
+                          OMR {parseFloat(salary.gross_amount).toFixed(2)}
                         </TableCell>
                         <TableCell className="text-red-600">
-                          ${parseFloat(salary.total_expenses).toFixed(2)}
+                          OMR {parseFloat(salary.total_expenses).toFixed(2)}
                         </TableCell>
                         <TableCell>
                           <Badge variant={salary.status === 'paid' ? 'default' : 'secondary'}>

@@ -52,7 +52,7 @@ const CompletedGameCard = ({ sale }) => {
         <div className="text-right">
           <div className="flex items-center justify-end gap-1 text-green-600">
             <DollarSign className="h-4 w-4" />
-            <span className="text-lg font-bold">${sale.game_pricing?.price || sale.game?.price}</span>
+            <span className="text-lg font-bold">OMR {sale.game_pricing?.price || sale.game?.price}</span>
           </div>
           <div className="text-xs text-muted-foreground">
             {t("Revenue")}

@@ -23,7 +23,7 @@ import { useNavigate } from "react-router-dom";
 import Pagination from "@/components/Pagination";
 import { Input } from "@/components/ui/input";
 import { toast } from 'react-hot-toast';
-import { EditIcon, MoreHorizontal, RefreshCw, Trash2Icon, SearchIcon, Eye } from "lucide-react";
+import { EditIcon, MoreHorizontal, RefreshCw, Trash2Icon, SearchIcon, Eye, Printer } from "lucide-react";
 import Edit from "./Edit";
 import Create from "./Create";
 import { can, handleError } from "@/utils/helpers";
@@ -31,6 +31,14 @@ import Loader from "@/components/Loader";
 import DeleteAlert from "@/components/misc/DeleteAlert";
 import { useTranslation } from "react-i18next";
 import ImagePreview from "@/components/misc/ImagePreview";
+import BarcodeGenerator from "@/components/misc/BarcodeGenerator";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 
 const GameAssetIndex = () => {
     const [loading, setLoading] = useState(true);
@@ -42,6 +50,8 @@ const GameAssetIndex = () => {
     const [selectedRecord, setSelectedRecord] = useState(null);
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [deleteAlertOpen, setDeleteAlertOpen] = useState(false);
+    const [barcodeDialogOpen, setBarcodeDialogOpen] = useState(false);
+    const [selectedAssetForBarcode, setSelectedAssetForBarcode] = useState(null);
 
     const navigate = useNavigate();
     const { t } = useTranslation();
@@ -178,6 +188,13 @@ const GameAssetIndex = () => {
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuLabel>{t("Actions")}</DropdownMenuLabel>
                                                 <DropdownMenuSeparator />
+                                                <DropdownMenuItem onClick={() => {
+                                                    setSelectedAssetForBarcode(gameAsset);
+                                                    setBarcodeDialogOpen(true);
+                                                }}>
+                                                    <Printer className="mr-2 h-4 w-4" />
+                                                    {t("Print Barcode")}
+                                                </DropdownMenuItem>
                                                 {updateAbility && (
                                                     <DropdownMenuItem onClick={() => {
                                                         setSelectedRecord(gameAsset);
@@ -237,6 +254,31 @@ const GameAssetIndex = () => {
                     onSubmitSuccess={fetchGameAssets}
                     record={selectedRecord}
                 />
+            )}
+
+            {barcodeDialogOpen && selectedAssetForBarcode && (
+                <Dialog open={barcodeDialogOpen} onOpenChange={setBarcodeDialogOpen}>
+                    <DialogContent className="max-w-md">
+                        <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2">
+                                <Printer className="h-5 w-5" />
+                                {t("Print Barcode")}
+                            </DialogTitle>
+                            <DialogDescription>
+                                {t("Generate and print barcode for")} {selectedAssetForBarcode.name}
+                            </DialogDescription>
+                        </DialogHeader>
+                        
+                        <div className="py-4">
+                            <BarcodeGenerator
+                                value={selectedAssetForBarcode.barcode}
+                                label={`${selectedAssetForBarcode.name} - ${selectedAssetForBarcode.game?.name || t("N/A")}`}
+                                showPrintButton={true}
+                                showDownloadButton={true}
+                            />
+                        </div>
+                    </DialogContent>
+                </Dialog>
             )}
         </div>
     );

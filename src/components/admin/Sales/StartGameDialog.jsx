@@ -404,14 +404,14 @@ const StartGameDialog = ({ open, onOpenChange, onSaleCreated }) => {
                 value: selectedGame.id,
                 label: selectedGame.type === 'limited' 
                   ? `${selectedGame.name} - ${t('Limited')}` 
-                  : `${selectedGame.name} - ${t('Unlimited')} - $${selectedGame.price}`
+                  : `${selectedGame.name} - ${t('Unlimited')} - OMR ${selectedGame.price}`
               } : null}
               onChange={handleGameSelect}
               options={games ? games.map(game => ({
                 value: game.id,
                 label: game.type === 'limited' 
                   ? `${game.name} - ${t('Limited')}` 
-                  : `${game.name} - ${t('Unlimited')} - $${game.price}`
+                  : `${game.name} - ${t('Unlimited')} - OMR ${game.price}`
               })) : []}
               isClearable
             />
@@ -492,7 +492,7 @@ const StartGameDialog = ({ open, onOpenChange, onSaleCreated }) => {
                 placeholder={t("Choose pricing")}
                 value={selectedGamePricing ? {
                   value: selectedGamePricing.id,
-                  label: `${selectedGamePricing.duration} - $${selectedGamePricing.price}`
+                  label: `${selectedGamePricing.duration} - OMR ${selectedGamePricing.price}`
                 } : null}
                 onChange={(selectedOption) => {
                   if (selectedOption) {
@@ -504,7 +504,7 @@ const StartGameDialog = ({ open, onOpenChange, onSaleCreated }) => {
                 }}
                 options={gamePricings.map(pricing => ({
                   value: pricing.id,
-                  label: `${pricing.duration} - $${pricing.price}`
+                  label: `${pricing.duration} - OMR ${pricing.price}`
                 }))}
                 isClearable
               />
@@ -623,7 +623,7 @@ const StartGameDialog = ({ open, onOpenChange, onSaleCreated }) => {
             <div className="bg-primary/10 p-4 rounded-lg">
               <div className="flex justify-between items-center mb-2">
                 <span className="font-medium">{t("Total Amount")}:</span>
-                <span className="text-xl font-bold">${calculateTotalAmount()}</span>
+                <span className="text-xl font-bold">OMR {calculateTotalAmount()}</span>
               </div>
               {selectedGame.type === 'limited' && selectedGamePricing && (
                 <p className="text-sm text-muted-foreground">

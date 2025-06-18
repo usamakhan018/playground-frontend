@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "../ui/button";
 import PageTitle from "./Layouts/PageTitle";
 import { useTranslation } from "react-i18next";
@@ -8,10 +8,10 @@ import { toast } from 'react-hot-toast';
 import { handleError } from "@/utils/helpers";
 import { getGames, getGameAssets } from "@/stores/features/ajaxFeature";
 import { 
-  Play, 
-  Clock, 
-  GamepadIcon, 
-  Trophy, 
+  Play,
+  Clock,
+  GamepadIcon,
+  Trophy,
   CheckCircle,
   DollarSign,
   Gamepad2,
@@ -194,7 +194,7 @@ export const Analytics = () => {
           <div className="p-6 pt-0">
             <div className="text-2xl font-bold">{stats.total_sales}</div>
             <p className="text-xs text-muted-foreground">
-              ${parseFloat(stats.total_revenue)} {t("Revenue")}
+              OMR {parseFloat(stats.total_revenue)} {t("Revenue")}
             </p>
           </div>
         </div>
@@ -228,7 +228,7 @@ export const Analytics = () => {
           </div>
           <div className="p-6 pt-0">
             <div className="text-2xl font-bold text-purple-600">
-              ${stats.average_revenue_per_game || '0.00'}
+              OMR {stats.average_revenue_per_game || '0.00'}
             </div>
             <p className="text-xs text-muted-foreground">{t("Per Game Today")}</p>
           </div>

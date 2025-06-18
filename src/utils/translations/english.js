@@ -681,6 +681,15 @@ const englishTranslations = {
     // General
     "Payroll": "Payroll",
     "Salaries": "Salaries",
+    "Pending Credits": "Pending Credits",
+    "Pending Debits": "Pending Debits",
+    "Refresh": "Refresh",
+    "Salary Slip": "Salary Slip",
+    "Print Barcode": "Print Barcode",
+    "Generate and print barcode for": "Generate and print barcode for",
+    "No barcode value provided": "No barcode value provided",
+    "Print": "Print",
+    "Download": "Download",
 };
 
 export default englishTranslations;
