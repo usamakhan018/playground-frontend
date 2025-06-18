@@ -14,12 +14,15 @@ import { toast } from 'react-hot-toast';
 import { Loader, Plus } from "lucide-react";
 import { handleError } from "@/utils/helpers";
 import { useTranslation } from "react-i18next";
+import { getExpenseCategories } from "@/stores/features/ajaxFeature";
+import { useDispatch } from "react-redux";
 
 function Create({ onSubmitSuccess }) {
   const [showDialog, setShowDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { t } = useTranslation();
-
+  const dispatch = useDispatch()
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -28,6 +31,7 @@ function Create({ onSubmitSuccess }) {
       const form = new FormData(e.currentTarget);
       const response = await axiosClient.post("expense_categories/store", form);
       toast.success(response.data.message);
+      dispatch(getExpenseCategories())
       onSubmitSuccess?.();
       setShowDialog(false);
     } catch (error) {

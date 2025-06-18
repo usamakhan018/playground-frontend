@@ -23,11 +23,12 @@ import {
   Calendar, 
   User, 
   FileText,
-  AlertCircle
+  AlertCircle,
+  Send
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-const ConfirmPaymentDialog = ({ 
+const SubmitReportDialog = ({ 
   open, 
   onOpenChange, 
   reportData, 
@@ -35,7 +36,7 @@ const ConfirmPaymentDialog = ({
   setAmount,
   notes,
   setNotes,
-  onConfirm,
+  onSubmit,
   loading = false
 }) => {
   const { t } = useTranslation();
@@ -60,9 +61,9 @@ const ConfirmPaymentDialog = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleConfirm = () => {
+  const handleSubmit = () => {
     if (validateForm()) {
-      onConfirm();
+      onSubmit();
     }
   };
 
@@ -71,11 +72,11 @@ const ConfirmPaymentDialog = ({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <DollarSign className="h-5 w-5" />
-            {t("Confirm Payment Collection")}
+            <Send className="h-5 w-5" />
+            {t("Submit Daily Report")}
           </DialogTitle>
           <DialogDescription>
-            {t("Confirm the payment received from the sales manager")}
+            {t("Submit the daily report with money collection details")}
           </DialogDescription>
         </DialogHeader>
 
@@ -109,12 +110,12 @@ const ConfirmPaymentDialog = ({
             </CardContent>
           </Card>
 
-          {/* Payment Form */}
+          {/* Payment Collection Form */}
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="amount" className="flex items-center gap-2">
                 <DollarSign className="h-4 w-4" />
-                {t("Amount Received")} *
+                {t("Amount Collected")} *
               </Label>
               <Input
                 id="amount"
@@ -129,7 +130,7 @@ const ConfirmPaymentDialog = ({
                     setErrors(prev => ({ ...prev, amount: null }));
                   }
                 }}
-                placeholder={t("Enter amount received")}
+                placeholder={t("Enter amount collected from sales manager")}
                 className={errors.amount ? "border-red-500" : ""}
               />
               {errors.amount && (
@@ -146,13 +147,13 @@ const ConfirmPaymentDialog = ({
             <div className="space-y-2">
               <Label htmlFor="notes" className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
-                {t("Notes")} ({t("Optional")})
+                {t("Collection Notes")} ({t("Optional")})
               </Label>
               <Textarea
                 id="notes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder={t("Add any notes about the payment collection...")}
+                placeholder={t("Add any notes about the money collection...")}
                 rows={3}
                 maxLength={500}
               />
@@ -163,13 +164,13 @@ const ConfirmPaymentDialog = ({
           </div>
 
           {/* Warning */}
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
             <div className="flex items-start gap-2">
-              <AlertCircle className="h-4 w-4 text-yellow-600 mt-0.5" />
+              <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5" />
               <div className="text-sm">
-                <p className="font-medium text-yellow-800">{t("Important")}</p>
-                <p className="text-yellow-700">
-                  {t("Once confirmed, this report will be marked as settled and cannot be modified.")}
+                <p className="font-medium text-blue-800">{t("Information")}</p>
+                <p className="text-blue-700">
+                  {t("This will submit the report and record the money collection. The report status will become 'submitted'.")}
                 </p>
               </div>
             </div>
@@ -185,10 +186,10 @@ const ConfirmPaymentDialog = ({
             {t("Cancel")}
           </Button>
           <Button 
-            onClick={handleConfirm}
+            onClick={handleSubmit}
             disabled={loading || !amount || parseFloat(amount) <= 0}
           >
-            {loading ? t("Processing...") : t("Confirm Payment")}
+            {loading ? t("Submitting...") : t("Submit Report")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -196,4 +197,4 @@ const ConfirmPaymentDialog = ({
   );
 };
 
-export default ConfirmPaymentDialog; 
+export default SubmitReportDialog; 

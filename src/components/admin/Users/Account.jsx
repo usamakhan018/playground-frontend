@@ -268,7 +268,7 @@ const UserAccount = () => {
     if (!selectedReport || !confirmAmount) return;
     
     try {
-      const response = await axiosClient.post('daily-reports/confirm-payment', {
+      const response = await axiosClient.post('daily-reports/submit-report', {
         report_id: selectedReport.report.id,
         amount_received: parseFloat(confirmAmount),
         notes: confirmNotes
@@ -971,7 +971,7 @@ const UserAccount = () => {
         setAmount={setConfirmAmount}
         notes={confirmNotes}
         setNotes={setConfirmNotes}
-        onConfirm={handleConfirmPayment}
+        onSubmit={handleConfirmPayment}
       />
     </div>
   );
