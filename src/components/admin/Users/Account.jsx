@@ -28,13 +28,13 @@ import { useNavigate, useParams } from "react-router-dom";
 import Pagination from "@/components/Pagination";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { 
-  ArrowLeft, 
-  User, 
-  Wallet, 
-  TrendingUp, 
-  TrendingDown, 
-  RefreshCw, 
+import {
+  ArrowLeft,
+  User,
+  Wallet,
+  TrendingUp,
+  TrendingDown,
+  RefreshCw,
   SearchIcon,
   CreditCard,
   ShoppingCart,
@@ -48,6 +48,7 @@ import Loader from "@/components/Loader";
 import { useTranslation } from "react-i18next";
 import ViewReportDialog from "../DailyReports/ViewReportDialog";
 import ConfirmPaymentDialog from "../DailyReports/ConfirmPaymentDialog";
+import ProcessSalaryDialog from "./ProcessSalaryDialog";
 
 const UserAccount = () => {
   const [loading, setLoading] = useState(true);
@@ -74,6 +75,9 @@ const UserAccount = () => {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [confirmAmount, setConfirmAmount] = useState("");
   const [confirmNotes, setConfirmNotes] = useState("");
+  const [salaries, setSalaries] = useState({ data: [], links: [] });
+  const [salariesPage, setSalariesPage] = useState(1);
+  const [showSalaryDialog, setShowSalaryDialog] = useState(false);
 
   const navigate = useNavigate();
   const { userId } = useParams();
@@ -86,6 +90,7 @@ const UserAccount = () => {
     fetchAccountData();
     fetchDailyReports();
     fetchCompletedReports();
+    fetchSalaries();
   }, [userId]);
 
   const fetchAccountData = async () => {
@@ -105,10 +110,10 @@ const UserAccount = () => {
 
   const fetchTransactions = async (page = 1, query = "") => {
     try {
-      const url = query 
+      const url = query
         ? `accounts/user/${userId}/transactions?query=${query.trim()}`
         : `accounts/user/${userId}/transactions?page=${page}`;
-      
+
       const response = await axiosClient.get(url);
       setAccountData(prev => ({
         ...prev,
@@ -122,10 +127,10 @@ const UserAccount = () => {
 
   const fetchSales = async (page = 1, query = "") => {
     try {
-      const url = query 
+      const url = query
         ? `accounts/user/${userId}/sales?query=${query.trim()}`
         : `accounts/user/${userId}/sales?page=${page}`;
-      
+
       const response = await axiosClient.get(url);
       setAccountData(prev => ({
         ...prev,
@@ -139,10 +144,10 @@ const UserAccount = () => {
 
   const fetchExpenses = async (page = 1, query = "") => {
     try {
-      const url = query 
+      const url = query
         ? `accounts/user/${userId}/expenses?query=${query.trim()}`
         : `accounts/user/${userId}/expenses?page=${page}`;
-      
+
       const response = await axiosClient.get(url);
       setAccountData(prev => ({
         ...prev,
@@ -218,7 +223,7 @@ const UserAccount = () => {
     setRefreshingBalance(true);
     try {
       const response = await axiosClient.post(`accounts/user/${userId}/refresh-balance`);
-      
+
       // Update the account data with new balance information
       setAccountData(prev => ({
         ...prev,
@@ -266,25 +271,26 @@ const UserAccount = () => {
 
   const handleConfirmPayment = async () => {
     if (!selectedReport || !confirmAmount) return;
-    
+
     try {
       const response = await axiosClient.post('daily-reports/submit-report', {
         report_id: selectedReport.report.id,
         amount_received: parseFloat(confirmAmount),
         notes: confirmNotes
       });
-      
-      // Refresh the reports
+
+      // Refresh the reports and account data
       fetchDailyReports();
       fetchCompletedReports();
-      
+      fetchAccountData(); // Refresh account balance and stats
+
       // Close dialogs and reset form
       setShowConfirmDialog(false);
       setShowReportDialog(false);
       setConfirmAmount("");
       setConfirmNotes("");
       setSelectedReport(null);
-      
+
     } catch (error) {
       handleError(error);
     }
@@ -298,6 +304,27 @@ const UserAccount = () => {
   const handleCompletedPageChange = (page) => {
     setCompletedPage(page);
     fetchCompletedReports(page);
+  };
+
+  const fetchSalaries = async (page = 1) => {
+    try {
+      const response = await axiosClient.get(`salaries/user/${userId}?page=${page}`);
+      setSalaries(response.data.data);
+    } catch (error) {
+      handleError(error);
+    }
+  };
+
+  const handleSalariesPageChange = (page) => {
+    setSalariesPage(page);
+    fetchSalaries(page);
+  };
+
+  const handleSalaryProcessed = () => {
+    fetchSalaries();
+    fetchDailyReports();
+    fetchCompletedReports();
+    fetchAccountData();
   };
 
   const getTransactionTypeColor = (type) => {
@@ -316,7 +343,7 @@ const UserAccount = () => {
       available: 'bg-blue-100 text-blue-800',
       sold: 'bg-purple-100 text-purple-800'
     };
-    
+
     return (
       <Badge className={colors[status] || 'bg-gray-100 text-gray-800'}>
         {t(status?.charAt(0).toUpperCase() + status?.slice(1) || 'Unknown')}
@@ -402,9 +429,8 @@ const UserAccount = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <div className={`text-2xl font-bold ${
-                accountData.account.raw_balance >= 0 ? 'text-green-600' : 'text-red-600'
-              }`}>
+              <div className={`text-2xl font-bold ${accountData.account.raw_balance >= 0 ? 'text-green-600' : 'text-red-600'
+                }`}>
                 ${accountData.account.balance || '0.00'}
               </div>
               <p className="text-xs text-muted-foreground">
@@ -463,13 +489,36 @@ const UserAccount = () => {
                   ${accountData.summary?.total_expenses_amount || '0.00'}
                 </span>
               </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">{t("Daily Reports")}:</span>
+                <span className="font-medium">
+                  {accountData.summary?.daily_reports_count || 0}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">{t("Submitted Reports")}:</span>
+                <span className="font-medium text-orange-600">
+                  {accountData.summary?.submitted_reports_count || 0}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">{t("Settled Reports")}:</span>
+                <span className="font-medium text-green-600">
+                  {accountData.summary?.settled_reports_count || 0}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">{t("Total Collections")}:</span>
+                <span className="font-medium text-blue-600">
+                  ${accountData.summary?.total_collections_amount || '0.00'}
+                </span>
+              </div>
               {accountData.account.raw_balance !== undefined && (
                 <div className="pt-2 border-t">
                   <div className="flex justify-between text-xs">
                     <span className="text-muted-foreground">{t("Net Balance")}:</span>
-                    <span className={`font-bold ${
-                      accountData.account.raw_balance >= 0 ? 'text-green-600' : 'text-red-600'
-                    }`}>
+                    <span className={`font-bold ${accountData.account.raw_balance >= 0 ? 'text-green-600' : 'text-red-600'
+                      }`}>
                       ${Math.abs(accountData.account.raw_balance).toFixed(2)}
                     </span>
                   </div>
@@ -482,7 +531,7 @@ const UserAccount = () => {
 
       {/* Tabs for Transactions, Sales, and Reports */}
       <Tabs defaultValue="transactions" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="transactions" className="flex items-center gap-2">
             <CreditCard className="h-4 w-4" />
             {t("Transactions")}
@@ -502,6 +551,10 @@ const UserAccount = () => {
           <TabsTrigger value="completed" className="flex items-center gap-2">
             <CheckCircle className="h-4 w-4" />
             {t("Completed Reports")}
+          </TabsTrigger>
+          <TabsTrigger value="salaries" className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4" />
+            {t("Salaries")}
           </TabsTrigger>
         </TabsList>
 
@@ -800,10 +853,21 @@ const UserAccount = () => {
         <TabsContent value="reports" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>{t("Daily Reports")}</CardTitle>
-              <CardDescription>
-                {t("View all daily reports for this user")}
-              </CardDescription>
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle>{t("Daily Reports")}</CardTitle>
+                  <CardDescription>
+                    {t("View all daily reports for this user")}
+                  </CardDescription>
+                </div>
+                <Button
+                  onClick={() => setShowSalaryDialog(true)}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <DollarSign className="h-4 w-4 mr-2" />
+                  {t("Process Salary")}
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <Table>
@@ -828,7 +892,7 @@ const UserAccount = () => {
                         <TableCell>
                           <Badge variant={
                             report.status === 'settled' ? 'default' :
-                            report.status === 'submitted' ? 'secondary' : 'outline'
+                              report.status === 'submitted' ? 'secondary' : 'outline'
                           }>
                             {t(report.status?.charAt(0).toUpperCase() + report.status?.slice(1))}
                           </Badge>
@@ -843,7 +907,7 @@ const UserAccount = () => {
                               <Eye className="h-4 w-4 mr-1" />
                               {t("View")}
                             </Button>
-                            {report.status !== 'settled' && (
+                            {report.status !== 'settled' && report.status !== 'submitted' && (
                               <Button
                                 variant="default"
                                 size="sm"
@@ -950,6 +1014,76 @@ const UserAccount = () => {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Salaries Tab */}
+        <TabsContent value="salaries" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>{t("Salary History")}</CardTitle>
+              <CardDescription>
+                {t("View all salary payments for this user")}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[50px]">#</TableHead>
+                    <TableHead>{t("Salary Date")}</TableHead>
+                    <TableHead>{t("Final Amount")}</TableHead>
+                    <TableHead>{t("Gross Amount")}</TableHead>
+                    <TableHead>{t("Total Expenses")}</TableHead>
+                    <TableHead>{t("Status")}</TableHead>
+                    <TableHead>{t("Paid By")}</TableHead>
+                    <TableHead>{t("Paid At")}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {salaries?.data?.length > 0 ? (
+                    salaries.data.map((salary, index) => (
+                      <TableRow key={salary.id}>
+                        <TableCell className="font-medium">{index + 1}</TableCell>
+                        <TableCell>{new Date(salary.salary_date).toLocaleDateString()}</TableCell>
+                        <TableCell className="font-bold text-green-600">
+                          ${parseFloat(salary.final_amount).toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-blue-600">
+                          ${parseFloat(salary.gross_amount).toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-red-600">
+                          ${parseFloat(salary.total_expenses).toFixed(2)}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={salary.status === 'paid' ? 'default' : 'secondary'}>
+                            {t(salary.status?.charAt(0).toUpperCase() + salary.status?.slice(1))}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{salary.paid_by_user?.name || t("N/A")}</TableCell>
+                        <TableCell>
+                          {salary.paid_at ? new Date(salary.paid_at).toLocaleDateString() : t("N/A")}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center h-24">
+                        <NoRecordFound />
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+              {salaries?.links?.length > 0 && (
+                <Pagination
+                  links={salaries.links}
+                  currentPage={salariesPage}
+                  onPageChange={handleSalariesPageChange}
+                  className="p-4"
+                />
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       {/* Dialogs */}
@@ -972,6 +1106,13 @@ const UserAccount = () => {
         notes={confirmNotes}
         setNotes={setConfirmNotes}
         onSubmit={handleConfirmPayment}
+      />
+
+      <ProcessSalaryDialog
+        open={showSalaryDialog}
+        onOpenChange={setShowSalaryDialog}
+        userId={userId}
+        onSalaryProcessed={handleSalaryProcessed}
       />
     </div>
   );
