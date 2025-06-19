@@ -108,6 +108,48 @@ const ExpenseIndex = () => {
     }
   };
 
+  const getExpenseTypeLabel = (type) => {
+    switch (type) {
+      case 'user':
+        return t('User Expense');
+      case 'company':
+        return t('Company Expense');
+      case 'asset':
+        return t('Asset Expense');
+      case 'general':
+        return t('General Expense');
+      default:
+        return t('Unknown');
+    }
+  };
+
+  const getExpenseTypeBadgeVariant = (type) => {
+    switch (type) {
+      case 'user':
+        return 'default';
+      case 'company':
+        return 'secondary';
+      case 'asset':
+        return 'outline';
+      case 'general':
+        return 'destructive';
+      default:
+        return 'default';
+    }
+  };
+
+  const getStatusBadgeVariant = (status) => {
+    switch (status) {
+      case 'approved':
+        return 'success';
+      case 'rejected':
+        return 'destructive';
+      case 'pending':
+      default:
+        return 'warning';
+    }
+  };
+
   return (
     <div className="space-y-3">
       <PageTitle title={t("Expenses")} />
@@ -149,10 +191,12 @@ const ExpenseIndex = () => {
           <TableHeader>
             <TableRow>
               <TableHead className="w-[50px]">#</TableHead>
-              <TableHead>{t("User")}</TableHead>
+              <TableHead>{t("Type")}</TableHead>
+              <TableHead>{t("User/Asset")}</TableHead>
               <TableHead>{t("Amount")}</TableHead>
               <TableHead>{t("Category")}</TableHead>
               <TableHead>{t("Description")}</TableHead>
+              <TableHead>{t("Status")}</TableHead>
               <TableHead>{t("Date")}</TableHead>
               <TableHead className="text-right">{t("Actions")}</TableHead>
             </TableRow>
@@ -160,7 +204,7 @@ const ExpenseIndex = () => {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center h-24">
+                <TableCell colSpan={9} className="text-center h-24">
                   <Loader />
                 </TableCell>
               </TableRow>
@@ -168,10 +212,26 @@ const ExpenseIndex = () => {
               expenses.map((expense, index) => (
                 <TableRow key={expense.id}>
                   <TableCell className="font-medium">{index + 1}</TableCell>
-                  <TableCell>{expense.user?.name}</TableCell>
+                  <TableCell>
+                    <Badge variant={getExpenseTypeBadgeVariant(expense.expense_type)}>
+                      {getExpenseTypeLabel(expense.expense_type)}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {expense.expense_type === 'user' && expense.user?.name}
+                    {expense.expense_type === 'asset' && expense.game_asset?.name}
+                    {(expense.expense_type === 'company' || expense.expense_type === 'general') && '-'}
+                  </TableCell>
                   <TableCell>OMR {expense.amount}</TableCell>
                   <TableCell>{expense.category?.name}</TableCell>
                   <TableCell className="max-w-32 truncate">{expense.description}</TableCell>
+                  <TableCell>
+                    <Badge variant={getStatusBadgeVariant(expense.status)}>
+                      {expense.status === 'pending' && t('Pending')}
+                      {expense.status === 'approved' && t('Approved')}
+                      {expense.status === 'rejected' && t('Rejected')}
+                    </Badge>
+                  </TableCell>
                   <TableCell>{new Date(expense.date).toLocaleDateString()}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
@@ -209,7 +269,7 @@ const ExpenseIndex = () => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={7} className="text-center h-24">
+                <TableCell colSpan={9} className="text-center h-24">
                   <NoRecordFound />
                 </TableCell>
               </TableRow>

@@ -6,17 +6,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import Select from "@/components/misc/Select";
-import { getUsers, getExpenseCategories } from '@/stores/features/ajaxFeature';
+import { getUsers, getExpenseCategories, getGameAssets } from '@/stores/features/ajaxFeature';
 import { CalendarDays, Upload, X, Eye } from 'lucide-react';
 
 const ExpenseForm = ({ initialData = null, onSubmit, isLoading = false }) => {
   const { t } = useTranslation();
   const dispatch = useDispatch();
-  const { users, expenseCategories } = useSelector((state) => state.ajax);
+  const { users, expenseCategories, gameAssets } = useSelector((state) => state.ajax);
 
   // State for select components to work with FormData
   const [selectedUser, setSelectedUser] = useState(initialData?.user_id || '');
   const [selectedCategory, setSelectedCategory] = useState(initialData?.expense_category_id || '');
+  const [selectedExpenseType, setSelectedExpenseType] = useState(initialData?.expense_type || 'user');
+  const [selectedAsset, setSelectedAsset] = useState(initialData?.game_asset_id || '');
+  const [selectedStatus, setSelectedStatus] = useState(initialData?.status || 'pending');
   
   // State for file preview
   const [proofPreview, setProofPreview] = useState(null);
@@ -25,12 +28,16 @@ const ExpenseForm = ({ initialData = null, onSubmit, isLoading = false }) => {
   useEffect(() => {
     if (!users) dispatch(getUsers());
     if (!expenseCategories) dispatch(getExpenseCategories());
-  }, [dispatch, users, expenseCategories]);
+    if (!gameAssets) dispatch(getGameAssets());
+  }, [dispatch, users, expenseCategories, gameAssets]);
 
   useEffect(() => {
     if (initialData) {
       setSelectedUser(initialData.user_id || '');
       setSelectedCategory(initialData.expense_category_id || '');
+      setSelectedExpenseType(initialData.expense_type || 'user');
+      setSelectedAsset(initialData.game_asset_id || '');
+      setSelectedStatus(initialData.status || 'pending');
       
       // Set existing receipt preview if available
       if (initialData.receipt_path) {
@@ -87,6 +94,22 @@ const ExpenseForm = ({ initialData = null, onSubmit, isLoading = false }) => {
     }
   };
 
+  // Handle expense type change to clear dependent fields
+  const handleExpenseTypeChange = (selectedOption) => {
+    const newType = selectedOption?.value || '';
+    setSelectedExpenseType(newType);
+    
+    // Clear user selection if not user expense
+    if (newType !== 'user') {
+      setSelectedUser('');
+    }
+    
+    // Clear asset selection if not asset expense
+    if (newType !== 'asset') {
+      setSelectedAsset('');
+    }
+  };
+
   const userOptions = users ? users.map(user => ({
     value: user.id,
     label: user.name
@@ -97,22 +120,42 @@ const ExpenseForm = ({ initialData = null, onSubmit, isLoading = false }) => {
     label: category.name
   })) : [];
 
+  const assetOptions = gameAssets ? gameAssets.map(asset => ({
+    value: asset.id,
+    label: `${asset.name} (${asset.game?.name || 'Unknown Game'})`
+  })) : [];
+
+  const expenseTypeOptions = [
+    { value: 'user', label: t('User Expense') },
+    { value: 'company', label: t('Company Expense') },
+    { value: 'asset', label: t('Asset Expense') },
+    { value: 'general', label: t('General Expense') }
+  ];
+
+  const statusOptions = [
+    { value: 'pending', label: t('Pending') },
+    { value: 'approved', label: t('Approved') },
+    { value: 'rejected', label: t('Rejected') }
+  ];
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Hidden inputs for select values */}
       <input type="hidden" name="user_id" value={selectedUser} />
       <input type="hidden" name="expense_category_id" value={selectedCategory} />
+      <input type="hidden" name="expense_type" value={selectedExpenseType} />
+      <input type="hidden" name="game_asset_id" value={selectedAsset} />
+      <input type="hidden" name="status" value={selectedStatus} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="user_id">{t('User')} *</Label>
+          <Label htmlFor="expense_type">{t('Expense Type')} *</Label>
           <Select
-            options={userOptions}
-            value={userOptions.find(option => option.value == selectedUser) || null}
-            onChange={(selectedOption) => setSelectedUser(selectedOption?.value || '')}
-            placeholder={t('Select User')}
-            isLoading={!users}
-            isClearable
+            options={expenseTypeOptions}
+            value={expenseTypeOptions.find(option => option.value === selectedExpenseType) || null}
+            onChange={handleExpenseTypeChange}
+            placeholder={t('Select Expense Type')}
+            isClearable={false}
           />
         </div>
 
@@ -128,6 +171,36 @@ const ExpenseForm = ({ initialData = null, onSubmit, isLoading = false }) => {
           />
         </div>
       </div>
+
+      {/* Conditional User Field - Only for user expenses */}
+      {selectedExpenseType === 'user' && (
+        <div className="space-y-2">
+          <Label htmlFor="user_id">{t('User')} *</Label>
+          <Select
+            options={userOptions}
+            value={userOptions.find(option => option.value == selectedUser) || null}
+            onChange={(selectedOption) => setSelectedUser(selectedOption?.value || '')}
+            placeholder={t('Select User')}
+            isLoading={!users}
+            isClearable
+          />
+        </div>
+      )}
+
+      {/* Conditional Asset Field - Only for asset expenses */}
+      {selectedExpenseType === 'asset' && (
+        <div className="space-y-2">
+          <Label htmlFor="game_asset_id">{t('Asset')} *</Label>
+          <Select
+            options={assetOptions}
+            value={assetOptions.find(option => option.value == selectedAsset) || null}
+            onChange={(selectedOption) => setSelectedAsset(selectedOption?.value || '')}
+            placeholder={t('Select Asset')}
+            isLoading={!gameAssets}
+            isClearable
+          />
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
@@ -156,6 +229,17 @@ const ExpenseForm = ({ initialData = null, onSubmit, isLoading = false }) => {
             onClick={(e) => e.target.showPicker && e.target.showPicker()}
           />
         </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="status">{t('Status')}</Label>
+        <Select
+          options={statusOptions}
+          value={statusOptions.find(option => option.value === selectedStatus) || null}
+          onChange={(selectedOption) => setSelectedStatus(selectedOption?.value || 'pending')}
+          placeholder={t('Select Status')}
+          isClearable={false}
+        />
       </div>
 
       <div className="space-y-2">

@@ -104,7 +104,7 @@ const SubmitReportDialog = ({
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">{t("Total Revenue")}:</span>
                 <span className="font-bold text-green-600">
-                  ${report.total_revenue?.toFixed(2) || report.actual_revenue?.toFixed(2) || '0.00'}
+                  ${parseFloat(report.total_revenue)?.toFixed(2) || parseFloat(report.actual_revenue)?.toFixed(2) || '0.00'}
                 </span>
               </div>
             </CardContent>
@@ -140,7 +140,7 @@ const SubmitReportDialog = ({
                 </p>
               )}
               <p className="text-xs text-muted-foreground">
-                {t("Maximum amount")}: ${(report.total_revenue || report.actual_revenue)?.toFixed(2) || '0.00'}
+                {t("Maximum amount")}: ${parseFloat(report.total_revenue || report.actual_revenue)?.toFixed(2) || '0.00'}
               </p>
             </div>
 
