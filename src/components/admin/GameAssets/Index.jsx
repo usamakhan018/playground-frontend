@@ -23,7 +23,7 @@ import { useNavigate } from "react-router-dom";
 import Pagination from "@/components/Pagination";
 import { Input } from "@/components/ui/input";
 import { toast } from 'react-hot-toast';
-import { EditIcon, MoreHorizontal, RefreshCw, Trash2Icon, SearchIcon, Eye, Printer } from "lucide-react";
+import { EditIcon, MoreHorizontal, RefreshCw, Trash2Icon, SearchIcon, Eye, Printer, Receipt, DollarSign, Clock, CheckCircle, AlertTriangle, FileText, Filter, Calendar } from "lucide-react";
 import Edit from "./Edit";
 import Create from "./Create";
 import { can, handleError } from "@/utils/helpers";
@@ -32,6 +32,8 @@ import DeleteAlert from "@/components/misc/DeleteAlert";
 import { useTranslation } from "react-i18next";
 import ImagePreview from "@/components/misc/ImagePreview";
 import BarcodeGenerator from "@/components/misc/BarcodeGenerator";
+import FilterComponent from "@/components/misc/FilterComponent";
+import { Badge } from "@/components/ui/badge";
 import {
     Dialog,
     DialogContent,
@@ -52,6 +54,17 @@ const GameAssetIndex = () => {
     const [deleteAlertOpen, setDeleteAlertOpen] = useState(false);
     const [barcodeDialogOpen, setBarcodeDialogOpen] = useState(false);
     const [selectedAssetForBarcode, setSelectedAssetForBarcode] = useState(null);
+    
+    // Expenses dialog states
+    const [expensesDialogOpen, setExpensesDialogOpen] = useState(false);
+    const [selectedAssetForExpenses, setSelectedAssetForExpenses] = useState(null);
+    const [assetExpenses, setAssetExpenses] = useState([]);
+    const [expensesLoading, setExpensesLoading] = useState(false);
+    const [expensesSearch, setExpensesSearch] = useState("");
+    const [expensesCurrentPage, setExpensesCurrentPage] = useState(1);
+    const [expensesLinks, setExpensesLinks] = useState([]);
+    const [expensesFilters, setExpensesFilters] = useState({});
+    const [expensesShowRefresh, setExpensesShowRefresh] = useState(false);
 
     const navigate = useNavigate();
     const { t } = useTranslation();
@@ -100,6 +113,112 @@ const GameAssetIndex = () => {
         setSearch("");
         setShowRefresh(false);
         fetchGameAssets();
+    };
+
+    // Expenses dialog functions
+    const fetchAssetExpenses = async (assetId, page = 1, filters = {}) => {
+        setExpensesLoading(true);
+        try {
+            // Build query parameters
+            const params = new URLSearchParams({ page: page.toString() });
+            
+            // Add filters to params
+            Object.entries(filters).forEach(([key, value]) => {
+                if (value && value !== '') {
+                    params.append(key, value);
+                }
+            });
+            
+            const response = await axiosClient.get(`expenses/by-asset/${assetId}?${params}`);
+            setAssetExpenses(response.data.data.data || response.data.data);
+            setExpensesLinks(response.data.data.links || []);
+        } catch (error) {
+            handleError(error);
+        } finally {
+            setExpensesLoading(false);
+        }
+    };
+
+    const handleViewExpenses = (gameAsset) => {
+        setSelectedAssetForExpenses(gameAsset);
+        setExpensesDialogOpen(true);
+        setExpensesCurrentPage(1);
+        setExpensesFilters({});
+        fetchAssetExpenses(gameAsset.id, 1, {});
+    };
+
+    const handleExpensesSearch = async (e) => {
+        e.preventDefault();
+        if (!expensesSearch.trim() || !selectedAssetForExpenses) return;
+
+        setExpensesLoading(true);
+        setExpensesShowRefresh(true);
+        try {
+            const response = await axiosClient.get(`expenses/by-asset/${selectedAssetForExpenses.id}?query=${expensesSearch.trim()}`);
+            setAssetExpenses(response.data.data.data || response.data.data);
+            setExpensesLinks([]);
+        } catch (error) {
+            handleError(error);
+        } finally {
+            setExpensesLoading(false);
+        }
+    };
+
+    const handleExpensesRefresh = () => {
+        setExpensesSearch("");
+        setExpensesShowRefresh(false);
+        setExpensesFilters({});
+        if (selectedAssetForExpenses) {
+            fetchAssetExpenses(selectedAssetForExpenses.id, 1, {});
+        }
+    };
+
+    const handleExpensesFilter = (filters) => {
+        setExpensesFilters(filters);
+        setExpensesCurrentPage(1);
+        if (selectedAssetForExpenses) {
+            fetchAssetExpenses(selectedAssetForExpenses.id, 1, filters);
+        }
+    };
+
+    const handleExpensesResetFilters = () => {
+        setExpensesFilters({});
+        setExpensesCurrentPage(1);
+        if (selectedAssetForExpenses) {
+            fetchAssetExpenses(selectedAssetForExpenses.id, 1, {});
+        }
+    };
+
+    const getExpenseStatusBadge = (status) => {
+        const variants = {
+            pending: 'pending',
+            approved: 'approved',
+            rejected: 'rejected'
+        };
+
+        return (
+            <Badge variant={variants[status]}>
+                {status === 'pending' && <Clock className="h-3 w-3 mr-1" />}
+                {status === 'approved' && <CheckCircle className="h-3 w-3 mr-1" />}
+                {status === 'rejected' && <AlertTriangle className="h-3 w-3 mr-1" />}
+                {t(status?.charAt(0).toUpperCase() + status?.slice(1) || 'Unknown')}
+            </Badge>
+        );
+    };
+
+    const getExpenseTypeBadge = (type) => {
+        const variants = {
+            user: 'secondary',
+            company: 'default',
+            asset: 'outline',
+            general: 'secondary'
+        };
+
+        return (
+            <Badge variant={variants[type] || 'secondary'}>
+                {t(type?.charAt(0).toUpperCase() + type?.slice(1) || 'Unknown')}
+            </Badge>
+        );
     };
 
     return (
@@ -187,6 +306,11 @@ const GameAssetIndex = () => {
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
                                                 <DropdownMenuLabel>{t("Actions")}</DropdownMenuLabel>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem onClick={() => handleViewExpenses(gameAsset)}>
+                                                    <Receipt className="mr-2 h-4 w-4" />
+                                                    {t("View Expenses")}
+                                                </DropdownMenuItem>
                                                 <DropdownMenuSeparator />
                                                 <DropdownMenuItem onClick={() => {
                                                     setSelectedAssetForBarcode(gameAsset);
@@ -276,6 +400,178 @@ const GameAssetIndex = () => {
                                 showPrintButton={true}
                                 showDownloadButton={true}
                             />
+                        </div>
+                    </DialogContent>
+                </Dialog>
+            )}
+
+            {expensesDialogOpen && selectedAssetForExpenses && (
+                <Dialog open={expensesDialogOpen} onOpenChange={setExpensesDialogOpen}>
+                    <DialogContent className="max-w-6xl max-h-[90vh] overflow-auto">
+                        <DialogHeader>
+                            <DialogTitle className="flex items-center gap-2">
+                                <Receipt className="h-5 w-5" />
+                                {t("Asset Expenses")} - {selectedAssetForExpenses.name}
+                            </DialogTitle>
+                            <DialogDescription>
+                                {t("View and manage expenses for")} {selectedAssetForExpenses.name} 
+                                {selectedAssetForExpenses.game && ` (${selectedAssetForExpenses.game.name})`}
+                            </DialogDescription>
+                        </DialogHeader>
+                        
+                        <div className="space-y-4">
+                            {/* Filters */}
+                            <FilterComponent
+                                onFilter={handleExpensesFilter}
+                                onReset={handleExpensesResetFilters}
+                                statusOptions={[
+                                    { value: 'pending', label: 'Pending' },
+                                    { value: 'approved', label: 'Approved' },
+                                    { value: 'rejected', label: 'Rejected' }
+                                ]}
+                                expenseTypeOptions={[
+                                    { value: 'user', label: 'User' },
+                                    { value: 'company', label: 'Company' },
+                                    { value: 'asset', label: 'Asset' },
+                                    { value: 'general', label: 'General' }
+                                ]}
+                                loading={expensesLoading}
+                                showDateFilter={true}
+                                showExpenseTypeFilter={true}
+                            />
+
+                            {/* Search */}
+                            <div className="flex justify-between items-center">
+                                <div className="text-sm text-muted-foreground">
+                                    {t("Expenses for this asset")}
+                                </div>
+                                
+                                <form onSubmit={handleExpensesSearch} className="flex gap-2">
+                                    <div className="flex gap-2">
+                                        <Input
+                                            id="expensesSearch"
+                                            name="expensesSearch"
+                                            value={expensesSearch}
+                                            placeholder={t("Search expenses...")}
+                                            onChange={(e) => setExpensesSearch(e.target.value)}
+                                            className="w-64"
+                                        />
+                                        <Button type="submit" size="sm" aria-label={t("Search")}>
+                                            <SearchIcon className="h-4 w-4" />
+                                        </Button>
+                                        {expensesShowRefresh && (
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={handleExpensesRefresh}
+                                                aria-label={t("Refresh")}
+                                            >
+                                                <RefreshCw className="h-4 w-4" />
+                                            </Button>
+                                        )}
+                                    </div>
+                                </form>
+                            </div>
+
+                            {/* Expenses Table */}
+                            <div className="border rounded-lg">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead className="w-[50px]">#</TableHead>
+                                            <TableHead>{t("Date")}</TableHead>
+                                            <TableHead>{t("Category")}</TableHead>
+                                            <TableHead>{t("Description")}</TableHead>
+                                            <TableHead>{t("Amount")}</TableHead>
+                                            <TableHead>{t("Type")}</TableHead>
+                                            <TableHead>{t("Status")}</TableHead>
+                                            <TableHead>{t("User")}</TableHead>
+                                            <TableHead>{t("Receipt")}</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {expensesLoading ? (
+                                            <TableRow>
+                                                <TableCell colSpan={9} className="text-center h-24">
+                                                    <Loader />
+                                                </TableCell>
+                                            </TableRow>
+                                        ) : assetExpenses.length > 0 ? (
+                                            assetExpenses.map((expense, index) => (
+                                                <TableRow key={expense.id}>
+                                                    <TableCell className="font-medium">{index + 1}</TableCell>
+                                                    <TableCell>
+                                                        <div className="flex items-center gap-1">
+                                                            <Calendar className="h-3 w-3 text-muted-foreground" />
+                                                            <span className="text-sm">
+                                                                {new Date(expense.date).toLocaleDateString()}
+                                                            </span>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="text-sm font-medium">
+                                                            {expense.category?.name || t("N/A")}
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="text-sm max-w-[200px] truncate" title={expense.description}>
+                                                            {expense.description || t("No description")}
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="flex items-center gap-1 font-bold text-red-600">
+                                                            <DollarSign className="h-3 w-3" />
+                                                            <span>OMR {parseFloat(expense.amount).toFixed(2)}</span>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>{getExpenseTypeBadge(expense.expense_type)}</TableCell>
+                                                    <TableCell>{getExpenseStatusBadge(expense.status)}</TableCell>
+                                                    <TableCell>
+                                                        <div className="text-sm">
+                                                            {expense.user?.name || t("N/A")}
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {expense.receipt_path ? (
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => window.open(`${import.meta.env.VITE_BASE_URL}${expense.receipt_path}`, '_blank')}
+                                                                className="h-7 px-2"
+                                                            >
+                                                                <FileText className="h-3 w-3 mr-1" />
+                                                                {t("View")}
+                                                            </Button>
+                                                        ) : (
+                                                            <span className="text-xs text-muted-foreground">{t("No receipt")}</span>
+                                                        )}
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        ) : (
+                                            <TableRow>
+                                                <TableCell colSpan={9} className="text-center h-24">
+                                                    <NoRecordFound />
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                    </TableBody>
+                                </Table>
+                                {expensesLinks.length > 0 && (
+                                    <Pagination
+                                        links={expensesLinks}
+                                        currentPage={expensesCurrentPage}
+                                        onPageChange={(page) => {
+                                            setExpensesCurrentPage(page);
+                                            if (selectedAssetForExpenses) {
+                                                fetchAssetExpenses(selectedAssetForExpenses.id, page, expensesFilters);
+                                            }
+                                        }}
+                                        className="p-4"
+                                    />
+                                )}
+                            </div>
                         </div>
                     </DialogContent>
                 </Dialog>

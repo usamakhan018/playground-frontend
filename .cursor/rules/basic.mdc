@@ -14,5 +14,4 @@ use the select as it's custom and made for project [Select.jsx](mdc:frontend/src
 
 and for status colors. make changes in the variants of [badge.jsx](mdc:frontend/src/components/ui/badge.jsx)
 
-
 When I talk about flow it means that I need the user story how it's going to work like first the user will click on this. Then front end will call the back end and this function will work and this function will return this data. This model will be used by this relationship like this. I need a complete story like slow means to me like the complete thing. How it's going to work, how the things are going to work. You know I do not need code. I just need the story in simple English words and I need several paragraphs. You know I do not need headings and these things. I just need a story which will have names of the pages and all files and their functions and it will tell me like what they are doing
