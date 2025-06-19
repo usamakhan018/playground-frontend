@@ -161,13 +161,25 @@ export function AppSidebar({ ...props }) {
                 ],
             },
             {
-                label: t("Payroll"),
+                label: t("Reports"),
                 icon: Building,
+                items: [
+                    {
+                        label: t("Daily Reports"),
+                        path: "/daily-reports",
+                        icon: Building,
+                        permission: can("Daily Report access"),
+                    },
+                ],
+            },
+            {
+                label: t("Salary Management"),
+                icon: Users,
                 items: [
                     {
                         label: t("Salaries"),
                         path: "/salaries",
-                        icon: Building,
+                        icon: Users,
                         permission: can("Salary access"),
                     },
                 ],

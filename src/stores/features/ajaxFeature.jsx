@@ -31,6 +31,11 @@ export const getDailyReports = createAsyncThunk("getDailyReports", async () => {
     return res.data.data;
 });
 
+export const getSalaries = createAsyncThunk("getSalaries", async () => {
+    const res = await axiosClient.get("salaries/all-salaries");
+    return res.data.data;
+});
+
 const ajaxFeature = createSlice({
     name: 'Ajax',
     initialState: {
@@ -40,6 +45,7 @@ const ajaxFeature = createSlice({
         gameAssets: null,
         users: null,
         dailyReports: null,
+        salaries: null,
         loading: false,
         error: false,
     },
@@ -124,6 +130,20 @@ const ajaxFeature = createSlice({
         });
 
         builder.addCase(getDailyReports.rejected, (state) => {
+            state.loading = false;
+        });
+
+        // SALARIES
+        builder.addCase(getSalaries.pending, (state) => {
+            state.loading = true;
+        });
+
+        builder.addCase(getSalaries.fulfilled, (state, action) => {
+            state.loading = false;
+            state.salaries = action.payload;
+        });
+
+        builder.addCase(getSalaries.rejected, (state) => {
             state.loading = false;
         });
     }

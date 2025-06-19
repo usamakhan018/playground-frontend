@@ -32,7 +32,8 @@ import {
   CreditCard,
   Gamepad2,
   Receipt,
-  Eye
+  Eye,
+  TrendingDown
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -105,7 +106,7 @@ const ViewReportDialog = ({
 
         <div className="space-y-6">
           {/* Report Summary Cards */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">{t("Total Sales")}</CardTitle>
@@ -126,10 +127,10 @@ const ViewReportDialog = ({
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-green-600">
-                  ${stats?.total_revenue?.toFixed(2) || '0.00'}
+                  OMR {stats?.total_revenue?.toFixed(2) || '0.00'}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {t("Average")}: ${stats?.average_sale_amount?.toFixed(2) || '0.00'}
+                  {t("Average")}: OMR {stats?.average_sale_amount?.toFixed(2) || '0.00'}
                 </p>
               </CardContent>
             </Card>
@@ -151,13 +152,30 @@ const ViewReportDialog = ({
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{t("Sales Manager")}</CardTitle>
-                <User className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium">{t("Total Expenses")}</CardTitle>
+                <DollarSign className="h-4 w-4 text-red-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-lg font-medium">{report.sales_manager?.name}</div>
+                <div className="text-2xl font-bold text-red-600">
+                  OMR {stats?.total_expenses?.toFixed(2) || '0.00'}
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  {report.sales_manager?.email}
+                  {stats?.expenses_count || 0} {t("expenses")}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{t("Net Profit")}</CardTitle>
+                <DollarSign className={`h-4 w-4 ${(stats?.net_profit || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`} />
+              </CardHeader>
+              <CardContent>
+                <div className={`text-2xl font-bold ${(stats?.net_profit || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  OMR {stats?.net_profit?.toFixed(2) || '0.00'}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {t("Revenue")} - {t("Expenses")}
                 </p>
               </CardContent>
             </Card>
@@ -183,7 +201,7 @@ const ViewReportDialog = ({
                         </p>
                       </div>
                       <div className="text-right">
-                        <div className="font-bold">${data.amount?.toFixed(2) || '0.00'}</div>
+                        <div className="font-bold">OMR {data.amount?.toFixed(2) || '0.00'}</div>
                       </div>
                     </div>
                   ))}
@@ -212,7 +230,36 @@ const ViewReportDialog = ({
                         </p>
                       </div>
                       <div className="text-right">
-                        <div className="font-bold">${data.amount?.toFixed(2) || '0.00'}</div>
+                        <div className="font-bold">OMR {data.amount?.toFixed(2) || '0.00'}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Expenses Breakdown */}
+          {stats?.expenses_by_category && Object.keys(stats.expenses_by_category).length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingDown className="h-4 w-4" />
+                  {t("Expenses Breakdown")}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4 md:grid-cols-3">
+                  {Object.entries(stats.expenses_by_category).map(([category, data]) => (
+                    <div key={category} className="flex justify-between items-center p-3 border rounded-lg">
+                      <div>
+                        <div className="font-medium text-sm">{category}</div>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {data.count} {t("expenses")}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold text-red-600">OMR {data.amount?.toFixed(2) || '0.00'}</div>
                       </div>
                     </div>
                   ))}
@@ -243,7 +290,7 @@ const ViewReportDialog = ({
                         <TableCell className="font-medium">{game.game_name}</TableCell>
                         <TableCell>{game.count}</TableCell>
                         <TableCell className="font-bold text-green-600">
-                          ${game.revenue?.toFixed(2) || '0.00'}
+                          OMR {game.revenue?.toFixed(2) || '0.00'}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -296,7 +343,7 @@ const ViewReportDialog = ({
                             <div className="text-sm">
                               <div>{sale.game_pricing.duration}</div>
                               <div className="text-muted-foreground">
-                                ${sale.game_pricing.price}
+                                OMR {sale.game_pricing.price}
                               </div>
                             </div>
                           ) : (
@@ -343,6 +390,69 @@ const ViewReportDialog = ({
             </CardContent>
           </Card>
 
+          {/* Expenses Details */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingDown className="h-4 w-4" />
+                {t("Expenses Details")}
+              </CardTitle>
+              <CardDescription>
+                {t("All expenses for this report")}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[50px]">#</TableHead>
+                    <TableHead>{t("Category")}</TableHead>
+                    <TableHead>{t("Description")}</TableHead>
+                    <TableHead>{t("Amount")}</TableHead>
+                    <TableHead>{t("Date")}</TableHead>
+                    <TableHead>{t("Receipt")}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {report.expenses?.length > 0 ? (
+                    report.expenses.map((expense, index) => (
+                      <TableRow key={expense.id}>
+                        <TableCell className="font-medium">{index + 1}</TableCell>
+                        <TableCell>
+                          <div className="font-medium">{expense.category?.name || t("Uncategorized")}</div>
+                        </TableCell>
+                        <TableCell className="max-w-48 truncate">{expense.description}</TableCell>
+                        <TableCell className="font-bold text-red-600">
+                          OMR {parseFloat(expense.amount)?.toFixed(2) || '0.00'}
+                        </TableCell>
+                        <TableCell>
+                          {new Date(expense.date).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          {expense.receipt_path && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => window.open(expense.receipt_path, '_blank')}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center h-24">
+                        {t("No expenses found")}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
           {/* Money Collection Info */}
           {report.money_collection && (
             <Card>
@@ -357,7 +467,7 @@ const ViewReportDialog = ({
                   <div>
                     <p className="text-sm text-muted-foreground">{t("Amount Collected")}</p>
                     <p className="text-2xl font-bold text-green-600">
-                      ${parseFloat(report.money_collection.amount)?.toFixed(2) || '0.00'}
+                      OMR {parseFloat(report.money_collection.amount)?.toFixed(2) || '0.00'}
                     </p>
                   </div>
                   <div>

@@ -14,6 +14,8 @@ import TicketIndex from "@/components/admin/Tickets/Index"
 import { Analytics } from "@/components/admin/Analytics"
 import Charts from "@/components/admin/Charts"
 import ExpenseIndex from "@/components/admin/Expenses/Index"
+import DailyReportsIndex from "@/components/admin/DailyReports/Index"
+import SalaryIndex from "@/components/admin/Salaries/Index"
 
 const adminRoutes = [
     {
@@ -97,11 +99,16 @@ const adminRoutes = [
         element: <ExpenseIndex />,
     },
 
-    // {
-    //     name: 'dailyReports',
-    //     path: 'daily-reports',
-    //     element: <DailyReportIndex />
-    // },
+    {
+        name: 'dailyReports',
+        path: 'daily-reports',
+        element: <DailyReportsIndex />
+    },
+    {
+        name: 'salaries',
+        path: 'salaries',
+        element: <SalaryIndex />
+    },
 ]
 
 export default adminRoutes

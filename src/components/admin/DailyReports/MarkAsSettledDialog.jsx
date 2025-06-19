@@ -16,20 +16,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { 
-  CheckCircle, 
-  Calendar, 
-  User, 
+import {
+  CheckCircle,
+  Calendar,
+  User,
   FileText,
   DollarSign,
   AlertCircle
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-const MarkAsSettledDialog = ({ 
-  open, 
-  onOpenChange, 
-  reportData, 
+const MarkAsSettledDialog = ({
+  open,
+  onOpenChange,
+  reportData,
   notes,
   setNotes,
   onMarkAsSettled,
@@ -82,7 +82,7 @@ const MarkAsSettledDialog = ({
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">{t("Amount Collected")}:</span>
                 <span className="font-bold text-green-600">
-                  ${report.money_collection?.amount?.toFixed(2) || '0.00'}
+                  OMR {parseFloat(report.money_collection?.amount)?.toFixed(2) || '0.00'}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
@@ -128,14 +128,14 @@ const MarkAsSettledDialog = ({
         </div>
 
         <DialogFooter>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={loading}
           >
             {t("Cancel")}
           </Button>
-          <Button 
+          <Button
             onClick={handleMarkAsSettled}
             disabled={loading}
             className="bg-green-600 hover:bg-green-700"

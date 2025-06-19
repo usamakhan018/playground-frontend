@@ -169,7 +169,7 @@ const ExpenseIndex = () => {
                 <TableRow key={expense.id}>
                   <TableCell className="font-medium">{index + 1}</TableCell>
                   <TableCell>{expense.user?.name}</TableCell>
-                  <TableCell>${expense.amount}</TableCell>
+                  <TableCell>OMR {expense.amount}</TableCell>
                   <TableCell>{expense.category?.name}</TableCell>
                   <TableCell className="max-w-32 truncate">{expense.description}</TableCell>
                   <TableCell>{new Date(expense.date).toLocaleDateString()}</TableCell>

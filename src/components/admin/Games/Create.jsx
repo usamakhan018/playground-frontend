@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import Select from "@/components/misc/Select";
 import axiosClient from "@/axios";
 import { toast } from 'react-hot-toast';
-import { Loader, Plus, Upload, X, DollarSign, Clock } from "lucide-react";
+import { Loader, Plus, Upload, X, DollarSign, Clock, Banknote } from "lucide-react";
 import { handleError } from "@/utils/helpers";
 import { useTranslation } from "react-i18next";
 import { useDispatch } from "react-redux";
@@ -249,7 +249,7 @@ function Create({ onSubmitSuccess }) {
                           className="mb-2"
                         />
                         <div className="relative">
-                          <DollarSign className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+                          <Banknote className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
                           <Input
                             type="number"
                             step="0.01"

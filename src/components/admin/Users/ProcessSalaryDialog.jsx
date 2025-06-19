@@ -141,7 +141,7 @@ const ProcessSalaryDialog = ({
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-green-600">
-                  ${salaryData.totals.total_sales || '0.00'}
+                  OMR {salaryData.totals.total_sales || '0.00'}
                 </div>
               </CardContent>
             </Card>
@@ -152,7 +152,7 @@ const ProcessSalaryDialog = ({
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-red-600">
-                  ${salaryData.totals.total_expenses || '0.00'}
+                  OMR {salaryData.totals.total_expenses || '0.00'}
                 </div>
               </CardContent>
             </Card>
@@ -165,7 +165,7 @@ const ProcessSalaryDialog = ({
                 <div className={`text-2xl font-bold ${
                   salaryData.totals.net_amount >= 0 ? 'text-green-600' : 'text-red-600'
                 }`}>
-                  ${salaryData.totals.net_amount || '0.00'}
+                  OMR {salaryData.totals.net_amount || '0.00'}
                 </div>
               </CardContent>
             </Card>
@@ -203,10 +203,10 @@ const ProcessSalaryDialog = ({
                       <TableRow key={report.id}>
                         <TableCell>{new Date(report.date).toLocaleDateString()}</TableCell>
                         <TableCell className="text-green-600">
-                          ${report.total_revenue || '0.00'}
+                          OMR {report.total_revenue || '0.00'}
                         </TableCell>
                         <TableCell className="text-blue-600">
-                          ${report.collection_amount || '0.00'}
+                          OMR {report.collection_amount || '0.00'}
                         </TableCell>
                         <TableCell>
                           <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded text-xs">
