@@ -572,7 +572,7 @@ const UserAccount = () => {
 
       {/* Tabs for Transactions, Sales, and Reports */}
       <Tabs defaultValue="transactions" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="transactions" className="flex items-center gap-2">
             <CreditCard className="h-4 w-4" />
             {t("Transactions")}
@@ -585,10 +585,10 @@ const UserAccount = () => {
             <DollarSign className="h-4 w-4" />
             {t("Expenses")}
           </TabsTrigger>
-          <TabsTrigger value="reports" className="flex items-center gap-2">
+          {/* <TabsTrigger value="reports" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             {t("Daily Reports")}
-          </TabsTrigger>
+          </TabsTrigger> */}
           <TabsTrigger value="completed" className="flex items-center gap-2">
             <CheckCircle className="h-4 w-4" />
             {t("Completed Reports")}
@@ -822,10 +822,11 @@ const UserAccount = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-[50px]">#</TableHead>
+                    <TableHead>{t("Type")}</TableHead>
                     <TableHead>{t("Amount")}</TableHead>
                     <TableHead>{t("Category")}</TableHead>
                     <TableHead>{t("Description")}</TableHead>
-                    <TableHead>{t("Daily Report")}</TableHead>
+                    <TableHead>{t("Status")}</TableHead>
                     <TableHead>{t("Date")}</TableHead>
                     <TableHead>{t("Actions")}</TableHead>
                   </TableRow>
@@ -835,6 +836,11 @@ const UserAccount = () => {
                     accountData.expenses.data.map((expense, index) => (
                       <TableRow key={expense.id}>
                         <TableCell className="font-medium">{index + 1}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {expense.expense_type?.charAt(0).toUpperCase() + expense.expense_type?.slice(1)}
+                          </Badge>
+                        </TableCell>
                         <TableCell className="font-medium text-red-600">
                           <div className="flex items-center gap-2">
                             <TrendingDown className="h-4 w-4" />
@@ -844,34 +850,47 @@ const UserAccount = () => {
                         <TableCell>{expense.category?.name || t("N/A")}</TableCell>
                         <TableCell className="max-w-32 truncate">{expense.description}</TableCell>
                         <TableCell>
-                          {expense.daily_report ? (
-                            <Badge variant="outline">
-                              {new Date(expense.daily_report.date).toLocaleDateString()}
-                            </Badge>
-                          ) : (
-                            <Badge variant="secondary">{t("Not linked")}</Badge>
-                          )}
+                          <Badge variant={
+                            expense.status === 'approved' ? 'success' :
+                              expense.status === 'rejected' ? 'destructive' : 'warning'
+                          }>
+                            {t(expense.status?.charAt(0).toUpperCase() + expense.status?.slice(1))}
+                          </Badge>
                         </TableCell>
                         <TableCell>
                           {new Date(expense.date).toLocaleDateString()}
                         </TableCell>
                         <TableCell>
-                          {expense.receipt_path && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => window.open(expense.receipt_path, '_blank')}
-                            >
-                              <Eye className="h-4 w-4 mr-1" />
-                              {t("View Receipt")}
-                            </Button>
-                          )}
+                          <div className="flex gap-2">
+                            {expense.receipt_path && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => window.open(`${import.meta.env.VITE_BASE_URL}${expense.receipt_path}`, '_blank')}
+                              >
+                                <Eye className="h-4 w-4 mr-1" />
+                                {t("View Receipt")}
+                              </Button>
+                            )}
+                            {expense.images && expense.images.length > 0 && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  window.open(`${import.meta.env.VITE_BASE_URL}${expense.images[0].image}`, '_blank');
+                                }}
+                              >
+                                <Eye className="h-4 w-4 mr-1" />
+                                {t("View Images")}
+                              </Button>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center h-24">
+                      <TableCell colSpan={8} className="text-center h-24">
                         <NoRecordFound />
                       </TableCell>
                     </TableRow>

@@ -533,19 +533,45 @@ const GameAssetIndex = () => {
                                                         </div>
                                                     </TableCell>
                                                     <TableCell>
-                                                        {expense.receipt_path ? (
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={() => window.open(`${import.meta.env.VITE_BASE_URL}${expense.receipt_path}`, '_blank')}
-                                                                className="h-7 px-2"
-                                                            >
-                                                                <FileText className="h-3 w-3 mr-1" />
-                                                                {t("View")}
-                                                            </Button>
-                                                        ) : (
-                                                            <span className="text-xs text-muted-foreground">{t("No receipt")}</span>
-                                                        )}
+                                                        <div className="flex items-center gap-2">
+                                                            {/* Single receipt (legacy) */}
+                                                            {expense.receipt_path && (
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() => window.open(`${import.meta.env.VITE_BASE_URL}${expense.receipt_path}`, '_blank')}
+                                                                    className="h-7 px-2"
+                                                                >
+                                                                    <FileText className="h-3 w-3 mr-1" />
+                                                                    {t("Receipt")}
+                                                                </Button>
+                                                            )}
+                                                            
+                                                            {/* Multiple images */}
+                                                            {expense.images && expense.images.length > 0 ? (
+                                                                <div className="flex items-center gap-1">
+                                                                    {expense.images.slice(0, 3).map((image, imgIndex) => (
+                                                                        <Button
+                                                                            key={imgIndex}
+                                                                            variant="outline"
+                                                                            size="sm"
+                                                                            onClick={() => window.open(`${import.meta.env.VITE_BASE_URL}${image.image}`, '_blank')}
+                                                                            className="h-7 px-2"
+                                                                        >
+                                                                            <FileText className="h-3 w-3 mr-1" />
+                                                                            {imgIndex + 1}
+                                                                        </Button>
+                                                                    ))}
+                                                                    {expense.images.length > 3 && (
+                                                                        <Badge variant="secondary" className="text-xs">
+                                                                            +{expense.images.length - 3}
+                                                                        </Badge>
+                                                                    )}
+                                                                </div>
+                                                            ) : (!expense.receipt_path && (
+                                                                <span className="text-xs text-muted-foreground">{t("No receipt")}</span>
+                                                            ))}
+                                                        </div>
                                                     </TableCell>
                                                 </TableRow>
                                             ))

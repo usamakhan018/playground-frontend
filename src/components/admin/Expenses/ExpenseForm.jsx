@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import Select from "@/components/misc/Select";
 import { getUsers, getExpenseCategories, getGameAssets } from '@/stores/features/ajaxFeature';
-import { CalendarDays, Upload, X, Eye } from 'lucide-react';
+import { CalendarDays, Upload, X, Eye, Plus, Trash2 } from 'lucide-react';
 
 const ExpenseForm = ({ initialData = null, onSubmit, isLoading = false }) => {
   const { t } = useTranslation();
@@ -21,9 +21,15 @@ const ExpenseForm = ({ initialData = null, onSubmit, isLoading = false }) => {
   const [selectedAsset, setSelectedAsset] = useState(initialData?.game_asset_id || '');
   const [selectedStatus, setSelectedStatus] = useState(initialData?.status || 'pending');
   
-  // State for file preview
+  // State for file preview (legacy single receipt)
   const [proofPreview, setProofPreview] = useState(null);
   const [proofFile, setProofFile] = useState(null);
+  
+  // State for multiple images
+  const [imageFiles, setImageFiles] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
+  const [existingImages, setExistingImages] = useState([]);
+  const [imagesToDelete, setImagesToDelete] = useState([]);
 
   useEffect(() => {
     if (!users) dispatch(getUsers());
@@ -39,9 +45,14 @@ const ExpenseForm = ({ initialData = null, onSubmit, isLoading = false }) => {
       setSelectedAsset(initialData.game_asset_id || '');
       setSelectedStatus(initialData.status || 'pending');
       
-      // Set existing receipt preview if available
+      // Set existing receipt preview if available (legacy)
       if (initialData.receipt_path) {
-        setProofPreview(initialData.receipt_path);
+        setProofPreview(`${import.meta.env.VITE_BASE_URL}${initialData.receipt_path}`);
+      }
+      
+      // Set existing images if available
+      if (initialData.images && initialData.images.length > 0) {
+        setExistingImages(initialData.images);
       }
     }
   }, [initialData]);
@@ -73,14 +84,70 @@ const ExpenseForm = ({ initialData = null, onSubmit, isLoading = false }) => {
     if (fileInput) fileInput.value = '';
   };
 
+  // Handle multiple images
+  const handleMultipleImagesChange = (e) => {
+    const files = Array.from(e.target.files);
+    const newImageFiles = [];
+    const newImagePreviews = [];
+
+    files.forEach((file) => {
+      if (file.type.startsWith('image/')) {
+        newImageFiles.push(file);
+        
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          newImagePreviews.push({
+            id: Date.now() + Math.random(),
+            url: e.target.result,
+            name: file.name,
+            isNew: true
+          });
+          
+          // Update state when all files are processed
+          if (newImagePreviews.length === files.length) {
+            setImageFiles(prev => [...prev, ...newImageFiles]);
+            setImagePreviews(prev => [...prev, ...newImagePreviews]);
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+    
+    // Reset file input
+    e.target.value = '';
+  };
+
+  const removeImage = (index, isExisting = false) => {
+    if (isExisting) {
+      const imageToDelete = existingImages[index];
+      setImagesToDelete(prev => [...prev, imageToDelete.id]);
+      setExistingImages(prev => prev.filter((_, i) => i !== index));
+    } else {
+      setImageFiles(prev => prev.filter((_, i) => i !== index));
+      setImagePreviews(prev => prev.filter((_, i) => i !== index));
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     const formData = new FormData(e.currentTarget);
     
-    // Add the proof file if selected
+    // Add the proof file if selected (legacy support)
     if (proofFile) {
       formData.append('receipt', proofFile);
+    }
+    
+    // Add multiple images
+    imageFiles.forEach((file, index) => {
+      formData.append('images[]', file);
+    });
+    
+    // Add images to delete
+    if (imagesToDelete.length > 0) {
+      imagesToDelete.forEach((imageId) => {
+        formData.append('delete_images[]', imageId);
+      });
     }
     
     if (initialData) {
@@ -254,7 +321,7 @@ const ExpenseForm = ({ initialData = null, onSubmit, isLoading = false }) => {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="receipt">{t('Receipt')}</Label>
+        <Label htmlFor="receipt">{t('Receipt')} ({t('Legacy')})</Label>
         <div className="space-y-3">
           <div className="flex items-center space-x-2">
             <Input
@@ -329,6 +396,96 @@ const ExpenseForm = ({ initialData = null, onSubmit, isLoading = false }) => {
           )}
           
           <p className="text-xs text-gray-500">{t('Supported formats: JPG, PNG, PDF (Max 2MB)')}</p>
+        </div>
+      </div>
+
+      {/* Multiple Images Section */}
+      <div className="space-y-2">
+        <Label htmlFor="images">{t('Multiple Images')} ({t('Recommended')})</Label>
+        <div className="space-y-3">
+          <div className="flex items-center space-x-2">
+            <Input
+              id="images"
+              type="file"
+              accept=".jpg,.jpeg,.png"
+              multiple
+              onChange={handleMultipleImagesChange}
+              className="flex-1"
+            />
+            <Plus className="h-4 w-4 text-gray-400" />
+          </div>
+          
+          {/* Existing Images */}
+          {existingImages.length > 0 && (
+            <div className="space-y-2">
+              <span className="text-sm font-medium">{t('Existing Images')}</span>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {existingImages.map((image, index) => (
+                  <div key={image.id} className="relative border rounded-lg overflow-hidden bg-gray-50">
+                    <img
+                      src={`${import.meta.env.VITE_BASE_URL}${image.image}`}
+                      alt={`Existing image ${index + 1}`}
+                      className="w-full h-24 object-cover"
+                    />
+                    <div className="absolute top-1 right-1 flex gap-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => window.open(`${import.meta.env.VITE_BASE_URL}${image.image}`, '_blank')}
+                        className="h-6 w-6 p-0 bg-white/80 hover:bg-white"
+                      >
+                        <Eye className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeImage(index, true)}
+                        className="h-6 w-6 p-0 bg-white/80 hover:bg-white text-red-600"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {/* New Images Preview */}
+          {imagePreviews.length > 0 && (
+            <div className="space-y-2">
+              <span className="text-sm font-medium">{t('New Images')}</span>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {imagePreviews.map((preview, index) => (
+                  <div key={preview.id} className="relative border rounded-lg overflow-hidden bg-gray-50">
+                    <img
+                      src={preview.url}
+                      alt={`New image ${index + 1}`}
+                      className="w-full h-24 object-cover"
+                    />
+                    <div className="absolute top-1 right-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeImage(index, false)}
+                        className="h-6 w-6 p-0 bg-white/80 hover:bg-white text-red-600"
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    <div className="absolute bottom-1 left-1 bg-black/60 text-white text-xs px-1 rounded">
+                      {preview.name}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          <p className="text-xs text-gray-500">{t('Supported formats: JPG, PNG (Max 2MB each)')}</p>
         </div>
       </div>
 
