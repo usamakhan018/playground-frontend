@@ -36,6 +36,16 @@ export const getSalaries = createAsyncThunk("getSalaries", async () => {
     return res.data.data;
 });
 
+export const getProductCategories = createAsyncThunk("getProductCategories", async () => {
+    const res = await axiosClient.get("product_categories/all");
+    return res.data.data;
+});
+
+export const getProducts = createAsyncThunk("getProducts", async () => {
+    const res = await axiosClient.get("products/all");
+    return res.data.data;
+});
+
 const ajaxFeature = createSlice({
     name: 'Ajax',
     initialState: {
@@ -46,6 +56,8 @@ const ajaxFeature = createSlice({
         users: null,
         dailyReports: null,
         salaries: null,
+        productCategories: null,
+        products: null,
         loading: false,
         error: false,
     },
@@ -144,6 +156,34 @@ const ajaxFeature = createSlice({
         });
 
         builder.addCase(getSalaries.rejected, (state) => {
+            state.loading = false;
+        });
+
+        // PRODUCT CATEGORIES
+        builder.addCase(getProductCategories.pending, (state) => {
+            state.loading = true;
+        });
+
+        builder.addCase(getProductCategories.fulfilled, (state, action) => {
+            state.loading = false;
+            state.productCategories = action.payload;
+        });
+
+        builder.addCase(getProductCategories.rejected, (state) => {
+            state.loading = false;
+        });
+
+        // PRODUCTS
+        builder.addCase(getProducts.pending, (state) => {
+            state.loading = true;
+        });
+
+        builder.addCase(getProducts.fulfilled, (state, action) => {
+            state.loading = false;
+            state.products = action.payload;
+        });
+
+        builder.addCase(getProducts.rejected, (state) => {
             state.loading = false;
         });
     }

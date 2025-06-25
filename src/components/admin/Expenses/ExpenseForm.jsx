@@ -290,7 +290,7 @@ const ExpenseForm = ({ initialData = null, onSubmit, isLoading = false }) => {
             id="date"
             name="date"
             type="date"
-            defaultValue={initialData?.date || ''}
+            defaultValue={new Date(initialData?.date).toISOString().split('T')[0] || ''}
             required
             className="w-full cursor-pointer"
             onClick={(e) => e.target.showPicker && e.target.showPicker()}

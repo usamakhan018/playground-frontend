@@ -78,9 +78,21 @@ const StartGameDialog = ({ open, onOpenChange, onSaleCreated }) => {
       setAssetBarcode('');
       setTicketBarcode('');
       
-      // Filter available assets for this game
-      const gameSpecificAssets = gameAssets?.filter(asset => asset.game_id === parseInt(selectedOption.value)) || [];
-      setAvailableGameAssets(gameSpecificAssets);
+      // For unlimited games, show all assets for this game (they're always available)
+      // For limited games, we'll need to fetch available assets from the API
+      if (game.type === 'unlimited') {
+        const gameSpecificAssets = gameAssets?.filter(asset => asset.game_id === parseInt(selectedOption.value)) || [];
+        setAvailableGameAssets(gameSpecificAssets);
+      } else {
+        // For limited games, fetch available assets from API
+        try {
+          const response = await axiosClient.get(`/game_assets/available-by-game/${game.id}`);
+          setAvailableGameAssets(response.data.data);
+        } catch (error) {
+          console.error('Error fetching available assets:', error);
+          setAvailableGameAssets([]);
+        }
+      }
       
       // If it's a limited game, fetch pricing options
       if (game.type === 'limited') {
@@ -452,6 +464,9 @@ const StartGameDialog = ({ open, onOpenChange, onSaleCreated }) => {
           {selectedGame && selectedGame.type === 'unlimited' && (
             <div className="space-y-2">
               <Label htmlFor="asset">{t("Select Asset")}</Label>
+              <p className="text-sm text-green-600 mb-2">
+                ✓ {t("All assets are available for unlimited games")}
+              </p>
               <Select
                 placeholder={t("Choose an asset")}
                 value={selectedGameAsset ? {

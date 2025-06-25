@@ -6,6 +6,8 @@ import RoleCreate from "@/components/admin/Roles/Create"
 import RoleEdit from "@/components/admin/Roles/Edit"
 import RoleIndex from "@/components/admin/Roles/Index"
 import ExpenseCategoryIndex from "@/components/admin/ExpenesCategory/Index"
+import ProductCategoryIndex from "@/components/admin/ProductCategories/Index"
+import ProductIndex from "@/components/admin/Products/Index"
 import UserIndex from "@/components/admin/Users/Index"
 import GameIndex from "@/components/admin/Games/Index"
 import GameAssetIndex from "@/components/admin/GameAssets/Index"
@@ -16,6 +18,7 @@ import Charts from "@/components/admin/Charts"
 import ExpenseIndex from "@/components/admin/Expenses/Index"
 import DailyReportsIndex from "@/components/admin/DailyReports/Index"
 import SalaryIndex from "@/components/admin/Salaries/Index"
+import { SaleDashboard } from "@/components/admin/SaleDashboard"
 
 const adminRoutes = [
     {
@@ -57,6 +60,16 @@ const adminRoutes = [
         name: 'expenseCategories',
         path: 'expense/categories',
         element: <ExpenseCategoryIndex />
+    },
+    {
+        name: 'productCategories',
+        path: 'product/categories',
+        element: <ProductCategoryIndex />
+    },
+    {
+        name: 'products',
+        path: 'products',
+        element: <ProductIndex />
     },
     {
         name: 'permissions',
@@ -109,6 +122,11 @@ const adminRoutes = [
         path: 'salaries',
         element: <SalaryIndex />
     },
+    {
+        name: 'saleDashboard',
+        path: 'sale-dashboard',
+        element: <SaleDashboard />
+    }
 ]
 
 export default adminRoutes

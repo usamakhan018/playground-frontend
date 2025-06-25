@@ -24,7 +24,7 @@ import { useNavigate } from "react-router-dom";
 import Pagination from "@/components/Pagination";
 import { Input } from "@/components/ui/input";
 import { toast } from 'react-hot-toast';
-import { EditIcon, MoreHorizontal, RefreshCw, Trash2Icon, SearchIcon } from "lucide-react";
+import { EditIcon, MoreHorizontal, RefreshCw, Trash2Icon, SearchIcon, CheckCircle, XCircle } from "lucide-react";
 import Edit from "./Edit";
 import Create from "./Create";
 import { can, handleError } from "@/utils/helpers";
@@ -42,6 +42,7 @@ const ExpenseIndex = () => {
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteAlertOpen, setDeleteAlertOpen] = useState(false);
+  const [processingApproval, setProcessingApproval] = useState(null);
 
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -105,6 +106,54 @@ const ExpenseIndex = () => {
       setDeleteAlertOpen(false);
     } catch (error) {
       handleError(error);
+    }
+  };
+
+  const handleApprove = async (expense) => {
+    setProcessingApproval(expense.id);
+    try {
+      const formData = new FormData();
+      formData.append('id', expense.id);
+
+      const response = await axiosClient.post('expenses/approve', formData);
+      toast.success(t("Expense approved successfully"));
+      
+      // Update the expense in the local state
+      setExpenses(prevExpenses => 
+        prevExpenses.map(exp => 
+          exp.id === expense.id 
+            ? { ...exp, status: 'approved' }
+            : exp
+        )
+      );
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setProcessingApproval(null);
+    }
+  };
+
+  const handleReject = async (expense) => {
+    setProcessingApproval(expense.id);
+    try {
+      const formData = new FormData();
+      formData.append('id', expense.id);
+
+      const response = await axiosClient.post('expenses/reject', formData);
+      toast.success(t("Expense rejected successfully"));
+      
+      // Update the expense in the local state
+      setExpenses(prevExpenses => 
+        prevExpenses.map(exp => 
+          exp.id === expense.id 
+            ? { ...exp, status: 'rejected' }
+            : exp
+        )
+      );
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setProcessingApproval(null);
     }
   };
 
@@ -236,14 +285,44 @@ const ExpenseIndex = () => {
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="h-8 w-8 p-0">
+                        <Button 
+                          variant="outline" 
+                          className="h-8 w-8 p-0"
+                          disabled={processingApproval === expense.id}
+                        >
                           <span className="sr-only">{t("Open menu")}</span>
-                          <MoreHorizontal className="h-4 w-4" />
+                          {processingApproval === expense.id ? (
+                            <RefreshCw className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <MoreHorizontal className="h-4 w-4" />
+                          )}
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>{t("Actions")}</DropdownMenuLabel>
                         <DropdownMenuSeparator />
+                        
+                        {/* Approval actions - only show for pending expenses */}
+                        {updateAbility && expense.status === 'pending' && (
+                          <>
+                            <DropdownMenuItem 
+                              onClick={() => handleApprove(expense)}
+                              className="text-green-600"
+                            >
+                              <CheckCircle className="mr-2 h-4 w-4" />
+                              {t("Approve")}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleReject(expense)}
+                              className="text-red-600"
+                            >
+                              <XCircle className="mr-2 h-4 w-4" />
+                              {t("Reject")}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                          </>
+                        )}
+                        
                         {updateAbility && (
                           <DropdownMenuItem onClick={() => {
                             setSelectedRecord(expense);

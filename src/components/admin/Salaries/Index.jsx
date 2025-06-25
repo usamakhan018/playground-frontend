@@ -63,7 +63,7 @@ const SalaryIndex = () => {
   const [showProcessDialog, setShowProcessDialog] = useState(false);
   const [showHistoryDialog, setShowHistoryDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [currentFilters, setCurrentFilters] = useState({ report_status: 'settled' });
+  const [currentFilters, setCurrentFilters] = useState({});
   const [stats, setStats] = useState({
     total_users: 0,
     total_pending_salaries: 0,
@@ -78,9 +78,11 @@ const SalaryIndex = () => {
   const accessAbility = can("Salary access");
   const processAbility = can("Salary create");
 
-  const reportStatusOptions = [
-    { value: 'settled', label: 'Settled' },
-    { value: 'completed', label: 'Completed' }
+  const salaryStatusOptions = [
+    { value: '', label: 'All Statuses' },
+    { value: 'pending', label: 'Pending' },
+    { value: 'paid', label: 'Paid' },
+    { value: 'processing', label: 'Processing' }
   ];
 
   useEffect(() => {
@@ -140,19 +142,17 @@ const SalaryIndex = () => {
   const handleRefresh = () => {
     setSearch("");
     setShowRefresh(false);
-    setCurrentFilters({ report_status: 'settled' });
-    fetchSalaryData(1, { report_status: 'settled' });
+    setCurrentFilters({});
+    fetchSalaryData(1, {});
   };
 
   const handleFilter = (filters) => {
-    // Ensure we always have a report_status filter for salary processing
-    const salaryFilters = { report_status: 'settled', ...filters };
-    setCurrentFilters(salaryFilters);
+    setCurrentFilters(filters);
     setCurrentPage(1);
   };
 
   const handleResetFilters = () => {
-    setCurrentFilters({ report_status: 'settled' });
+    setCurrentFilters({});
     setCurrentPage(1);
   };
 
@@ -237,13 +237,13 @@ const SalaryIndex = () => {
       <FilterComponent
         onFilter={handleFilter}
         onReset={handleResetFilters}
-        statusOptions={reportStatusOptions.map(option => ({
+        statusOptions={salaryStatusOptions.map(option => ({
           value: option.value,
-          label: option.label
+          label: t(option.label)
         }))}
-        defaultStatus="settled"
+        defaultStatus=""
         loading={loading}
-        showStatusFilter={false} // Hide status filter since we manage report_status separately
+        showStatusFilter={true}
       />
 
       {/* Search and Actions */}
@@ -290,6 +290,7 @@ const SalaryIndex = () => {
               <TableHead>{t("Total Revenue")}</TableHead>
               <TableHead>{t("Total Expenses")}</TableHead>
               <TableHead>{t("Net Amount")}</TableHead>
+              <TableHead>{t("Salary Status")}</TableHead>
               <TableHead>{t("Latest Report")}</TableHead>
               <TableHead>{t("Last Salary")}</TableHead>
               <TableHead className="text-right w-[150px]">{t("Actions")}</TableHead>
@@ -298,7 +299,7 @@ const SalaryIndex = () => {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={9} className="text-center h-24">
+                <TableCell colSpan={10} className="text-center h-24">
                   <Loader />
                 </TableCell>
               </TableRow>
@@ -347,8 +348,17 @@ const SalaryIndex = () => {
                     </div>
                   </TableCell>
                   <TableCell>
+                    <Badge variant={
+                      item.salary_status === 'paid' ? 'success' : 
+                      item.salary_status === 'processing' ? 'warning' : 
+                      'destructive'
+                    }>
+                      {t(item.salary_status || 'pending')}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
                     <div className="text-sm">
-                      {new Date(item.latest_report_date).toLocaleDateString()}
+                      {item.latest_report_date ? new Date(item.latest_report_date).toLocaleDateString() : t("No reports")}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -395,7 +405,7 @@ const SalaryIndex = () => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={9} className="text-center h-24">
+                <TableCell colSpan={10} className="text-center h-24">
                   <NoRecordFound />
                 </TableCell>
               </TableRow>

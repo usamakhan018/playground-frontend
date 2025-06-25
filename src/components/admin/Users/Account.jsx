@@ -330,10 +330,20 @@ const UserAccount = () => {
   const handleViewSalarySlip = async (salaryId) => {
     try {
       const response = await axiosClient.get(`salaries/slip/${salaryId}`);
-      if (response.data.data.slip_url) {
+      console.log(response.data.data);
+      if (response.data.data && response.data.data.slip_url) {
         window.open(response.data.data.slip_url, '_blank');
+      } else {
+        // If no slip URL, try to regenerate the slip
+        const regenerateResponse = await axiosClient.post(`salaries/regenerate-slip/${salaryId}`);
+        if (regenerateResponse.data.data && regenerateResponse.data.data.slip_url) {
+          window.open(regenerateResponse.data.data.slip_url, '_blank');
+        } else {
+          throw new Error('Unable to generate or retrieve salary slip');
+        }
       }
     } catch (error) {
+      console.error('Salary slip error:', error);
       handleError(error);
     }
   };
@@ -1124,16 +1134,28 @@ const UserAccount = () => {
                           {salary.paid_at ? new Date(salary.paid_at).toLocaleDateString() : t("N/A")}
                         </TableCell>
                         <TableCell>
-                          {salary.slip_path && (
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handleViewSalarySlip(salary.id)}
-                            >
-                              <FileText className="h-4 w-4 mr-1" />
-                              {t('Salary Slip')}
-                            </Button>
-                          )}
+                          <div className="flex gap-2">
+                            {salary.slip_path ? (
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleViewSalarySlip(salary.id)}
+                              >
+                                <FileText className="h-4 w-4 mr-1" />
+                                {t('View Slip')}
+                              </Button>
+                            ) : (
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleViewSalarySlip(salary.id)}
+                                className="text-orange-600 border-orange-600 hover:bg-orange-50"
+                              >
+                                <FileText className="h-4 w-4 mr-1" />
+                                {t('Generate Slip')}
+                              </Button>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))

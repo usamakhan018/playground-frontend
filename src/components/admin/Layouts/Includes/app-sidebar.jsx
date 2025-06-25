@@ -9,6 +9,7 @@ import {
     Gamepad2,
     Home,
     HomeIcon,
+    Package,
     ReceiptIcon,
     Settings,
     ShoppingCart,
@@ -139,6 +140,30 @@ export function AppSidebar({ ...props }) {
                         path: "/permissions",
                         icon: DoorOpen,
                         permission: can("Permission access"),
+                    },
+                ],
+            },
+            {
+                label: t("Product Management"),
+                icon: Package,
+                items: [
+                    {
+                        label: t("Product Categories"),
+                        path: "/product/categories",
+                        icon: Package,
+                        permission: can("Product Category access"),
+                    },
+                    {
+                        label: t("Products"),
+                        path: "/products",
+                        icon: Package,
+                        permission: can("Product access"),
+                    },
+                    {
+                        label: t("Sale Dashboard"),
+                        path: "/sale-dashboard",
+                        icon: ShoppingCart,
+                        permission: can("Sale access"),
                     },
                 ],
             },
