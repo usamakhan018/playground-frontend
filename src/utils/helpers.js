@@ -207,3 +207,24 @@ export const printReceipt = (data) => {
         }, 1000);
     };
 };
+
+
+export const formatTime = (date) => {
+    if (!date) return '';
+    const d = new Date(date);
+    return d.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+    });
+}
+
+export const formatDate = (date) => {
+    if (!date) return '';
+    const d = new Date(date);
+    return d.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long', 
+        day: 'numeric'
+    });
+}

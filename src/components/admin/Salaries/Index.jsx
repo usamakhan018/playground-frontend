@@ -44,7 +44,7 @@ import {
   Wallet,
   Clock
 } from "lucide-react";
-import { can, handleError } from "@/utils/helpers";
+import { can, handleError, humanizeText } from "@/utils/helpers";
 import Loader from "@/components/Loader";
 import { useTranslation } from "react-i18next";
 import ProcessSalaryDialog from "../Users/ProcessSalaryDialog";
@@ -63,7 +63,7 @@ const SalaryIndex = () => {
   const [showProcessDialog, setShowProcessDialog] = useState(false);
   const [showHistoryDialog, setShowHistoryDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [currentFilters, setCurrentFilters] = useState({});
+  const [currentFilters, setCurrentFilters] = useState({ status: 'settled' });
   const [stats, setStats] = useState({
     total_users: 0,
     total_pending_salaries: 0,
@@ -78,11 +78,12 @@ const SalaryIndex = () => {
   const accessAbility = can("Salary access");
   const processAbility = can("Salary create");
 
-  const salaryStatusOptions = [
-    { value: '', label: 'All Statuses' },
-    { value: 'pending', label: 'Pending' },
-    { value: 'paid', label: 'Paid' },
-    { value: 'processing', label: 'Processing' }
+  const reportStatusOptions = [
+    { value: '', label: 'All Report Statuses' },
+    { value: 'pending', label: 'Pending Reports' },
+    { value: 'submitted', label: 'Submitted Reports' },
+    { value: 'settled', label: 'Ready for Salary Processing' },
+    { value: 'completed', label: 'Salary Already Processed' }
   ];
 
   useEffect(() => {
@@ -98,12 +99,24 @@ const SalaryIndex = () => {
       
       // Add filters to params
       Object.entries(filters).forEach(([key, value]) => {
-        if (value && value !== '') {
-          params.append(key, value);
+        if (value) {
+          if (typeof value === 'object' && value.value !== undefined) {
+            // Handle react-select object
+            if (value.value !== '') {
+              params.append(key, value.value);
+            }
+          } else if (value !== '') {
+            // Handle regular value
+            params.append(key, value);
+          }
         }
       });
       
       const response = await axiosClient.get(`salaries/index-data?${params}`);
+      
+      console.log('Salary data response:', response.data);
+      console.log('Salary data array:', response.data.data.data);
+      console.log('Stats:', response.data.data.stats);
       
       setSalaryData(response.data.data.data);
       setStats(response.data.data.stats);
@@ -129,6 +142,9 @@ const SalaryIndex = () => {
     setShowRefresh(true);
     try {
       const response = await axiosClient.get(`salaries/index-data?query=${search.trim()}`);
+      
+      console.log('Search response:', response.data);
+      
       setSalaryData(response.data.data.data);
       setStats(response.data.data.stats);
       setLinks([]);
@@ -142,8 +158,8 @@ const SalaryIndex = () => {
   const handleRefresh = () => {
     setSearch("");
     setShowRefresh(false);
-    setCurrentFilters({});
-    fetchSalaryData(1, {});
+    setCurrentFilters({ status: 'settled' });
+    fetchSalaryData(1, { status: 'settled' });
   };
 
   const handleFilter = (filters) => {
@@ -152,7 +168,7 @@ const SalaryIndex = () => {
   };
 
   const handleResetFilters = () => {
-    setCurrentFilters({});
+    setCurrentFilters({ status: 'settled' });
     setCurrentPage(1);
   };
 
@@ -237,11 +253,11 @@ const SalaryIndex = () => {
       <FilterComponent
         onFilter={handleFilter}
         onReset={handleResetFilters}
-        statusOptions={salaryStatusOptions.map(option => ({
+        statusOptions={reportStatusOptions.map(option => ({
           value: option.value,
           label: t(option.label)
         }))}
-        defaultStatus=""
+        defaultStatus="settled"
         loading={loading}
         showStatusFilter={true}
       />
@@ -249,7 +265,7 @@ const SalaryIndex = () => {
       {/* Search and Actions */}
       <div className="flex flex-col sm:flex-row justify-between gap-4">
         <div className="text-sm text-muted-foreground">
-          {t("Manage employee salaries and payroll")}
+          {t("Manage employee salaries and payroll")} - {t("Shows reports based on salary processing status")}
         </div>
 
         <form onSubmit={handleSearch} className="flex gap-2">
@@ -328,9 +344,14 @@ const SalaryIndex = () => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-1 font-medium text-green-600">
-                      <TrendingUp className="h-3 w-3" />
-                      <span>{formatCurrency(item.total_revenue)}</span>
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-1 font-medium text-green-600">
+                        <TrendingUp className="h-3 w-3" />
+                        <span>{formatCurrency(item.total_revenue)}</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {t("Games")}: {formatCurrency(item.game_revenue || 0)} | {t("Products")}: {formatCurrency(item.product_revenue || 0)}
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -350,10 +371,11 @@ const SalaryIndex = () => {
                   <TableCell>
                     <Badge variant={
                       item.salary_status === 'paid' ? 'success' : 
+                      item.salary_status === 'waiting' ? 'warning' : 
                       item.salary_status === 'processing' ? 'warning' : 
                       'destructive'
                     }>
-                      {t(item.salary_status || 'pending')}
+                      {t(humanizeText(item.salary_status) || 'pending')}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -368,7 +390,7 @@ const SalaryIndex = () => {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
-                      {processAbility && (
+                      {processAbility && item.salary_status !== 'paid' && (
                         <Button
                           size="sm"
           

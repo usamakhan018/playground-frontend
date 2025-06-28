@@ -201,6 +201,31 @@ const arabicTranslations = {
     "No active games at the moment": "لا توجد ألعاب نشطة في الوقت الحالي",
     "Start a new game to see it here": "ابدأ لعبة جديدة لرؤيتها هنا",
     "Completed Games Today": "الألعاب المكتملة اليوم",
+
+    // Product Sales Index
+    "Product Sales": "مبيعات المنتجات",
+    "Sale Date": "تاريخ البيع",
+    "Sale Time": "وقت البيع",
+    "Report Date": "تاريخ التقرير",
+    "Salesperson": "البائع",
+    "Quantity": "الكمية",
+    "Unit Price": "سعر الوحدة",
+    "Total Amount": "المبلغ الإجمالي",
+    "From Date": "من تاريخ",
+    "To Date": "إلى تاريخ",
+    "Report From Date": "من تاريخ التقرير",
+    "Report To Date": "إلى تاريخ التقرير",
+    "Select User": "اختر المستخدم",
+    "All Users": "جميع المستخدمين",
+    "All Categories": "جميع الفئات",
+    "All Statuses": "جميع الحالات",
+    "Clear Filters": "مسح المرشحات",
+    "Apply Filters": "تطبيق المرشحات",
+    "No sales found": "لم يتم العثور على مبيعات",
+    "Search by product, category, or user": "البحث بالمنتج أو الفئة أو المستخدم",
+    "Advanced Filters": "مرشحات متقدمة",
+    "Report Status": "حالة التقرير",
+    "Sale ID": "رقم البيع",
     
     // Game States
     "EXPIRED": "منتهية الصلاحية",
@@ -395,6 +420,14 @@ const arabicTranslations = {
     // Expense Categories
     "Expense Categories": "فئات المصروفات",
     "Expense Category": "فئة المصروفات",
+
+    // Hotel Expenses
+    "Hotel Expenses": "مصروفات الفندق",
+    "Hotel Expense": "مصروف الفندق",
+    "Create Hotel Expense": "إنشاء مصروف فندق",
+    "Update Hotel Expense": "تحديث مصروف الفندق",
+    "Delete Hotel Expense": "حذف مصروف الفندق",
+    "Current file": "الملف الحالي",
 
     // Expenses
     "Expenses": "المصروفات",
@@ -640,6 +673,24 @@ const arabicTranslations = {
     "Select Daily Report": "اختر التقرير اليومي",
     "Optional": "اختياري",
     "View Receipt": "عرض الإيصال",
+    "View Proof": "عرض الإثبات",
+    "Games": "الألعاب",
+    "Products": "المنتجات",
+    "Product Sales Details": "تفاصيل مبيعات المنتجات",
+    "All product sales transactions in this report": "جميع معاملات مبيعات المنتجات في هذا التقرير",
+    "Unit Price": "سعر الوحدة",
+    "Proof": "الإثبات",
+    "No product sales found": "لم يتم العثور على مبيعات منتجات",
+    "Game Revenue": "إيرادات الألعاب",
+    "Product Revenue": "إيرادات المنتجات",
+    "Includes both game sales and product sales revenue": "يشمل إيرادات مبيعات الألعاب والمنتجات",
+    "Shows reports based on salary processing status": "يظهر التقارير بناءً على حالة معالجة الراتب",
+    "waiting": "في الانتظار",
+    "All Report Statuses": "جميع حالات التقارير",
+    "Pending Reports": "التقارير المعلقة",
+    "Submitted Reports": "التقارير المقدمة",
+    "Ready for Salary Processing": "جاهزة لمعالجة الراتب",
+    "Salary Already Processed": "تم معالجة الراتب بالفعل",
     "Total Expense Amount": "إجمالي مبلغ المصروفات",
 
     // Salary Management
@@ -781,6 +832,7 @@ const arabicTranslations = {
   "Generate Slip": "إنشاء القسيمة",
   
   // Sale Dashboard
+  "Sale Dashboard": "لوحة المبيعات",
   "Product Sales Dashboard": "لوحة مبيعات المنتجات",
   "Today's Sales": "مبيعات اليوم",
   "Revenue": "الإيرادات",
@@ -798,7 +850,7 @@ const arabicTranslations = {
   "Select a product to continue": "اختر منتجاً للمتابعة",
   "Choose a category and product above": "اختر فئة ومنتج من الأعلى",
   "No products found in this category": "لا توجد منتجات في هذه الفئة",
-  "Please select a product and enter valid quantity and price": "يرجى اختيار منتج وإدخال كمية وسعر صحيحين",
+  "Please select a product and enter valid quantity": "يرجى اختيار منتج وإدخال كمية صحيحة",
   "Product sale recorded successfully!": "تم تسجيل بيع المنتج بنجاح!",
 };
 

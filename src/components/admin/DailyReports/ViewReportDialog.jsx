@@ -115,7 +115,7 @@ const ViewReportDialog = ({
               <CardContent>
                 <div className="text-2xl font-bold">{stats?.total_sales || 0}</div>
                 <p className="text-xs text-muted-foreground">
-                  {stats?.completed_sales || 0} {t("completed")}, {stats?.pending_sales || 0} {t("pending")}
+                  {t("Games")}: {stats?.total_game_sales || 0} | {t("Products")}: {stats?.total_product_sales || 0}
                 </p>
               </CardContent>
             </Card>
@@ -130,7 +130,7 @@ const ViewReportDialog = ({
                   OMR {stats?.total_revenue?.toFixed(2) || '0.00'}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {t("Average")}: OMR {stats?.average_sale_amount?.toFixed(2) || '0.00'}
+                  {t("Games")}: OMR {parseFloat(stats?.game_revenue)?.toFixed(2) || '0.00'} | {t("Products")}: OMR {parseFloat(stats?.product_revenue)?.toFixed(2) || '0.00'}
                 </p>
               </CardContent>
             </Card>
@@ -382,6 +382,85 @@ const ViewReportDialog = ({
                     <TableRow>
                       <TableCell colSpan={9} className="text-center h-24">
                         {t("No sales found")}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          {/* Product Sales Details */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ShoppingCart className="h-4 w-4" />
+                {t("Product Sales Details")}
+              </CardTitle>
+              <CardDescription>
+                {t("All product sales transactions in this report")}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[50px]">#</TableHead>
+                    <TableHead>{t("Product")}</TableHead>
+                    <TableHead>{t("Category")}</TableHead>
+                    <TableHead>{t("Quantity")}</TableHead>
+                    <TableHead>{t("Unit Price")}</TableHead>
+                    <TableHead>{t("Total Amount")}</TableHead>
+                    <TableHead>{t("Payment")}</TableHead>
+                    <TableHead>{t("Time")}</TableHead>
+                    <TableHead>{t("Proof")}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {report.product_sales?.length > 0 ? (
+                    report.product_sales.map((productSale, index) => (
+                      <TableRow key={productSale.id}>
+                        <TableCell className="font-medium">{index + 1}</TableCell>
+                        <TableCell>
+                          <div className="font-medium">
+                            {productSale.product?.name || t("N/A")}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {productSale.product?.category?.name || t("N/A")}
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {productSale.quantity}
+                        </TableCell>
+                        <TableCell>
+                          OMR {parseFloat(productSale.price)?.toFixed(2) || '0.00'}
+                        </TableCell>
+                        <TableCell className="font-bold text-green-600">
+                          OMR {parseFloat(productSale.total_amount)?.toFixed(2) || '0.00'}
+                        </TableCell>
+                        <TableCell>
+                          {productSale.payment_method && getPaymentMethodBadge(productSale.payment_method)}
+                        </TableCell>
+                        <TableCell>
+                          {new Date(productSale.created_at).toLocaleTimeString()}
+                        </TableCell>
+                        <TableCell>
+                          {productSale.proof_image_path && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => window.open(productSale.proof_image_path, '_blank')}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={9} className="text-center h-24">
+                        {t("No product sales found")}
                       </TableCell>
                     </TableRow>
                   )}

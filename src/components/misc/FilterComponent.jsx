@@ -9,12 +9,12 @@ import { useSelector, useDispatch } from "react-redux";
 import { getUsers } from "@/stores/features/ajaxFeature";
 import Select from "./Select";
 
-const FilterComponent = ({ 
-  onFilter, 
-  onReset, 
-  statusOptions = [], 
-  showUserFilter = true, 
-  showDateFilter = true, 
+const FilterComponent = ({
+  onFilter,
+  onReset,
+  statusOptions = [],
+  showUserFilter = true,
+  showDateFilter = true,
   showStatusFilter = true,
   defaultStatus = null,
   loading = false
@@ -41,7 +41,7 @@ const FilterComponent = ({
   const handleFilterChange = (key, value) => {
     const newFilters = { ...filters, [key]: value };
     setFilters(newFilters);
-    
+
     // Auto-apply filters when they change
     onFilter(newFilters);
   };
@@ -62,7 +62,7 @@ const FilterComponent = ({
     label: `${user.name} (${user.email})`
   })) : [];
 
-  const hasActiveFilters = Object.values(filters).some(value => 
+  const hasActiveFilters = Object.values(filters).some(value =>
     value && value !== defaultStatus
   );
 
@@ -117,7 +117,6 @@ const FilterComponent = ({
                     value={filters.status}
                     onChange={(value) => handleFilterChange('status', value)}
                     options={[
-                      { value: '', label: t('All Statuses') },
                       ...statusOptions.map(option => ({
                         value: option.value,
                         label: t(option.label)

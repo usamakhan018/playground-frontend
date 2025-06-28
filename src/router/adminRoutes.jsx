@@ -16,9 +16,11 @@ import TicketIndex from "@/components/admin/Tickets/Index"
 import { Analytics } from "@/components/admin/Analytics"
 import Charts from "@/components/admin/Charts"
 import ExpenseIndex from "@/components/admin/Expenses/Index"
+import HotelExpenseIndex from "@/components/admin/HotelExpenses/Index"
 import DailyReportsIndex from "@/components/admin/DailyReports/Index"
 import SalaryIndex from "@/components/admin/Salaries/Index"
 import { SaleDashboard } from "@/components/admin/SaleDashboard"
+import ProductSalesIndex from "@/components/admin/Sales/Index"
 
 const adminRoutes = [
     {
@@ -111,6 +113,11 @@ const adminRoutes = [
         path: 'expenses',
         element: <ExpenseIndex />,
     },
+    {
+        name: 'hotelExpenses',
+        path: 'hotel-expenses',
+        element: <HotelExpenseIndex />
+    },
 
     {
         name: 'dailyReports',
@@ -126,6 +133,11 @@ const adminRoutes = [
         name: 'saleDashboard',
         path: 'sale-dashboard',
         element: <SaleDashboard />
+    },
+    {
+        name: 'productSales',
+        path: 'product-sales',
+        element: <ProductSalesIndex />
     }
 ]
 

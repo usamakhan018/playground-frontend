@@ -143,6 +143,9 @@ const ProcessSalaryDialog = ({
                 <div className="text-2xl font-bold text-green-600">
                   OMR {salaryData.totals.total_sales || '0.00'}
                 </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {t("Games")}: OMR {salaryData.totals.total_game_sales || '0.00'} | {t("Products")}: OMR {salaryData.totals.total_product_sales || '0.00'}
+                </p>
               </CardContent>
             </Card>
 
@@ -202,8 +205,15 @@ const ProcessSalaryDialog = ({
                     salaryData.submitted_reports.map((report) => (
                       <TableRow key={report.id}>
                         <TableCell>{new Date(report.date).toLocaleDateString()}</TableCell>
-                        <TableCell className="text-green-600">
-                          OMR {report.total_revenue || '0.00'}
+                        <TableCell>
+                          <div className="flex flex-col gap-1">
+                            <div className="text-green-600 font-medium">
+                              OMR {report.total_revenue || '0.00'}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {t("Games")}: OMR {report.game_revenue || '0.00'} | {t("Products")}: OMR {report.product_revenue || '0.00'}
+                            </div>
+                          </div>
                         </TableCell>
                         <TableCell className="text-blue-600">
                           OMR {report.collection_amount || '0.00'}

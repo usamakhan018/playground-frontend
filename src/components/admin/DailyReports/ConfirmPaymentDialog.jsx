@@ -102,11 +102,35 @@ const SubmitReportDialog = ({
                 <span className="font-medium">{report.total_transactions}</span>
               </div>
               <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">{t("Games")}:</span>
+                <span className="font-medium">{report.total_game_sales || 0}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">{t("Products")}:</span>
+                <span className="font-medium">{report.total_product_sales || 0}</span>
+              </div>
+              <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">{t("Total Revenue")}:</span>
                 <span className="font-bold text-green-600">
-                  ${parseFloat(report.total_revenue)?.toFixed(2) || parseFloat(report.actual_revenue)?.toFixed(2) || '0.00'}
+                  OMR {parseFloat(report.total_revenue)?.toFixed(2) || parseFloat(report.actual_revenue)?.toFixed(2) || '0.00'}
                 </span>
               </div>
+              {(report.game_revenue || report.product_revenue) && (
+                <>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">{t("Game Revenue")}:</span>
+                    <span className="font-medium text-green-600">
+                      OMR {parseFloat(report.game_revenue)?.toFixed(2) || '0.00'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">{t("Product Revenue")}:</span>
+                    <span className="font-medium text-green-600">
+                      OMR {parseFloat(report.product_revenue)?.toFixed(2) || '0.00'}
+                    </span>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
 

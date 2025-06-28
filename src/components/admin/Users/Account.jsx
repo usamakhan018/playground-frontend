@@ -43,7 +43,7 @@ import {
   Eye,
   DollarSign
 } from "lucide-react";
-import { can, handleError } from "@/utils/helpers";
+import { can, handleError, humanizeText } from "@/utils/helpers";
 import Loader from "@/components/Loader";
 import { useTranslation } from "react-i18next";
 import ViewReportDialog from "../DailyReports/ViewReportDialog";
@@ -55,19 +55,23 @@ const UserAccount = () => {
   const [accountData, setAccountData] = useState(null);
   const [transactionLinks, setTransactionLinks] = useState([]);
   const [salesLinks, setSalesLinks] = useState([]);
+  const [productSalesLinks, setProductSalesLinks] = useState([]);
   const [expensesLinks, setExpensesLinks] = useState([]);
   const [dailyReports, setDailyReports] = useState({ data: [], links: [] });
   const [completedReports, setCompletedReports] = useState({ data: [], links: [] });
   const [transactionPage, setTransactionPage] = useState(1);
   const [salesPage, setSalesPage] = useState(1);
+  const [productSalesPage, setProductSalesPage] = useState(1);
   const [expensesPage, setExpensesPage] = useState(1);
   const [reportsPage, setReportsPage] = useState(1);
   const [completedPage, setCompletedPage] = useState(1);
   const [transactionSearch, setTransactionSearch] = useState("");
   const [salesSearch, setSalesSearch] = useState("");
+  const [productSalesSearch, setProductSalesSearch] = useState("");
   const [expensesSearch, setExpensesSearch] = useState("");
   const [showTransactionRefresh, setShowTransactionRefresh] = useState(false);
   const [showSalesRefresh, setShowSalesRefresh] = useState(false);
+  const [showProductSalesRefresh, setShowProductSalesRefresh] = useState(false);
   const [showExpensesRefresh, setShowExpensesRefresh] = useState(false);
   const [refreshingBalance, setRefreshingBalance] = useState(false);
   const [selectedReport, setSelectedReport] = useState(null);
@@ -100,6 +104,7 @@ const UserAccount = () => {
       setAccountData(response.data.data);
       setTransactionLinks(response.data.data.transactions.links || []);
       setSalesLinks(response.data.data.sales.links || []);
+      setProductSalesLinks(response.data.data.product_sales.links || []);
       setExpensesLinks(response.data.data.expenses.links || []);
     } catch (error) {
       handleError(error);
@@ -137,6 +142,23 @@ const UserAccount = () => {
         sales: response.data.data
       }));
       setSalesLinks(response.data.data.links || []);
+    } catch (error) {
+      handleError(error);
+    }
+  };
+
+  const fetchProductSales = async (page = 1, query = "") => {
+    try {
+      const url = query
+        ? `accounts/user/${userId}/product-sales?query=${query.trim()}`
+        : `accounts/user/${userId}/product-sales?page=${page}`;
+
+      const response = await axiosClient.get(url);
+      setAccountData(prev => ({
+        ...prev,
+        product_sales: response.data.data
+      }));
+      setProductSalesLinks(response.data.data.links || []);
     } catch (error) {
       handleError(error);
     }
@@ -198,6 +220,21 @@ const UserAccount = () => {
     fetchSales();
   };
 
+  const handleProductSalesSearch = async (e) => {
+    e.preventDefault();
+    if (!productSalesSearch.trim()) return;
+
+    setShowProductSalesRefresh(true);
+    await fetchProductSales(1, productSalesSearch);
+    setProductSalesLinks([]);
+  };
+
+  const handleProductSalesRefresh = () => {
+    setProductSalesSearch("");
+    setShowProductSalesRefresh(false);
+    fetchProductSales();
+  };
+
   const handleExpensesRefresh = () => {
     setExpensesSearch("");
     setShowExpensesRefresh(false);
@@ -212,6 +249,11 @@ const UserAccount = () => {
   const handleSalesPageChange = (page) => {
     setSalesPage(page);
     fetchSales(page);
+  };
+
+  const handleProductSalesPageChange = (page) => {
+    setProductSalesPage(page);
+    fetchProductSales(page);
   };
 
   const handleExpensesPageChange = (page) => {
@@ -523,9 +565,21 @@ const UserAccount = () => {
                 </span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">{t("Total Sales")}:</span>
+                <span className="text-muted-foreground">{t("Game Sales")}:</span>
                 <span className="font-medium">
                   {accountData.summary?.sales_count || accountData.sales.total || 0}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">{t("Product Sales")}:</span>
+                <span className="font-medium text-blue-600">
+                  {accountData.summary?.product_sales_count || accountData.product_sales?.total || 0}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">{t("Product Revenue")}:</span>
+                <span className="font-medium text-green-600">
+                  OMR {accountData.summary?.total_product_sales_amount || '0.00'}
                 </span>
               </div>
               <div className="flex justify-between text-sm">
@@ -582,14 +636,18 @@ const UserAccount = () => {
 
       {/* Tabs for Transactions, Sales, and Reports */}
       <Tabs defaultValue="transactions" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="transactions" className="flex items-center gap-2">
             <CreditCard className="h-4 w-4" />
             {t("Transactions")}
           </TabsTrigger>
           <TabsTrigger value="sales" className="flex items-center gap-2">
             <ShoppingCart className="h-4 w-4" />
-            {t("Sales")}
+            {t("Game Sales")}
+          </TabsTrigger>
+          <TabsTrigger value="product-sales" className="flex items-center gap-2">
+            <ShoppingCart className="h-4 w-4" />
+            {t("Product Sales")}
           </TabsTrigger>
           <TabsTrigger value="expenses" className="flex items-center gap-2">
             <DollarSign className="h-4 w-4" />
@@ -786,6 +844,134 @@ const UserAccount = () => {
                   links={salesLinks}
                   currentPage={salesPage}
                   onPageChange={handleSalesPageChange}
+                  className="p-4"
+                />
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Product Sales Tab */}
+        <TabsContent value="product-sales" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex flex-col sm:flex-row justify-between gap-4">
+                <div>
+                  <CardTitle>{t("Product Sales History")}</CardTitle>
+                  <CardDescription>
+                    {t("View all product sales for this user")}
+                  </CardDescription>
+                </div>
+                <form onSubmit={handleProductSalesSearch} className="flex gap-2">
+                  <Input
+                    value={productSalesSearch}
+                    placeholder={t("Search product sales")}
+                    onChange={(e) => setProductSalesSearch(e.target.value)}
+                    className="w-48"
+                  />
+                  <Button type="submit" aria-label={t("Search")}>
+                    <SearchIcon className="h-4 w-4" />
+                  </Button>
+                  {showProductSalesRefresh && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleProductSalesRefresh}
+                      aria-label={t("Refresh")}
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                    </Button>
+                  )}
+                </form>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[50px]">#</TableHead>
+                    <TableHead>{t("Product")}</TableHead>
+                    <TableHead>{t("Category")}</TableHead>
+                    <TableHead>{t("Quantity")}</TableHead>
+                    <TableHead>{t("Price")}</TableHead>
+                    <TableHead>{t("Total Amount")}</TableHead>
+                    <TableHead>{t("Payment Method")}</TableHead>
+                    <TableHead>{t("Date")}</TableHead>
+                    <TableHead>{t("Actions")}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {accountData.product_sales?.data?.length > 0 ? (
+                    accountData.product_sales.data.map((productSale, index) => (
+                      <TableRow key={productSale.id}>
+                        <TableCell className="font-medium">{index + 1}</TableCell>
+                        <TableCell className="font-medium">
+                          {productSale.product?.name || t("N/A")}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {productSale.product?.category?.name || t("Uncategorized")}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center font-medium">
+                          {productSale.quantity}
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          OMR {parseFloat(productSale.price).toFixed(2)}
+                        </TableCell>
+                        <TableCell className="font-bold text-green-600">
+                          OMR {parseFloat(productSale.total_amount).toFixed(2)}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={
+                            productSale.payment_method === 'cash' ? 'default' :
+                            productSale.payment_method === 'credit_card' ? 'secondary' :
+                            productSale.payment_method === 'bank_transfer' ? 'outline' : 'outline'
+                          }>
+                            {productSale.payment_method === 'cash' ? t("Cash") :
+                             productSale.payment_method === 'credit_card' ? t("Credit Card") :
+                             productSale.payment_method === 'bank_transfer' ? t("Bank Transfer") :
+                             productSale.payment_method || t("N/A")}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">
+                              {new Date(productSale.created_at).toLocaleDateString()}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {new Date(productSale.created_at).toLocaleTimeString()}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {productSale.proof && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => window.open(`${import.meta.env.VITE_BASE_URL}${productSale.proof}`, '_blank')}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              {t("View Proof")}
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={9} className="text-center h-24">
+                        <NoRecordFound />
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+              {productSalesLinks.length > 0 && (
+                <Pagination
+                  links={productSalesLinks}
+                  currentPage={productSalesPage}
+                  onPageChange={handleProductSalesPageChange}
                   className="p-4"
                 />
               )}

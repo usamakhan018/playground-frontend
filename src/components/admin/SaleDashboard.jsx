@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Badge } from "../ui/badge";
 import PageTitle from "./Layouts/PageTitle";
+import Select from "../misc/Select";
 import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import axiosClient from "@/axios";
@@ -18,7 +19,15 @@ import {
   ArrowLeft,
   CheckCircle,
   RefreshCw,
-  TrendingUp
+  TrendingUp,
+  ShoppingBag,
+  Trash2,
+  X,
+  Camera,
+  Upload,
+  CreditCard,
+  Banknote,
+  FileText
 } from "lucide-react";
 import Loader from "../Loader";
 import ImagePreview from "../misc/ImagePreview";
@@ -39,10 +48,21 @@ export const SaleDashboard = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
   
-  // Sale form state
+  // Shopping cart state
+  const [cartItems, setCartItems] = useState([]);
+  const [paymentMethod, setPaymentMethod] = useState('cash');
+  
+  // Sale form state - for quick add
   const [quantity, setQuantity] = useState(1);
-  const [salePrice, setSalePrice] = useState(0);
   const [totalAmount, setTotalAmount] = useState(0);
+  
+  // Proof upload state
+  const [proofImage, setProofImage] = useState(null);
+  const [isCapturingProof, setIsCapturingProof] = useState(false);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const streamRef = useRef(null);
+  const fileInputRef = useRef(null);
   
   // Today's stats
   const [todayStats, setTodayStats] = useState({
@@ -66,21 +86,28 @@ export const SaleDashboard = () => {
     }
   }, [selectedCategory, products]);
 
-  // Calculate total when quantity or price changes
+  // Cleanup camera when payment method changes or component unmounts
   useEffect(() => {
-    if (salePrice && quantity) {
-      setTotalAmount((parseFloat(salePrice) * parseInt(quantity)).toFixed(2));
-    } else {
-      setTotalAmount(0);
+    if (!['bank_transfer', 'credit_card'].includes(paymentMethod)) {
+      stopCamera();
+      setProofImage(null);
     }
-  }, [quantity, salePrice]);
+  }, [paymentMethod]);
 
-  // Set sale price when product is selected
   useEffect(() => {
-    if (selectedProduct) {
-      setSalePrice(selectedProduct.price);
-    }
-  }, [selectedProduct]);
+    return () => {
+      stopCamera();
+    };
+  }, []);
+
+  // Calculate cart total
+  const getCartTotal = () => {
+    return cartItems.reduce((total, item) => total + parseFloat(item.total_amount), 0).toFixed(2);
+  };
+
+  const getCartItemsCount = () => {
+    return cartItems.reduce((total, item) => total + item.quantity, 0);
+  };
 
   const fetchInitialData = async () => {
     try {
@@ -100,15 +127,16 @@ export const SaleDashboard = () => {
 
   const fetchTodayStats = async () => {
     try {
-      // This would fetch today's product sales stats
-      // For now, using dummy data since backend isn't implemented yet
+      const response = await axiosClient.get('product-sales/today-stats');
+      setTodayStats(response.data.data);
+    } catch (error) {
+      console.error('Error fetching today stats:', error);
+      // Set default stats on error
       setTodayStats({
         total_sales: 0,
         total_revenue: 0,
         total_products_sold: 0
       });
-    } catch (error) {
-      console.error('Error fetching today stats:', error);
     }
   };
 
@@ -116,8 +144,6 @@ export const SaleDashboard = () => {
     setSelectedCategory(category);
     setSelectedProduct(null);
     setQuantity(1);
-    setSalePrice(0);
-    setTotalAmount(0);
   };
 
   const handleProductSelect = (product) => {
@@ -131,30 +157,174 @@ export const SaleDashboard = () => {
     }
   };
 
-  const handlePriceChange = (e) => {
-    const price = e.target.value;
-    if (price >= 0) {
-      setSalePrice(price);
+  const addToCart = () => {
+    if (!selectedProduct || quantity < 1) {
+      toast.error(t("Please select a product and enter valid quantity"));
+      return;
+    }
+
+    const existingItemIndex = cartItems.findIndex(item => item.product_id === selectedProduct.id);
+    const itemTotal = (parseFloat(selectedProduct.price) * quantity).toFixed(2);
+
+    if (existingItemIndex !== -1) {
+      // Update existing item
+      const updatedCart = [...cartItems];
+      updatedCart[existingItemIndex].quantity += quantity;
+      updatedCart[existingItemIndex].total_amount = (parseFloat(selectedProduct.price) * updatedCart[existingItemIndex].quantity).toFixed(2);
+      setCartItems(updatedCart);
+    } else {
+      // Add new item
+      const newItem = {
+        product_id: selectedProduct.id,
+        product: selectedProduct,
+        quantity: quantity,
+        price: selectedProduct.price,
+        total_amount: itemTotal
+      };
+      setCartItems([...cartItems, newItem]);
+    }
+
+    // Reset product selection
+    setSelectedProduct(null);
+    setQuantity(1);
+    toast.success(t("Item added to cart"));
+  };
+
+  const removeFromCart = (productId) => {
+    setCartItems(cartItems.filter(item => item.product_id !== productId));
+    toast.success(t("Item removed from cart"));
+  };
+
+  const updateCartItemQuantity = (productId, newQuantity) => {
+    if (newQuantity < 1) {
+      removeFromCart(productId);
+      return;
+    }
+
+    const updatedCart = cartItems.map(item => {
+      if (item.product_id === productId) {
+        return {
+          ...item,
+          quantity: newQuantity,
+          total_amount: (parseFloat(item.price) * newQuantity).toFixed(2)
+        };
+      }
+      return item;
+    });
+    setCartItems(updatedCart);
+  };
+
+  const clearCart = () => {
+    setCartItems([]);
+    toast.success(t("Cart cleared"));
+  };
+
+  // Camera and proof upload functionality
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'environment' } 
+      });
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        streamRef.current = stream;
+        setIsCapturingProof(true);
+      }
+    } catch (error) {
+      console.error('Error accessing camera:', error);
+      toast.error(t("Camera access denied"));
+    }
+  };
+
+  const captureImage = () => {
+    if (videoRef.current && canvasRef.current) {
+      const canvas = canvasRef.current;
+      const video = videoRef.current;
+      const context = canvas.getContext('2d');
+      
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0);
+      
+      // Convert to blob for upload
+      canvas.toBlob((blob) => {
+        const file = new File([blob], 'camera-capture.jpg', { type: 'image/jpeg' });
+        setProofImage(file);
+        stopCamera();
+        toast.success(t("Image captured successfully"));
+      }, 'image/jpeg', 0.8);
+    }
+  };
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    setIsCapturingProof(false);
+  };
+
+  const handleFileUpload = (event) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setProofImage(file);
+      toast.success(t("Image uploaded successfully"));
     }
   };
 
   const handleSaleSubmit = async () => {
-    if (!selectedProduct || quantity < 1 || salePrice <= 0) {
-      toast.error(t("Please select a product and enter valid quantity and price"));
+    if (cartItems.length === 0) {
+      toast.error(t("Please add items to cart before completing sale"));
+      return;
+    }
+
+    // Validate proof image for bank transfer and credit card
+    if (['bank_transfer', 'credit_card'].includes(paymentMethod) && !proofImage) {
+      toast.error(t("Proof image is required for this payment method"));
       return;
     }
 
     setProcessing(true);
     try {
-      // This would submit the sale to backend
-      // For now, just show success message
-      toast.success(t("Product sale recorded successfully!"));
+      let response;
+
+      if (proofImage) {
+        // Use FormData when we have a proof image
+        const formData = new FormData();
+        
+        // Append items array in FormData format that Laravel can understand
+        cartItems.forEach((item, index) => {
+          formData.append(`items[${index}][product_id]`, item.product_id);
+          formData.append(`items[${index}][quantity]`, item.quantity);
+          formData.append(`items[${index}][price]`, item.price);
+          formData.append(`items[${index}][total_amount]`, item.total_amount);
+        });
+        
+        formData.append('payment_method', paymentMethod);
+        formData.append('proof', proofImage);
+
+        response = await axiosClient.post('product-sales/store', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+      } else {
+        // Use regular JSON when no proof image
+        response = await axiosClient.post('product-sales/store', {
+        items: cartItems,
+        payment_method: paymentMethod
+      });
+      }
       
-      // Reset form
+      toast.success(response.data.message);
+      
+      // Reset cart and form
+      setCartItems([]);
       setSelectedProduct(null);
       setQuantity(1);
-      setSalePrice(0);
-      setTotalAmount(0);
+      setPaymentMethod('cash');
+      setProofImage(null);
       
       // Update stats
       await fetchTodayStats();
@@ -171,8 +341,6 @@ export const SaleDashboard = () => {
     setSelectedProduct(null);
     setFilteredProducts([]);
     setQuantity(1);
-    setSalePrice(0);
-    setTotalAmount(0);
   };
 
   if (loading) {
@@ -188,6 +356,21 @@ export const SaleDashboard = () => {
       <div className="flex justify-between items-center">
         <PageTitle title={t("Product Sales Dashboard")} />
         <div className="flex items-center gap-2">
+          <div className="relative">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <ShoppingBag className="h-4 w-4" />
+              {t("Cart")}
+            </Button>
+            {cartItems.length > 0 && (
+              <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                {cartItems.length}
+              </div>
+            )}
+          </div>
           <Button
             variant="outline"
             size="sm"
@@ -208,7 +391,7 @@ export const SaleDashboard = () => {
             <ShoppingCart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{todayStats.total_sales}</div>
+            <div className="text-2xl font-bold">{todayStats.total_sales || 0}</div>
             <p className="text-xs text-muted-foreground">{t("Total transactions")}</p>
           </CardContent>
         </Card>
@@ -220,7 +403,7 @@ export const SaleDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              OMR {parseFloat(todayStats.total_revenue).toFixed(2)}
+              OMR {parseFloat(todayStats.total_revenue || 0).toFixed(2)}
             </div>
             <p className="text-xs text-muted-foreground">{t("Today's earnings")}</p>
           </CardContent>
@@ -232,7 +415,7 @@ export const SaleDashboard = () => {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{todayStats.total_products_sold}</div>
+            <div className="text-2xl font-bold text-blue-600">{todayStats.total_products_sold || 0}</div>
             <p className="text-xs text-muted-foreground">{t("Items today")}</p>
           </CardContent>
         </Card>
@@ -376,11 +559,24 @@ export const SaleDashboard = () => {
                               </div>
                             </div>
                           </div>
-                          {selectedProduct?.id === product.id && (
-                            <div className="absolute top-2 right-2">
+                          <div className="absolute top-2 right-2 flex gap-1">
+                            {selectedProduct?.id === product.id && (
                               <CheckCircle className="h-5 w-5 text-green-600" />
-                            </div>
-                          )}
+                            )}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedProduct(product);
+                                setQuantity(1);
+                                addToCart();
+                              }}
+                              className="text-xs p-1 h-6"
+                            >
+                              <Plus className="h-3 w-3" />
+                            </Button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -396,108 +592,249 @@ export const SaleDashboard = () => {
           </Card>
         </div>
 
-        {/* Sale Form */}
+        {/* Shopping Cart */}
         <div className="lg:col-span-1">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ShoppingCart className="h-5 w-5" />
-                {t("Sale Details")}
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <ShoppingBag className="h-5 w-5" />
+                  {t("Shopping Cart")}
+                </CardTitle>
+                {cartItems.length > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={clearCart}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {selectedProduct ? (
+              {cartItems.length > 0 ? (
                 <>
-                  {/* Selected Product Info */}
-                  <div className="p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 overflow-hidden rounded bg-gray-200">
-                        {selectedProduct.image ? (
-                          <ImagePreview
-                            src={`${import.meta.env.VITE_BASE_URL}${selectedProduct.image}`}
-                            alt={selectedProduct.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Package className="h-6 w-6 text-gray-400" />
+                  {/* Cart Items */}
+                  <div className="space-y-3 max-h-64 overflow-y-auto">
+                    {cartItems.map((item) => (
+                      <div key={item.product_id} className="p-3 border rounded-lg">
+                        <div className="flex items-start gap-3">
+                          <div className="w-12 h-12 overflow-hidden rounded bg-gray-200 flex-shrink-0">
+                            {item.product.image ? (
+                              <ImagePreview
+                                src={`${import.meta.env.VITE_BASE_URL}${item.product.image}`}
+                                alt={item.product.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Package className="h-6 w-6 text-gray-400" />
+                              </div>
+                            )}
                           </div>
-                        )}
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-sm truncate">{item.product.name}</h4>
+                            <p className="text-xs text-muted-foreground">
+                              OMR {item.price} each
+                            </p>
+                            <div className="flex items-center justify-between mt-2">
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => updateCartItemQuantity(item.product_id, item.quantity - 1)}
+                                  className="h-6 w-6 p-0"
+                                >
+                                  <Minus className="h-3 w-3" />
+                                </Button>
+                                <span className="text-sm font-medium w-6 text-center">{item.quantity}</span>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => updateCartItemQuantity(item.product_id, item.quantity + 1)}
+                                  className="h-6 w-6 p-0"
+                                >
+                                  <Plus className="h-3 w-3" />
+                                </Button>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-bold text-green-600">
+                                  OMR {item.total_amount}
+                                </span>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => removeFromCart(item.product_id)}
+                                  className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium truncate">{selectedProduct.name}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {selectedCategory?.name}
+                    ))}
+                  </div>
+
+                  {/* Quick Add Selected Product */}
+                  {selectedProduct && (
+                    <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 overflow-hidden rounded bg-gray-200">
+                          {selectedProduct.image ? (
+                            <ImagePreview
+                              src={`${import.meta.env.VITE_BASE_URL}${selectedProduct.image}`}
+                              alt={selectedProduct.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <Package className="h-4 w-4 text-gray-400 m-2" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h5 className="text-sm font-medium truncate">{selectedProduct.name}</h5>
+                          <p className="text-xs text-muted-foreground">OMR {selectedProduct.price}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleQuantityChange(quantity - 1)}
+                              disabled={quantity <= 1}
+                              className="h-6 w-6 p-0"
+                            >
+                              <Minus className="h-3 w-3" />
+                            </Button>
+                            <span className="text-sm w-6 text-center">{quantity}</span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleQuantityChange(quantity + 1)}
+                              className="h-6 w-6 p-0"
+                            >
+                              <Plus className="h-3 w-3" />
+                            </Button>
+                          </div>
+                          <Button
+                            size="sm"
+                            onClick={addToCart}
+                            className="text-xs"
+                          >
+                            {t("Add")}
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Payment Method */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">{t("Payment Method")}</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      {[
+                        { value: 'cash', label: t("Cash"), icon: Banknote },
+                        { value: 'credit_card', label: t("Credit Card"), icon: CreditCard },
+                        { value: 'bank_transfer', label: t("Bank Transfer"), icon: FileText },
+                      ].map((method) => {
+                        const IconComponent = method.icon;
+                        return (
+                          <button
+                            key={method.value}
+                            type="button"
+                            className={`flex items-center justify-center p-3 border rounded-lg transition-colors ${
+                              paymentMethod === method.value 
+                                ? 'bg-primary text-primary-foreground border-primary' 
+                                : 'border-input hover:bg-accent'
+                            }`}
+                            onClick={() => setPaymentMethod(method.value)}
+                          >
+                            <IconComponent className="h-4 w-4 mr-2" />
+                            {method.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Proof Upload for Bank Transfer & Credit Card */}
+                  {['bank_transfer', 'credit_card'].includes(paymentMethod) && (
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">{t("Payment Proof")} *</label>
+                      <div className="flex gap-2">
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          onClick={startCamera}
+                          className="flex-1"
+                        >
+                          <Camera className="h-4 w-4 mr-2" />
+                          {t("Take Photo")}
+                        </Button>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          onClick={() => fileInputRef.current?.click()}
+                          className="flex-1"
+                        >
+                          <Upload className="h-4 w-4 mr-2" />
+                          {t("Upload File")}
+                        </Button>
+                      </div>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                      />
+                      {proofImage && (
+                        <p className="text-sm text-green-600">
+                          ✓ {t("Image ready")}: {proofImage.name}
                         </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Camera View */}
+                  {isCapturingProof && (
+                    <div className="space-y-2">
+                      <video
+                        ref={videoRef}
+                        autoPlay
+                        playsInline
+                        className="w-full h-48 bg-black rounded-lg"
+                      />
+                      <div className="flex gap-2">
+                        <Button type="button" onClick={captureImage} className="flex-1">
+                          {t("Capture")}
+                        </Button>
+                        <Button type="button" variant="outline" onClick={stopCamera}>
+                          {t("Cancel")}
+                        </Button>
                       </div>
                     </div>
-                  </div>
+                  )}
 
-                  {/* Quantity Control */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">{t("Quantity")}</label>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleQuantityChange(quantity - 1)}
-                        disabled={quantity <= 1}
-                      >
-                        <Minus className="h-4 w-4" />
-                      </Button>
-                      <Input
-                        type="number"
-                        value={quantity}
-                        onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 1)}
-                        className="text-center w-20"
-                        min="1"
-                      />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleQuantityChange(quantity + 1)}
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
+                  {/* Cart Summary */}
+                  <div className="space-y-2 pt-2 border-t">
+                    <div className="flex justify-between text-sm">
+                      <span>{t("Total Items")}:</span>
+                      <span className="font-medium">{getCartItemsCount()}</span>
+                    </div>
+                    <div className="flex justify-between text-lg font-bold">
+                      <span>{t("Total Amount")}:</span>
+                      <span className="text-green-600">OMR {getCartTotal()}</span>
                     </div>
                   </div>
 
-                  {/* Sale Price */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">{t("Sale Price")}</label>
-                    <div className="relative">
-                      <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        type="number"
-                        step="0.01"
-                        value={salePrice}
-                        onChange={handlePriceChange}
-                        className="pl-9"
-                        placeholder="0.00"
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {t("Original price")}: OMR {selectedProduct.price}
-                    </p>
-                  </div>
-
-                  {/* Total Amount */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">{t("Total Amount")}</label>
-                    <div className="p-3 bg-green-50 rounded-lg border border-green-200">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-green-700">{quantity} × OMR {salePrice}</span>
-                        <span className="text-lg font-bold text-green-700">
-                          OMR {totalAmount}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Submit Button */}
+                  {/* Complete Sale Button */}
                   <Button
                     onClick={handleSaleSubmit}
-                    disabled={processing || !selectedProduct || quantity < 1 || salePrice <= 0}
+                    disabled={processing || cartItems.length === 0}
                     className="w-full"
                   >
                     {processing ? (
@@ -508,22 +845,25 @@ export const SaleDashboard = () => {
                     ) : (
                       <>
                         <ShoppingCart className="h-4 w-4 mr-2" />
-                        {t("Complete Sale")}
+                        {t("Complete Sale")} - OMR {getCartTotal()}
                       </>
                     )}
                   </Button>
                 </>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
-                  <ShoppingCart className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                  <p>{t("Select a product to continue")}</p>
-                  <p className="text-sm">{t("Choose a category and product above")}</p>
+                  <ShoppingBag className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p>{t("Your cart is empty")}</p>
+                  <p className="text-sm">{t("Add products to your cart to continue")}</p>
                 </div>
               )}
             </CardContent>
           </Card>
         </div>
       </div>
+
+      {/* Hidden canvas for image capture */}
+      <canvas ref={canvasRef} className="hidden" />
     </div>
   );
 }; 

@@ -76,6 +76,18 @@ const MarkAsSettledDialog = ({
                 <span className="font-medium">{report.sales_manager?.name}</span>
               </div>
               <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">{t("Total Sales")}:</span>
+                <span className="font-medium">{report.total_transactions || 0}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">{t("Games")}:</span>
+                <span className="font-medium">{report.total_game_sales || 0}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">{t("Products")}:</span>
+                <span className="font-medium">{report.total_product_sales || 0}</span>
+              </div>
+              <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">{t("Status")}:</span>
                 <span className="font-medium text-orange-600">{t("Submitted")}</span>
               </div>

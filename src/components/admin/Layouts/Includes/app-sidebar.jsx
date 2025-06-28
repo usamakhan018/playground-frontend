@@ -1,23 +1,19 @@
 import * as React from "react";
 import {
     BarChart,
-    Bell,
     BookImageIcon,
     Building,
     DoorOpen,
-    GalleryVerticalEnd,
     Gamepad2,
     Home,
-    HomeIcon,
+    Hotel,
     Package,
     ReceiptIcon,
-    Settings,
     ShoppingCart,
     Ticket,
     User2Icon,
     UserCheck,
     Users,
-    Wrench,
 } from "lucide-react";
 
 import {
@@ -30,13 +26,12 @@ import {
 } from "@/components/ui/sidebar";
 import { SiderBarHeader } from "./sidebar-header";
 import { useSelector } from "react-redux";
-import { can, hasRole } from "@/utils/helpers";
+import { can } from "@/utils/helpers";
 import { useTranslation } from "react-i18next";
 import { SearchForm } from "./search-form";
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
 import { useLanguage } from "@/contexts/LanguageProvider";
-import { NavLink } from "react-router-dom";
 
 export function AppSidebar({ ...props }) {
     const user = useSelector((store) => store.auth.user);
@@ -176,6 +171,12 @@ export function AppSidebar({ ...props }) {
                         path: "/expenses",
                         icon: ReceiptIcon,
                         permission: can("Expense access"),
+                    },
+                    {
+                        label: t("Hotel Expenses"),
+                        path: "/hotel-expenses",
+                        icon: Hotel,
+                        permission: can("Hotel Expense access"),
                     },
                     {
                         label: t("Expense Categories"),

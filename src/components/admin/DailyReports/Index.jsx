@@ -448,9 +448,14 @@ const DailyReportsIndex = () => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-1">
-                      <FileText className="h-3 w-3 text-muted-foreground" />
-                      <span className="font-medium">{report.total_transactions}</span>
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-1">
+                        <FileText className="h-3 w-3 text-muted-foreground" />
+                        <span className="font-medium">{report.total_transactions}</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {t("Games")}: {report.total_game_sales || 0} | {t("Products")}: {report.total_product_sales || 0}
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell>
