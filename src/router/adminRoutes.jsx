@@ -21,6 +21,7 @@ import DailyReportsIndex from "@/components/admin/DailyReports/Index"
 import SalaryIndex from "@/components/admin/Salaries/Index"
 import { SaleDashboard } from "@/components/admin/SaleDashboard"
 import ProductSalesIndex from "@/components/admin/Sales/Index"
+import TicketBatchesIndex from "@/components/admin/Tickets/TicketBatches"
 
 const adminRoutes = [
     {
@@ -102,6 +103,11 @@ const adminRoutes = [
         name: 'tickets',
         path: 'tickets',
         element: <TicketIndex />
+    },
+    {
+        name: 'ticketBatches',
+        path: 'ticket-batches',
+        element: <TicketBatchesIndex />
     },
     {
         name: 'charts',

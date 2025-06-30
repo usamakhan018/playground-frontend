@@ -70,7 +70,7 @@ const SalaryHistoryDialog = ({
   const handleDownloadSlip = async (salaryId) => {
     try {
       const response = await axiosClient.get(`salaries/slip/${salaryId}`);
-      if (response.data.data.slip_url) {
+      if (response.data.success && response.data.data.slip_url) {
         window.open(response.data.data.slip_url, '_blank');
       }
     } catch (error) {

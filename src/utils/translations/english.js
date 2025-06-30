@@ -872,6 +872,27 @@ const englishTranslations = {
     "No products found in this category": "No products found in this category",
     "Please select a product and enter valid quantity": "Please select a product and enter valid quantity",
     "Product sale recorded successfully!": "Product sale recorded successfully!",
+
+    // Export functionality
+    "Export Data": "Export Data",
+    "Export Sales": "Export Sales",
+    "Export Expenses": "Export Expenses",
+    "Export Combined": "Export Combined",
+    "Start Date": "Start Date",
+    "End Date": "End Date",
+    "Select User": "Select User",
+    "Select Game": "Select Game",
+    "Select Category": "Select Category",
+    "Select Payment Method": "Select Payment Method",
+    "Select Status": "Select Status",
+    "Select Expense Type": "Select Expense Type",
+    "Clear Filters": "Clear Filters",
+    "Exporting...": "Exporting...",
+    "Export completed successfully": "Export completed successfully",
+    "User": "User",
+    "Category": "Category",
+    "Payment Method": "Payment Method",
+    "Expense Type": "Expense Type",
 };
 
 export default englishTranslations;

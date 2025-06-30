@@ -10,26 +10,22 @@ function GeneratePDF() {
   const [isLoading, setIsLoading] = useState(false);
   const { t } = useTranslation();
 
-  const handlePrintTickets = async () => {
+  const handleDownloadTickets = async () => {
     setIsLoading(true);
 
     try {
-      // Open the tickets print page in a new window
-      const printUrl = `${axiosClient.defaults.baseURL}/tickets/unused-pdf`;
-      const printWindow = window.open(printUrl, '_blank', 'width=800,height=600');
+      // Create a download link for the PDF
+      const downloadUrl = `${axiosClient.defaults.baseURL}tickets/unused-pdf`;
       
-      if (printWindow) {
-        // Wait for the page to load, then trigger print
-        printWindow.addEventListener('load', () => {
-          setTimeout(() => {
-            printWindow.print();
-          }, 500);
-        });
-        
-        toast.success(t("Print page opened successfully"));
-      } else {
-        toast.error(t("Unable to open print window. Please allow popups."));
-      }
+      // Create a temporary link element to trigger download
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = 'unused_tickets.pdf';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast.success(t("PDF download started"));
     } catch (error) {
       handleError(error);
     } finally {
@@ -41,7 +37,7 @@ function GeneratePDF() {
     <Button 
       variant="secondary" 
       className="gap-2"
-      onClick={handlePrintTickets}
+      onClick={handleDownloadTickets}
       disabled={isLoading}
     >
       {isLoading ? (
@@ -49,7 +45,7 @@ function GeneratePDF() {
       ) : (
         <Printer className="w-4 h-4" />
       )}
-      <span>{t("Print Tickets")}</span>
+      <span>{t("Download PDF")}</span>
     </Button>
   );
 }

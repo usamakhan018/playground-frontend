@@ -30,11 +30,11 @@ import {
 import { useNavigate } from "react-router-dom";
 import Pagination from "@/components/Pagination";
 import { Input } from "@/components/ui/input";
-import { 
-  MoreHorizontal, 
-  RefreshCw, 
-  SearchIcon, 
-  Eye, 
+import {
+  MoreHorizontal,
+  RefreshCw,
+  SearchIcon,
+  Eye,
   DollarSign,
   FileText,
   Clock,
@@ -66,7 +66,7 @@ const DailyReportsIndex = () => {
   const [confirmNotes, setConfirmNotes] = useState("");
   const [settleNotes, setSettleNotes] = useState("");
   const [settleLoading, setSettleLoading] = useState(false);
-  const [currentFilters, setCurrentFilters] = useState({});
+  const [currentFilters, setCurrentFilters] = useState();
   const [stats, setStats] = useState({
     total_reports: 0,
     pending_reports: 0,
@@ -97,19 +97,27 @@ const DailyReportsIndex = () => {
     try {
       // Build query parameters
       const params = new URLSearchParams({ page: page.toString() });
-      
+
       // Add filters to params
       Object.entries(filters).forEach(([key, value]) => {
-        if (value && value !== '') {
-          params.append(key, value);
+        if (value) {
+          if (typeof value === 'object' && value.value !== undefined) {
+            // Handle react-select object
+            if (value.value !== '') {
+              params.append(key, value.value);
+            }
+          } else if (value !== '') {
+            // Handle regular value
+            params.append(key, value);
+          }
         }
       });
-      
+
       const response = await axiosClient.get(`daily-reports/all-reports?${params}`);
-      
+
       setLinks(response.data.data.links);
       setReports(response.data.data.data);
-      
+
       // Calculate stats from the API response
       const apiStats = {
         total_reports: response.data.data.total || response.data.data.data.length,
@@ -120,7 +128,7 @@ const DailyReportsIndex = () => {
           .reduce((sum, r) => sum + (r.total_revenue || 0), 0)
       };
       setStats(apiStats);
-      
+
     } catch (error) {
       handleError(error);
     } finally {
@@ -138,7 +146,7 @@ const DailyReportsIndex = () => {
       const response = await axiosClient.get(`daily-reports/pending?query=${search.trim()}`);
       setReports(response.data.data.data);
       setLinks([]);
-      
+
       // Update stats for search results
       const searchStats = {
         total_reports: response.data.data.data.length,
@@ -194,7 +202,7 @@ const DailyReportsIndex = () => {
       });
 
       // Refresh the reports list
-      fetchReports();
+      fetchReports(currentPage, currentFilters);
 
       // Close dialogs and reset form
       setShowConfirmDialog(false);
@@ -219,7 +227,7 @@ const DailyReportsIndex = () => {
       });
 
       // Refresh the reports list
-      fetchReports();
+      fetchReports(currentPage, currentFilters);
 
       // Close dialogs and reset form
       setShowSettleDialog(false);
@@ -237,7 +245,7 @@ const DailyReportsIndex = () => {
   const getStatusBadge = (status) => {
     const variants = {
       pending: 'pending',
-      submitted: 'submitted', 
+      submitted: 'submitted',
       settled: 'settled'
     };
 
@@ -483,7 +491,7 @@ const DailyReportsIndex = () => {
                           {t("Collect")}
                         </Button>
                       )}
-                      
+
                       {report.status === 'submitted' && settleAbility && (
                         <Button
                           size="sm"

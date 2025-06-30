@@ -852,6 +852,27 @@ const arabicTranslations = {
   "No products found in this category": "لا توجد منتجات في هذه الفئة",
   "Please select a product and enter valid quantity": "يرجى اختيار منتج وإدخال كمية صحيحة",
   "Product sale recorded successfully!": "تم تسجيل بيع المنتج بنجاح!",
+
+  // Export functionality
+  "Export Data": "تصدير البيانات",
+  "Export Sales": "تصدير المبيعات",
+  "Export Expenses": "تصدير المصروفات",
+  "Export Combined": "تصدير مجمع",
+  "Start Date": "تاريخ البداية",
+  "End Date": "تاريخ النهاية",
+  "Select User": "اختر المستخدم",
+  "Select Game": "اختر اللعبة",
+  "Select Category": "اختر الفئة",
+  "Select Payment Method": "اختر طريقة الدفع",
+  "Select Status": "اختر الحالة",
+  "Select Expense Type": "اختر نوع المصروف",
+  "Clear Filters": "مسح المرشحات",
+  "Exporting...": "جاري التصدير...",
+  "Export completed successfully": "تم التصدير بنجاح",
+  "User": "المستخدم",
+  "Category": "الفئة",
+  "Payment Method": "طريقة الدفع",
+  "Expense Type": "نوع المصروف",
 };
 
 export default arabicTranslations;

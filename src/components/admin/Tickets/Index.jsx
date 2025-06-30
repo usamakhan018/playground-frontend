@@ -116,15 +116,22 @@ const TicketIndex = () => {
       <div className="flex flex-col sm:flex-row justify-between gap-4">
         <div className="flex gap-2 flex-wrap">
           {createAbility && <Create onSubmitSuccess={fetchTickets} />}
-          <Link target="_blank" to={`${axiosClient.defaults.baseURL}tickets/unused-pdf`}>
-            <Button
-              variant="secondary"
-              className="gap-2"
-            >
-              <Printer className="w-4 h-4" />
-              <span>{t("Print Tickets")}</span>
-            </Button>
-          </Link>
+          <Button
+            variant="secondary"
+            className="gap-2"
+            onClick={() => {
+              const link = document.createElement('a');
+              link.href = `${axiosClient.defaults.baseURL}tickets/unused-pdf`;
+              link.download = 'unused_tickets.pdf';
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              toast.success(t("PDF download started"));
+            }}
+          >
+            <Printer className="w-4 h-4" />
+            <span>{t("Download PDF")}</span>
+          </Button>
           <ValidateTicket />
         </div>
 

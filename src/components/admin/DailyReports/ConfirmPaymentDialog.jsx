@@ -136,7 +136,7 @@ const SubmitReportDialog = ({
 
           {/* Payment Collection Form */}
           <div className="space-y-4">
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label htmlFor="amount" className="flex items-center gap-2">
                 <DollarSign className="h-4 w-4" />
                 {t("Amount Collected")} *
@@ -166,7 +166,7 @@ const SubmitReportDialog = ({
               <p className="text-xs text-muted-foreground">
                 {t("Maximum amount")}: ${parseFloat(report.total_revenue || report.actual_revenue)?.toFixed(2) || '0.00'}
               </p>
-            </div>
+            </div> */}
 
             <div className="space-y-2">
               <Label htmlFor="notes" className="flex items-center gap-2">

@@ -15,7 +15,6 @@ import {
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -30,103 +29,68 @@ import {
 import { useNavigate } from "react-router-dom";
 import Pagination from "@/components/Pagination";
 import { Input } from "@/components/ui/input";
+import { toast } from 'react-hot-toast';
 import { 
-  MoreHorizontal, 
   RefreshCw, 
   SearchIcon, 
   Eye, 
+  Download, 
+  MoreHorizontal,
   DollarSign,
-  FileText,
-  Calculator,
-  User,
   TrendingUp,
   TrendingDown,
-  Wallet,
-  Clock
+  Clock,
+  CheckCircle,
+  User,
+  Calculator,
+  History
 } from "lucide-react";
-import { can, handleError, humanizeText } from "@/utils/helpers";
+import { can, handleError } from "@/utils/helpers";
 import Loader from "@/components/Loader";
 import { useTranslation } from "react-i18next";
 import ProcessSalaryDialog from "../Users/ProcessSalaryDialog";
 import SalaryHistoryDialog from "./SalaryHistoryDialog";
-import { useDispatch } from "react-redux";
-import FilterComponent from "@/components/misc/FilterComponent";
 
 const SalaryIndex = () => {
   const [loading, setLoading] = useState(true);
   const [links, setLinks] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [salaryData, setSalaryData] = useState([]);
+  const [salaries, setSalaries] = useState([]);
   const [search, setSearch] = useState("");
   const [showRefresh, setShowRefresh] = useState(false);
-  const [selectedUserId, setSelectedUserId] = useState(null);
+  const [selectedSalary, setSelectedSalary] = useState(null);
   const [showProcessDialog, setShowProcessDialog] = useState(false);
   const [showHistoryDialog, setShowHistoryDialog] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [currentFilters, setCurrentFilters] = useState({ status: 'settled' });
   const [stats, setStats] = useState({
-    total_users: 0,
-    total_pending_salaries: 0,
-    total_submitted_reports: 0,
-    total_pending_amount: 0
+    total_records: 0,
+    total_paid: 0,
+    total_pending: 0,
+    total_cancelled: 0,
+    total_amount: 0,
   });
 
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { dispatch } = useDispatch();
 
   const accessAbility = can("Salary access");
-  const processAbility = can("Salary create");
-
-  const reportStatusOptions = [
-    { value: '', label: 'All Report Statuses' },
-    { value: 'pending', label: 'Pending Reports' },
-    { value: 'submitted', label: 'Submitted Reports' },
-    { value: 'settled', label: 'Ready for Salary Processing' },
-    { value: 'completed', label: 'Salary Already Processed' }
-  ];
+  const processAbility = can("Salary create"); // Assuming salary processing requires create permission
 
   useEffect(() => {
     if (!accessAbility) navigate("/unauthorized");
-    fetchSalaryData(currentPage, currentFilters);
-  }, [currentPage, currentFilters]);
+    fetchSalaries(currentPage);
+  }, [currentPage]);
 
-  const fetchSalaryData = async (page = 1, filters = {}) => {
+  const fetchSalaries = async (page = 1, query = "") => {
     setLoading(true);
     try {
-      // Build query parameters
-      const params = new URLSearchParams({ page: page.toString() });
-      
-      // Add filters to params
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value) {
-          if (typeof value === 'object' && value.value !== undefined) {
-            // Handle react-select object
-            if (value.value !== '') {
-              params.append(key, value.value);
-            }
-          } else if (value !== '') {
-            // Handle regular value
-            params.append(key, value);
-          }
-        }
-      });
-      
+      const params = new URLSearchParams({ page });
+      if (query) params.append("query", query);
       const response = await axiosClient.get(`salaries/index-data?${params}`);
-      
-      console.log('Salary data response:', response.data);
-      console.log('Salary data array:', response.data.data.data);
-      console.log('Stats:', response.data.data.stats);
-      
-      setSalaryData(response.data.data.data);
-      setStats(response.data.data.stats);
-      
-      // Set pagination links if available
-      if (response.data.data.pagination) {
-        const pagination = response.data.data.pagination;
-        setLinks(pagination.links || []);
+      if (response.data) {
+        setSalaries(response.data.data.data);
+        setStats(response.data.data.stats);
+        setLinks(response.data.data.pagination.links || []);
       }
-      
     } catch (error) {
       handleError(error);
     } finally {
@@ -134,73 +98,62 @@ const SalaryIndex = () => {
     }
   };
 
+  const formatCurrency = (amount) => `OMR ${parseFloat(amount || 0).toFixed(2)}`;
+
   const handleSearch = async (e) => {
     e.preventDefault();
     if (!search.trim()) return;
-
-    setLoading(true);
     setShowRefresh(true);
-    try {
-      const response = await axiosClient.get(`salaries/index-data?query=${search.trim()}`);
-      
-      console.log('Search response:', response.data);
-      
-      setSalaryData(response.data.data.data);
-      setStats(response.data.data.stats);
-      setLinks([]);
-    } catch (error) {
-      handleError(error);
-    } finally {
-      setLoading(false);
-    }
+    fetchSalaries(1, search.trim());
   };
 
   const handleRefresh = () => {
     setSearch("");
     setShowRefresh(false);
-    setCurrentFilters({ status: 'settled' });
-    fetchSalaryData(1, { status: 'settled' });
+    fetchSalaries();
   };
 
-  const handleFilter = (filters) => {
-    setCurrentFilters(filters);
-    setCurrentPage(1);
-  };
-
-  const handleResetFilters = () => {
-    setCurrentFilters({ status: 'settled' });
-    setCurrentPage(1);
-  };
-
-  const handleProcessSalary = (userId) => {
-    setSelectedUserId(userId);
+  const handleProcessSalary = (salary) => {
+    setSelectedSalary(salary);
     setShowProcessDialog(true);
   };
 
+  const handleViewHistory = (salary) => {
+    setSelectedSalary(salary);
+    setShowHistoryDialog(true);
+  };
+
   const handleSalaryProcessed = () => {
-    // Refresh the data after salary is processed
-    fetchSalaryData();
+    fetchSalaries(currentPage);
+    setShowProcessDialog(false);
+    toast.success(t("Salary processed successfully"));
   };
 
-  const formatCurrency = (amount) => {
-    return `OMR ${parseFloat(amount).toFixed(2)}`;
-  };
-
-  const getDaysAgo = (dateString) => {
-    if (!dateString) return t("Never");
-    
-    const date = new Date(dateString);
-    const today = new Date();
-    const diffTime = Math.abs(today - date);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 0) {
-      return t("Today");
-    } else if (diffDays === 1) {
-      return t("1 day ago");
-    } else {
-      return `${diffDays} ${t("days ago")}`;
+  const viewSlip = async (salaryId) => {
+    try {
+      const resp = await axiosClient.get(`salaries/slip/${salaryId}`);
+      if (resp.data.success) {
+        window.open(resp.data.data.slip_url, "_blank");
+      }
+    } catch (error) {
+      handleError(error);
     }
+  };
+
+  const getStatusBadge = (status) => {
+    const statusConfig = {
+      paid: { variant: "default", className: "bg-green-600 text-white", label: t("Paid") },
+      pending: { variant: "secondary", className: "bg-orange-500 text-white", label: t("Pending") },
+      cancelled: { variant: "destructive", className: "bg-red-600 text-white", label: t("Cancelled") },
+    };
+
+    const config = statusConfig[status] || statusConfig.pending;
+    
+    return (
+      <Badge className={`${config.className} text-xs`}>
+        {config.label}
+      </Badge>
+    );
   };
 
   return (
@@ -208,203 +161,157 @@ const SalaryIndex = () => {
       <PageTitle title={t("Salary Management")} />
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t("Total Users")}</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("Total Records")}</CardTitle>
             <User className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.total_users}</div>
+            <div className="text-2xl font-bold">{stats.total_records}</div>
             <p className="text-xs text-muted-foreground">
-              {t("With submitted reports")}
+              {t("All salary records")}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t("Pending Salaries")}</CardTitle>
-            <Clock className="h-4 w-4 text-orange-600" />
+            <CardTitle className="text-sm font-medium">{t("Total Paid")}</CardTitle>
+            <CheckCircle className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{stats.total_pending_salaries}</div>
+            <div className="text-2xl font-bold text-green-600">{formatCurrency(stats.total_paid)}</div>
             <p className="text-xs text-muted-foreground">
-              {t("Awaiting processing")}
+              {t("Successfully paid salaries")}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t("Total Reports")}</CardTitle>
-            <FileText className="h-4 w-4 text-blue-600" />
+            <CardTitle className="text-sm font-medium">{t("Total Pending")}</CardTitle>
+            <Clock className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{stats.total_submitted_reports}</div>
+            <div className="text-2xl font-bold text-orange-500">{formatCurrency(stats.total_pending)}</div>
             <p className="text-xs text-muted-foreground">
-              {t("Submitted reports")}
+              {t("Awaiting payment")}
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{t("Total Amount")}</CardTitle>
+            <DollarSign className="h-4 w-4 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">{formatCurrency(stats.total_amount)}</div>
+            <p className="text-xs text-muted-foreground">
+              {t("Overall total")}
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Filters */}
-      <FilterComponent
-        onFilter={handleFilter}
-        onReset={handleResetFilters}
-        statusOptions={reportStatusOptions.map(option => ({
-          value: option.value,
-          label: t(option.label)
-        }))}
-        defaultStatus="settled"
-        loading={loading}
-        showStatusFilter={true}
-      />
-
       {/* Search and Actions */}
       <div className="flex flex-col sm:flex-row justify-between gap-4">
-        <div className="text-sm text-muted-foreground">
-          {t("Manage employee salaries and payroll")} - {t("Shows reports based on salary processing status")}
-        </div>
-
+        <div className="flex-1" />
+        
         <form onSubmit={handleSearch} className="flex gap-2">
-          <div className="flex gap-2">
-            <Input
-              id="search"
-              name="search"
-              value={search}
-              placeholder={t("Search by employee name or email...")}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-64"
-            />
-            <Button type="submit" aria-label={t("Search")}>
-              <SearchIcon className="h-4 w-4" />
+          <Input
+            placeholder={t("Search by employee name or email...")}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-[300px]"
+          />
+          <Button type="submit" variant="outline" size="icon">
+            <SearchIcon className="h-4 w-4" />
+          </Button>
+          {showRefresh && (
+            <Button type="button" variant="outline" size="icon" onClick={handleRefresh}>
+              <RefreshCw className="h-4 w-4" />
             </Button>
-            {showRefresh && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleRefresh}
-                aria-label={t("Refresh")}
-              >
-                <RefreshCw className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
+          )}
         </form>
       </div>
 
       {/* Salary Table */}
-      <div className="bg-background">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[50px]">#</TableHead>
-              <TableHead>{t("Employee")}</TableHead>
-              <TableHead>{t("Reports Count")}</TableHead>
-              <TableHead>{t("Total Revenue")}</TableHead>
-              <TableHead>{t("Total Expenses")}</TableHead>
-              <TableHead>{t("Net Amount")}</TableHead>
-              <TableHead>{t("Salary Status")}</TableHead>
-              <TableHead>{t("Latest Report")}</TableHead>
-              <TableHead>{t("Last Salary")}</TableHead>
-              <TableHead className="text-right w-[150px]">{t("Actions")}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("Salary Records")}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={10} className="text-center h-24">
-                  <Loader />
-                </TableCell>
+                <TableHead>#</TableHead>
+                <TableHead>{t("Employee")}</TableHead>
+                <TableHead>{t("Salary Date")}</TableHead>
+                <TableHead>{t("Amounts")}</TableHead>
+                <TableHead>{t("Status")}</TableHead>
+                <TableHead>{t("Paid By")}</TableHead>
+                <TableHead className="text-right">{t("Actions")}</TableHead>
               </TableRow>
-            ) : salaryData.length > 0 ? (
-              salaryData.map((item, index) => (
-                <TableRow key={item.id}>
-                  <TableCell className="font-medium">{index + 1}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                        <User className="h-4 w-4 text-gray-600" />
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center h-24">
+                    <Loader />
+                  </TableCell>
+                </TableRow>
+              ) : salaries.length > 0 ? (
+                salaries.map((salary, idx) => (
+                  <TableRow key={salary.id}>
+                    <TableCell className="font-medium">
+                      {(currentPage - 1) * 15 + idx + 1}
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <div className="font-medium">{salary.user?.name}</div>
+                        <div className="text-xs text-muted-foreground">{salary.user?.email}</div>
                       </div>
-                      <div>
-                        <div className="font-medium">{item.user.name}</div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm">
+                        {new Date(salary.created_at).toLocaleDateString()}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1 text-green-600 font-medium">
+                          <TrendingUp className="h-3 w-3" />
+                          <span>{formatCurrency(salary.final_amount)}</span>
+                        </div>
                         <div className="text-xs text-muted-foreground">
-                          {item.user.email}
+                          {t("Gross")}: {formatCurrency(salary.gross_amount)} | 
+                          {t("Expenses")}: {formatCurrency(salary.total_expenses)}
+                        </div>
+                        {salary.settled_amount !== undefined && (
+                          <div className="text-xs text-muted-foreground">
+                            {t("Settled")}: {formatCurrency(salary.settled_amount)} | 
+                            {t("Pending")}: {formatCurrency(salary.pending_amount)} | 
+                            {t("Submitted")}: {formatCurrency(salary.submitted_amount)}
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {getStatusBadge(salary.status)}
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <div className="text-sm font-medium">{salary.paid_by_user?.name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {salary.paid_at ? new Date(salary.paid_at).toLocaleDateString() : t("Not paid")}
                         </div>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      <FileText className="h-3 w-3 text-blue-600" />
-                      <span className="font-medium text-blue-600">{item.submitted_reports_count}</span>
-                      <span className="text-xs text-muted-foreground">{t("reports")}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-1 font-medium text-green-600">
-                        <TrendingUp className="h-3 w-3" />
-                        <span>{formatCurrency(item.total_revenue)}</span>
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {t("Games")}: {formatCurrency(item.game_revenue || 0)} | {t("Products")}: {formatCurrency(item.product_revenue || 0)}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1 font-medium text-red-600">
-                      <TrendingDown className="h-3 w-3" />
-                      <span>{formatCurrency(item.total_expenses)}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className={`flex items-center gap-1 font-bold ${
-                      item.net_amount >= 0 ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      <DollarSign className="h-3 w-3" />
-                      <span>{formatCurrency(item.net_amount)}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={
-                      item.salary_status === 'paid' ? 'success' : 
-                      item.salary_status === 'waiting' ? 'warning' : 
-                      item.salary_status === 'processing' ? 'warning' : 
-                      'destructive'
-                    }>
-                      {t(humanizeText(item.salary_status) || 'pending')}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm">
-                      {item.latest_report_date ? new Date(item.latest_report_date).toLocaleDateString() : t("No reports")}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-xs text-muted-foreground">
-                      {getDaysAgo(item.last_salary_date)}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      {processAbility && item.salary_status !== 'paid' && (
-                        <Button
-                          size="sm"
-          
-                          onClick={() => handleProcessSalary(item.user.id)}
-                          className="bg-green-600 hover:bg-green-700"
-                        >
-                          <Calculator className="mr-1 h-3 w-3" />
-                          {t("Process")}
-                        </Button>
-                      )}
-                      
+                    </TableCell>
+                    <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="outline" className="h-8 w-8 p-0">
+                          <Button variant="ghost" className="h-8 w-8 p-0">
                             <span className="sr-only">{t("Open menu")}</span>
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
@@ -412,52 +319,72 @@ const SalaryIndex = () => {
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>{t("Actions")}</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => {
-                            setSelectedUser(item.user.id);
-                            setShowHistoryDialog(true);
-                          }}>
-                            <Eye className="mr-2 h-4 w-4" />
-                            {t("Salary History")}
+                          
+                          {processAbility && salary.status === "pending" && (
+                            <DropdownMenuItem onClick={() => handleProcessSalary(salary)}>
+                              <Calculator className="mr-2 h-4 w-4" />
+                              {t("Process Salary")}
+                            </DropdownMenuItem>
+                          )}
+                          
+                          <DropdownMenuItem onClick={() => handleViewHistory(salary)}>
+                            <History className="mr-2 h-4 w-4" />
+                            {t("View History")}
                           </DropdownMenuItem>
+                          
+                          {salary.slip_path && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => viewSlip(salary.id)}>
+                                <Download className="mr-2 h-4 w-4" />
+                                {t("Download Slip")}
+                              </DropdownMenuItem>
+                            </>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
-                    </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center h-24">
+                    <NoRecordFound />
                   </TableCell>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={10} className="text-center h-24">
-                  <NoRecordFound />
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-        {links.length > 0 && (
-          <Pagination
-            links={links}
-            currentPage={currentPage}
-            onPageChange={setCurrentPage}
-            className="p-4"
-          />
-        )}
-      </div>
+              )}
+            </TableBody>
+          </Table>
+          
+          {links.length > 0 && (
+            <div className="mt-4">
+              <Pagination 
+                links={links} 
+                currentPage={currentPage} 
+                onPageChange={setCurrentPage} 
+              />
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-      {/* Process Salary Dialog */}
-      <ProcessSalaryDialog
-        open={showProcessDialog}
-        onOpenChange={setShowProcessDialog}
-        userId={selectedUserId}
-        onSalaryProcessed={handleSalaryProcessed}
-      />
+      {/* Dialogs */}
+      {showProcessDialog && selectedSalary && (
+        <ProcessSalaryDialog
+          open={showProcessDialog}
+          onOpenChange={setShowProcessDialog}
+          userId={selectedSalary.user?.id}
+          onSalaryProcessed={handleSalaryProcessed}
+        />
+      )}
 
-      {/* Salary History Dialog */}
-      <SalaryHistoryDialog
-        open={showHistoryDialog}
-        onOpenChange={setShowHistoryDialog}
-        userId={selectedUser}
-      />
+      {showHistoryDialog && selectedSalary && (
+        <SalaryHistoryDialog
+          open={showHistoryDialog}
+          onOpenChange={setShowHistoryDialog}
+          userId={selectedSalary.user?.id}
+        />
+      )}
     </div>
   );
 };

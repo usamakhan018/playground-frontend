@@ -16,12 +16,14 @@ import {
   DollarSign,
   Gamepad2,
   RefreshCw,
-  Target
+  Target,
+  Download
 } from "lucide-react";
 import Loader from "../Loader";
 import StartGameDialog from "./Sales/StartGameDialog";
 import ActiveGameCard from "./Sales/ActiveGameCard";
 import CompletedGameCard from "./Sales/CompletedGameCard";
+import ExportDialog from "./Analytics/ExportDialog";
 
 export const Analytics = () => {
   const { t } = useTranslation();
@@ -43,6 +45,7 @@ export const Analytics = () => {
   const [activeGames, setActiveGames] = useState([]);
   const [completedGames, setCompletedGames] = useState([]);
   const [startGameDialogOpen, setStartGameDialogOpen] = useState(false);
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   // Auto-refresh interval for dashboard data
@@ -175,6 +178,15 @@ export const Analytics = () => {
             {refreshing ? t("Refreshing...") : t("Refresh")}
           </Button>
           <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setExportDialogOpen(true)}
+            className="flex items-center gap-2"
+          >
+            <Download className="h-4 w-4" />
+            {t("Export Data")}
+          </Button>
+          <Button
             onClick={() => setStartGameDialogOpen(true)}
             className="flex items-center gap-2"
           >
@@ -285,6 +297,12 @@ export const Analytics = () => {
         onSaleCreated={() => {
           fetchDashboardData();
         }}
+      />
+
+      {/* Export Dialog */}
+      <ExportDialog
+        open={exportDialogOpen}
+        onOpenChange={setExportDialogOpen}
       />
     </div>
   );

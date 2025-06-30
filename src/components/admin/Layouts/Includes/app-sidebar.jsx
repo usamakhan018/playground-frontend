@@ -106,9 +106,15 @@ export function AppSidebar({ ...props }) {
                         icon: BookImageIcon,
                         permission: can("Game Asset access"),
                     },
+                    // {
+                    //     label: t("Tickets"),
+                    //     path: "/tickets",
+                    //     icon: Ticket,
+                    //     permission: can("Ticket access"),
+                    // },
                     {
-                        label: t("Tickets"),
-                        path: "/tickets",
+                        label: t("Ticket Batches"),
+                        path: "/ticket-batches",
                         icon: Ticket,
                         permission: can("Ticket access"),
                     },
