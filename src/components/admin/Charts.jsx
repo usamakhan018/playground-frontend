@@ -25,9 +25,11 @@ function Charts() {
         salesOverview: [],
         revenueTrend: [],
         gamePopularity: [],
-        userActivity: [],
+        productPopularity: [],
+        businessSplit: [],
+        expenseOverview: [],
         financialOverview: [],
-        ticketStatus: []
+        systemStatus: []
     });
 
     useEffect(() => {
@@ -43,9 +45,11 @@ function Charts() {
                 salesOverview: response.data.data.salesOverview || [],
                 revenueTrend: response.data.data.revenueTrend || [],
                 gamePopularity: response.data.data.gamePopularity || [],
-                userActivity: response.data.data.userActivity || [],
+                productPopularity: response.data.data.productPopularity || [],
+                businessSplit: response.data.data.businessSplit || [],
+                expenseOverview: response.data.data.expenseOverview || [],
                 financialOverview: response.data.data.financialOverview || [],
-                ticketStatus: response.data.data.ticketStatus || []
+                systemStatus: response.data.data.systemStatus || []
             });
         } catch (error) {
             console.error('Error fetching charts data:', error);
@@ -58,8 +62,6 @@ function Charts() {
     const handleRefresh = () => {
         fetchChartsData();
     };
-
-
 
     if (loading) {
         return (
@@ -90,11 +92,11 @@ function Charts() {
 
             {/* Charts Grid */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {/* Sales Overview Chart */}
+            {/* Sales Overview Chart - Playground vs Restaurant */}
             <Card>
                 <CardHeader>
                     <CardTitle>{t('Sales Overview')}</CardTitle>
-                    <CardDescription>{t('Sales performance across different periods')}</CardDescription>
+                    <CardDescription>{t('Playground vs Restaurant sales comparison')}</CardDescription>
                 </CardHeader>
                 <CardContent className="h-[300px]">
                     <BarChartComponent data={chartData.salesOverview} />
@@ -105,10 +107,21 @@ function Charts() {
             <Card>
                 <CardHeader>
                     <CardTitle>{t('Revenue Trend')}</CardTitle>
-                    <CardDescription>{t('Daily revenue over the last week')}</CardDescription>
+                    <CardDescription>{t('Daily revenue breakdown for the last week')}</CardDescription>
                 </CardHeader>
                 <CardContent className="h-[300px]">
                     <LineChartComponent data={chartData.revenueTrend} />
+                </CardContent>
+            </Card>
+
+            {/* Business Split Chart */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>{t('Business Split')}</CardTitle>
+                    <CardDescription>{t('Revenue distribution between playground and restaurant')}</CardDescription>
+                </CardHeader>
+                <CardContent className="h-[300px]">
+                    <PieChartComponent data={chartData.businessSplit} />
                 </CardContent>
             </Card>
 
@@ -123,14 +136,25 @@ function Charts() {
                 </CardContent>
             </Card>
 
-            {/* User Activity Chart */}
+            {/* Product Popularity Chart */}
             <Card>
                 <CardHeader>
-                    <CardTitle>{t('User Activity')}</CardTitle>
-                    <CardDescription>{t('User engagement and growth metrics')}</CardDescription>
+                    <CardTitle>{t('Product Popularity')}</CardTitle>
+                    <CardDescription>{t('Best selling products by sales count')}</CardDescription>
                 </CardHeader>
                 <CardContent className="h-[300px]">
-                    <PieChartComponent data={chartData.userActivity} />
+                    <BarChartComponent data={chartData.productPopularity} />
+                </CardContent>
+            </Card>
+
+            {/* Expense Overview Chart */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>{t('Expense Overview')}</CardTitle>
+                    <CardDescription>{t('General vs Hotel expenses over time')}</CardDescription>
+                </CardHeader>
+                <CardContent className="h-[300px]">
+                    <LineChartComponent data={chartData.expenseOverview} />
                 </CardContent>
             </Card>
 
@@ -138,21 +162,21 @@ function Charts() {
             <Card>
                 <CardHeader>
                     <CardTitle>{t('Financial Overview')}</CardTitle>
-                    <CardDescription>{t('Revenue vs Expenses comparison')}</CardDescription>
+                    <CardDescription>{t('Complete revenue and expense breakdown')}</CardDescription>
                 </CardHeader>
                 <CardContent className="h-[300px]">
                     <LineChartComponent data={chartData.financialOverview} />
                 </CardContent>
             </Card>
 
-            {/* Ticket Status Chart */}
+            {/* System Status Chart */}
             <Card>
                 <CardHeader>
-                    <CardTitle>{t('Ticket Status')}</CardTitle>
-                    <CardDescription>{t('Ticket usage and availability metrics')}</CardDescription>
+                    <CardTitle>{t('System Status')}</CardTitle>
+                    <CardDescription>{t('Key system metrics and operational status')}</CardDescription>
                 </CardHeader>
                 <CardContent className="h-[300px]">
-                    <GaugeComponent data={chartData.ticketStatus} />
+                    <GaugeComponent data={chartData.systemStatus} />
                 </CardContent>
             </Card>
             </div>

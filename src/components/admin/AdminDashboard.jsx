@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import PageTitle from "./Layouts/PageTitle";
 import { useTranslation } from "react-i18next";
-import { 
-    Home, 
-    RefreshCcw, 
-    Users, 
-    ShoppingCart, 
+import {
+    Home,
+    RefreshCcw,
+    Users,
+    ShoppingCart,
     GamepadIcon,
     Ticket,
     DollarSign,
@@ -24,7 +24,10 @@ import {
     Banknote,
     ClipboardList,
     Wallet,
-    BarChart3
+    BarChart3,
+    UtensilsCrossed,
+    Hotel,
+    Store
 } from "lucide-react";
 import { handleError } from "@/utils/helpers";
 import axiosClient from "@/axios";
@@ -55,33 +58,33 @@ const AdminDashboard = () => {
         }
     }
 
-    if (loading || !stats) {  
+    if (loading || !stats) {
         return <Loader />
     }
 
-    // Sales & Revenue Overview
-    const salesOverview = [
+    // PLAYGROUND Sales & Revenue Overview
+    const playgroundOverview = [
         {
-            title: t("Sales Today"),
-            count: stats.sales_today || 0,
-            icon: ShoppingCart,
+            title: t("Playground Sales Today"),
+            count: stats.playground_sales_today || 0,
+            icon: Gamepad2,
             bgColor: "bg-blue-100 dark:bg-blue-900",
             textColor: "text-blue-800 dark:text-blue-100",
             iconColor: "text-blue-600 dark:text-blue-400",
-            description: t("Total sales made today")
+            description: t("Game sales made today")
         },
         {
-            title: t("Revenue Today"),
-            count: `$${(stats.revenue_today || 0).toLocaleString()}`,
+            title: t("Playground Revenue Today"),
+            count: `OMR ${(stats.playground_revenue_today || 0).toLocaleString()}`,
             icon: DollarSign,
             bgColor: "bg-emerald-100 dark:bg-emerald-900",
             textColor: "text-emerald-800 dark:text-emerald-100",
             iconColor: "text-emerald-600 dark:text-emerald-400",
-            description: t("Total revenue generated today")
+            description: t("Game revenue generated today")
         },
         {
             title: t("Active Games"),
-            count: stats.active_sales_today || 0,
+            count: stats.active_playground_sales_today || 0,
             icon: GamepadIcon,
             bgColor: "bg-orange-100 dark:bg-orange-900",
             textColor: "text-orange-800 dark:text-orange-100",
@@ -89,48 +92,88 @@ const AdminDashboard = () => {
             description: t("Games currently being played")
         },
         {
-            title: t("Net Profit Today"),
-            count: `$${(stats.net_profit_today || 0).toLocaleString()}`,
-            icon: stats.net_profit_today >= 0 ? TrendingUp : TrendingDown,
-            bgColor: stats.net_profit_today >= 0 ? "bg-green-100 dark:bg-green-900" : "bg-red-100 dark:bg-red-900",
-            textColor: stats.net_profit_today >= 0 ? "text-green-800 dark:text-green-100" : "text-red-800 dark:text-red-100",
-            iconColor: stats.net_profit_today >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400",
-            description: t("Today's profit after expenses")
+            title: t("Playground Profit Today"),
+            count: `OMR ${(stats.playground_profit_today || 0).toLocaleString()}`,
+            icon: stats.playground_profit_today >= 0 ? TrendingUp : TrendingDown,
+            bgColor: stats.playground_profit_today >= 0 ? "bg-green-100 dark:bg-green-900" : "bg-red-100 dark:bg-red-900",
+            textColor: stats.playground_profit_today >= 0 ? "text-green-800 dark:text-green-100" : "text-red-800 dark:text-red-100",
+            iconColor: stats.playground_profit_today >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400",
+            description: t("Today's playground profit after expenses")
         }
     ];
 
-    // Monthly Overview  
-    const monthlyOverview = [
+    // RESTAURANT Sales & Revenue Overview
+    const restaurantOverview = [
         {
-            title: t("Monthly Sales"),
-            count: stats.sales_this_month || 0,
-            icon: BarChart3,
+            title: t("Restaurant Sales Today"),
+            count: stats.restaurant_sales_today || 0,
+            icon: UtensilsCrossed,
             bgColor: "bg-purple-100 dark:bg-purple-900",
             textColor: "text-purple-800 dark:text-purple-100",
-            iconColor: "text-purple-600 dark:text-purple-400"
+            iconColor: "text-purple-600 dark:text-purple-400",
+            description: t("Product sales made today")
         },
         {
-            title: t("Monthly Revenue"),
-            count: `$${(stats.revenue_this_month || 0).toLocaleString()}`,
+            title: t("Restaurant Revenue Today"),
+            count: `OMR ${(stats.restaurant_revenue_today || 0).toLocaleString()}`,
+            icon: Banknote,
+            bgColor: "bg-cyan-100 dark:bg-cyan-900",
+            textColor: "text-cyan-800 dark:text-cyan-100",
+            iconColor: "text-cyan-600 dark:text-cyan-400",
+            description: t("Product revenue generated today")
+        },
+        {
+            title: t("Hotel Expenses Today"),
+            count: `OMR ${(stats.hotel_expenses_today || 0).toLocaleString()}`,
+            icon: Hotel,
+            bgColor: "bg-rose-100 dark:bg-rose-900",
+            textColor: "text-rose-800 dark:text-rose-100",
+            iconColor: "text-rose-600 dark:text-rose-400",
+            description: t("Hotel related expenses today")
+        },
+        {
+            title: t("Restaurant Profit Today"),
+            count: `OMR ${(stats.restaurant_profit_today || 0).toLocaleString()}`,
+            icon: stats.restaurant_profit_today >= 0 ? TrendingUp : TrendingDown,
+            bgColor: stats.restaurant_profit_today >= 0 ? "bg-green-100 dark:bg-green-900" : "bg-red-100 dark:bg-red-900",
+            textColor: stats.restaurant_profit_today >= 0 ? "text-green-800 dark:text-green-100" : "text-red-800 dark:text-red-100",
+            iconColor: stats.restaurant_profit_today >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400",
+            description: t("Today's restaurant profit after expenses")
+        }
+    ];
+
+    // Combined Monthly Overview  
+    const monthlyOverview = [
+        {
+            title: t("Total Sales This Month"),
+            count: stats.sales_this_month || 0,
+            icon: BarChart3,
+            bgColor: "bg-indigo-100 dark:bg-indigo-900",
+            textColor: "text-indigo-800 dark:text-indigo-100",
+            iconColor: "text-indigo-600 dark:text-indigo-400"
+        },
+        {
+            title: t("Total Revenue This Month"),
+            count: `OMR ${(stats.revenue_this_month || 0).toLocaleString()}`,
             icon: Banknote,
             bgColor: "bg-cyan-100 dark:bg-cyan-900",
             textColor: "text-cyan-800 dark:text-cyan-100",
             iconColor: "text-cyan-600 dark:text-cyan-400"
         },
         {
-            title: t("Monthly Expenses"),
-            count: `$${(stats.expenses_this_month || 0).toLocaleString()}`,
+            title: t("Total Expenses This Month"),
+            count: `OMR ${(stats.expenses_this_month || 0).toLocaleString()}`,
             icon: Receipt,
             bgColor: "bg-red-100 dark:bg-red-900",
             textColor: "text-red-800 dark:text-red-100",
             iconColor: "text-red-600 dark:text-red-400"
         },
         {
-            title: t("Monthly Profit"),
-            count: `$${(stats.net_profit_this_month || 0).toLocaleString()}`,
+            title: t("Net Profit This Month"),
+            count: `OMR ${(stats.net_profit_this_month || 0).toLocaleString()}`,
             icon: stats.net_profit_this_month >= 0 ? TrendingUp : TrendingDown,
             bgColor: stats.net_profit_this_month >= 0 ? "bg-green-100 dark:bg-green-900" : "bg-red-100 dark:bg-red-900",
-            textColor: stats.net_profit_this_month >= 0 ? "text-green-800 dark:text-green-100" : "text-red-800 dark:text-red-100", 
+            textColor: stats.net_profit_this_month >= 0 ? "text-green-800 dark:text-green-100" : "text-red-800 dark:text-red-100",
             iconColor: stats.net_profit_this_month >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
         }
     ];
@@ -211,7 +254,7 @@ const AdminDashboard = () => {
         },
         {
             title: t("Account Balance"),
-            count: `$${(stats.total_account_balance || 0).toLocaleString()}`,
+            count: `OMR ${(stats.total_account_balance || 0).toLocaleString()}`,
             icon: Wallet,
             bgColor: "bg-emerald-100 dark:bg-emerald-900",
             textColor: "text-emerald-800 dark:text-emerald-100",
@@ -251,11 +294,27 @@ const AdminDashboard = () => {
                 </Button>
             </div>
 
-            {/* Today's Overview */}
+            {/* Playground Overview */}
             <div>
-                <h2 className="text-xl font-semibold mb-4">{t("Today's Overview")}</h2>
+                <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                    <Gamepad2 className="h-5 w-5" />
+                    {t("Playground Overview")}
+                </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {salesOverview.map((card) => (
+                    {playgroundOverview.map((card) => (
+                        <StatCard key={card.title} {...card} />
+                    ))}
+                </div>
+            </div>
+
+            {/* Restaurant Overview */}
+            <div>
+                <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                    <UtensilsCrossed className="h-5 w-5" />
+                    {t("Restaurant Overview")}
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {restaurantOverview.map((card) => (
                         <StatCard key={card.title} {...card} />
                     ))}
                 </div>
@@ -306,7 +365,10 @@ const AdminDashboard = () => {
                 {/* Popular Games */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>{t("Popular Games")}</CardTitle>
+                        <CardTitle className="flex items-center gap-2">
+                            <Gamepad2 className="h-5 w-5" />
+                            {t("Popular Games")}
+                        </CardTitle>
                         <CardDescription>{t("Top performing games by sales count")}</CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -330,48 +392,78 @@ const AdminDashboard = () => {
                     </CardContent>
                 </Card>
 
-                {/* System Health */}
+                {/* Popular Products */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>{t("System Health")}</CardTitle>
-                        <CardDescription>{t("Key system metrics and status")}</CardDescription>
+                        <CardTitle className="flex items-center gap-2">
+                            <UtensilsCrossed className="h-5 w-5" />
+                            {t("Popular Products")}
+                        </CardTitle>
+                        <CardDescription>{t("Top performing products by sales count")}</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm">{t("Reports Status")}</span>
-                                <div className="text-right">
-                                    <div className="text-sm text-muted-foreground">
-                                        {stats.confirmed_reports || 0} {t("confirmed")} / {stats.submitted_reports || 0} {t("submitted")}
+                        {stats.popular_products && stats.popular_products.length > 0 ? (
+                            <div className="space-y-3">
+                                {stats.popular_products.map((product, index) => (
+                                    <div key={product.product_id} className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium">
+                                                {index + 1}
+                                            </div>
+                                            <span className="font-medium">{product.product?.name || 'Unknown Product'}</span>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="text-sm font-medium">{product.sales_count} {t("sales")}</div>
+                                            <div className="text-xs text-muted-foreground">OMR {parseFloat(product.total_revenue)?.toFixed(2)}</div>
+                                        </div>
                                     </div>
-                                </div>
+                                ))}
                             </div>
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm">{t("Collections Status")}</span>
-                                <div className="text-right">
-                                    <div className="text-sm text-muted-foreground">
-                                        {stats.confirmed_collections || 0} {t("confirmed")} / {stats.settled_collections || 0} {t("settled")}
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm">{t("Salary Status")}</span>
-                                <div className="text-right">
-                                    <div className="text-sm text-muted-foreground">
-                                        {stats.paid_salaries || 0} {t("paid")} / {stats.pending_salaries || 0} {t("pending")}
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm">{t("Active Accounts")}</span>
-                                <div className="text-right">
-                                    <div className="text-sm font-medium">{stats.accounts_count || 0}</div>
-                                </div>
-                            </div>
-                        </div>
+                        ) : (
+                            <p className="text-muted-foreground text-center py-4">{t("No products data available")}</p>
+                        )}
                     </CardContent>
                 </Card>
             </div>
+
+            {/* System Health */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>{t("System Health")}</CardTitle>
+                    <CardDescription>{t("Key system metrics and status")}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm">{t("Reports Status")}</span>
+                            <div className="text-right">
+                                <div className="text-sm font-medium">{stats.submitted_reports || 0} {t("submitted")}</div>
+                                <div className="text-xs text-muted-foreground">{stats.settled_reports || 0} {t("settled")}</div>
+                            </div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm">{t("Collections Status")}</span>
+                            <div className="text-right">
+                                <div className="text-sm font-medium">{stats.pending_collections || 0} {t("pending")}</div>
+                                <div className="text-xs text-muted-foreground">{stats.settled_collections || 0} {t("settled")}</div>
+                            </div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm">{t("Salary Status")}</span>
+                            <div className="text-right">
+                                <div className="text-sm font-medium">{stats.paid_salaries || 0} {t("paid")}</div>
+                                <div className="text-xs text-muted-foreground">{stats.pending_salaries || 0} {t("pending")}</div>
+                            </div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm">{t("Active Accounts")}</span>
+                            <div className="text-right">
+                                <div className="text-sm font-medium">{stats.accounts_count || 0}</div>
+                            </div>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
         </div>
     );
 };

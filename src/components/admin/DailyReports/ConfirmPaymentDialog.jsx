@@ -18,20 +18,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { 
-  DollarSign, 
-  Calendar, 
-  User, 
+import {
+  DollarSign,
+  Calendar,
+  User,
   FileText,
   AlertCircle,
   Send
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-const SubmitReportDialog = ({ 
-  open, 
-  onOpenChange, 
-  reportData, 
+const SubmitReportDialog = ({
+  open,
+  onOpenChange,
+  reportData,
   amount,
   setAmount,
   notes,
@@ -41,18 +41,18 @@ const SubmitReportDialog = ({
 }) => {
   const { t } = useTranslation();
   const [errors, setErrors] = useState({});
-
+  const [btnLoading, setBtnLoading] = useState(false);
   if (!reportData?.report) return null;
 
   const { report } = reportData;
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!amount || parseFloat(amount) <= 0) {
       newErrors.amount = t("Amount must be greater than 0");
     }
-    
+
     if (parseFloat(amount) > (report.total_revenue || report.actual_revenue || 0)) {
       newErrors.amount = t("Amount cannot exceed total revenue");
     }
@@ -62,6 +62,7 @@ const SubmitReportDialog = ({
   };
 
   const handleSubmit = () => {
+    setBtnLoading(true)
     if (validateForm()) {
       onSubmit();
     }
@@ -202,22 +203,22 @@ const SubmitReportDialog = ({
         </div>
 
         <DialogFooter>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={loading}
           >
             {t("Cancel")}
           </Button>
-          <Button 
+          <Button
             onClick={handleSubmit}
-            disabled={loading || !amount || parseFloat(amount) <= 0}
+            disabled={btnLoading || !amount || parseFloat(amount) <= 0}
             className="flex items-center gap-2"
           >
-            {loading && (
+            {btnLoading && (
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
             )}
-            {loading ? t("Submitting...") : t("Submit Report")}
+            {btnLoading ? t("Submitting...") : t("Submit Report")}
           </Button>
         </DialogFooter>
       </DialogContent>

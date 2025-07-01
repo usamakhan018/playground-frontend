@@ -144,26 +144,34 @@ const ExportDialog = ({ open, onOpenChange }) => {
                 <Calendar className="h-4 w-4" />
                 {t("Start Date")}
               </Label>
-              <Input
-                id="start_date"
-                type="date"
-                value={filters.start_date}
-                onChange={(e) => handleFilterChange('start_date', e.target.value)}
-                className="cursor-pointer"
-              />
+              <div className="relative">
+                <Input
+                  id="start_date"
+                  type="date"
+                  value={filters.start_date}
+                  onChange={(e) => handleFilterChange('start_date', e.target.value)}
+                  className="w-full cursor-pointer"
+                  onClick={(e) => e.target.showPicker()}
+                />
+                <div className="absolute inset-0" onClick={(e) => e.target.previousSibling.showPicker()}></div>
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="end_date" className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
                 {t("End Date")}
               </Label>
-              <Input
-                id="end_date"
-                type="date"
-                value={filters.end_date}
-                onChange={(e) => handleFilterChange('end_date', e.target.value)}
-                className="cursor-pointer"
-              />
+              <div className="relative">
+                <Input
+                  id="end_date"
+                  type="date"
+                  value={filters.end_date}
+                  onChange={(e) => handleFilterChange('end_date', e.target.value)}
+                  className="w-full cursor-pointer"
+                  onClick={(e) => e.target.showPicker()}
+                />
+                <div className="absolute inset-0" onClick={(e) => e.target.previousSibling.showPicker()}></div>
+              </div>
             </div>
           </div>
 
@@ -174,7 +182,7 @@ const ExportDialog = ({ open, onOpenChange }) => {
               <Select
                 placeholder={t("Select User")}
                 value={filters.user_id}
-                onValueChange={(value) => handleFilterChange('user_id', value)}
+                onChange={(value) => handleFilterChange('user_id', value)}
                 options={filterOptions.users.map(user => ({
                   value: user.id.toString(),
                   label: user.name
@@ -187,7 +195,7 @@ const ExportDialog = ({ open, onOpenChange }) => {
               <Select
                 placeholder={t("Select Game")}
                 value={filters.game_id}
-                onValueChange={(value) => handleFilterChange('game_id', value)}
+                onChange={(value) => handleFilterChange('game_id', value)}
                 options={filterOptions.games.map(game => ({
                   value: game.id.toString(),
                   label: game.name
@@ -200,7 +208,7 @@ const ExportDialog = ({ open, onOpenChange }) => {
               <Select
                 placeholder={t("Select Category")}
                 value={filters.category_id}
-                onValueChange={(value) => handleFilterChange('category_id', value)}
+                onChange={(value) => handleFilterChange('category_id', value)}
                 options={filterOptions.categories.map(category => ({
                   value: category.id.toString(),
                   label: category.name
@@ -213,7 +221,7 @@ const ExportDialog = ({ open, onOpenChange }) => {
               <Select
                 placeholder={t("Select Payment Method")}
                 value={filters.payment_method}
-                onValueChange={(value) => handleFilterChange('payment_method', value)}
+                onChange={(value) => handleFilterChange('payment_method', value)}
                 options={filterOptions.payment_methods.map(method => ({
                   value: method,
                   label: method.charAt(0).toUpperCase() + method.slice(1).replace('_', ' ')
@@ -226,7 +234,7 @@ const ExportDialog = ({ open, onOpenChange }) => {
               <Select
                 placeholder={t("Select Status")}
                 value={filters.status}
-                onValueChange={(value) => handleFilterChange('status', value)}
+                onChange={(value) => handleFilterChange('status', value)}
                 options={filterOptions.statuses.map(status => ({
                   value: status,
                   label: status.charAt(0).toUpperCase() + status.slice(1)
@@ -239,7 +247,7 @@ const ExportDialog = ({ open, onOpenChange }) => {
               <Select
                 placeholder={t("Select Expense Type")}
                 value={filters.expense_type}
-                onValueChange={(value) => handleFilterChange('expense_type', value)}
+                onChange={(value) => handleFilterChange('expense_type', value)}
                 options={filterOptions.expense_types.map(type => ({
                   value: type,
                   label: type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' ')

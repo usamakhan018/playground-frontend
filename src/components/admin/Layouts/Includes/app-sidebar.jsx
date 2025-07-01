@@ -9,11 +9,22 @@ import {
     Hotel,
     Package,
     ReceiptIcon,
+    Settings,
     ShoppingCart,
     Ticket,
     User2Icon,
     UserCheck,
     Users,
+    Wallet,
+    FileBarChart,
+    LayoutDashboard,
+    ShieldCheck,
+    BadgeDollarSign,
+    Receipt,
+    Store,
+    ClipboardList,
+    UserCog,
+    FolderTree
 } from "lucide-react";
 
 import {
@@ -49,25 +60,19 @@ export function AppSidebar({ ...props }) {
                     {
                         label: t("Dashboard"),
                         path: "/dashboard",
-                        icon: Home,
+                        icon: LayoutDashboard,
                         permission: can("Dashboard access"),
-                    },
-                    {
-                        label: t("Sales Dashboard"),
-                        path: "/sales",
-                        icon: ShoppingCart,
-                        permission: can("Sale access"),
                     },
                     {
                         label: t("Charts"),
                         path: "/charts",
-                        icon: BarChart,
+                        icon: FileBarChart,
                         permission: can("Charts access"),
                     },
                     {
                         label: t("Roles"),
                         path: "/roles",
-                        icon: UserCheck,
+                        icon: ShieldCheck,
                         permission: can("Role access"),
                     },
                     {
@@ -76,16 +81,10 @@ export function AppSidebar({ ...props }) {
                         icon: DoorOpen,
                         permission: can("Permission access"),
                     },
-                    // {
-                    //     label: t("Settings"),
-                    //     path: "/settings",
-                    //     icon: Settings,
-                    //     permission: can("Setting access"),
-                    // },
                     {
                         label: t("Profile"),
                         path: "/profile",
-                        icon: User2Icon,
+                        icon: UserCog,
                         permission: can("Profile access"),
                     },
                 ],
@@ -94,6 +93,12 @@ export function AppSidebar({ ...props }) {
                 label: t("Games Management"),
                 icon: Gamepad2,
                 items: [
+                    {
+                        label: t("Playground Sales"),
+                        path: "/sales",
+                        icon: Store,
+                        permission: can("Sale access"),
+                    },
                     {
                         label: t("Games"),
                         path: "/games",
@@ -106,12 +111,6 @@ export function AppSidebar({ ...props }) {
                         icon: BookImageIcon,
                         permission: can("Game Asset access"),
                     },
-                    // {
-                    //     label: t("Tickets"),
-                    //     path: "/tickets",
-                    //     icon: Ticket,
-                    //     permission: can("Ticket access"),
-                    // },
                     {
                         label: t("Ticket Batches"),
                         path: "/ticket-batches",
@@ -121,56 +120,8 @@ export function AppSidebar({ ...props }) {
                 ],
             },
             {
-                label: t("User Management"),
-                icon: Users,
-                items: [
-                    {
-                        label: t("Users"),
-                        path: "/users",
-                        icon: Home,
-                        permission: can("User access"),
-                    },
-                    {
-                        label: t("Roles"),
-                        path: "/roles",
-                        icon: UserCheck,
-                        permission: can("Role access"),
-                    },
-                    {
-                        label: t("Permissions"),
-                        path: "/permissions",
-                        icon: DoorOpen,
-                        permission: can("Permission access"),
-                    },
-                ],
-            },
-            {
-                label: t("Product Management"),
-                icon: Package,
-                items: [
-                    {
-                        label: t("Product Categories"),
-                        path: "/product/categories",
-                        icon: Package,
-                        permission: can("Product Category access"),
-                    },
-                    {
-                        label: t("Products"),
-                        path: "/products",
-                        icon: Package,
-                        permission: can("Product access"),
-                    },
-                    {
-                        label: t("Sale Dashboard"),
-                        path: "/sale-dashboard",
-                        icon: ShoppingCart,
-                        permission: can("Sale access"),
-                    },
-                ],
-            },
-            {
                 label: t("Expenses"),
-                icon: ReceiptIcon,
+                icon: Receipt,
                 items: [
                     {
                         label: t("Expenses"),
@@ -187,32 +138,80 @@ export function AppSidebar({ ...props }) {
                     {
                         label: t("Expense Categories"),
                         path: "/expense/categories",
-                        icon: Home,
+                        icon: FolderTree,
                         permission: can("Expense Category access"),
                     },
                 ],
             },
             {
+                label: t("Product Management"),
+                icon: Package,
+                items: [
+                    {
+                        label: t("Product Categories"),
+                        path: "/product/categories",
+                        icon: FolderTree,
+                        permission: can("Product Category access"),
+                    },
+                    {
+                        label: t("Products"),
+                        path: "/products",
+                        icon: Package,
+                        permission: can("Product access"),
+                    },
+                    {
+                        label: t("Sale Dashboard"),
+                        path: "/sale-dashboard",
+                        icon: Store,
+                        permission: can("Sale access"),
+                    },
+                ],
+            },
+            {
                 label: t("Reports"),
-                icon: Building,
+                icon: ClipboardList,
                 items: [
                     {
                         label: t("Daily Reports"),
                         path: "/daily-reports",
-                        icon: Building,
+                        icon: FileBarChart,
                         permission: can("Daily Report access"),
                     },
                 ],
             },
             {
                 label: t("Salary Management"),
-                icon: Users,
+                icon: BadgeDollarSign,
                 items: [
                     {
                         label: t("Salaries"),
                         path: "/salaries",
-                        icon: Users,
+                        icon: Wallet,
                         permission: can("Salary access"),
+                    },
+                ],
+            },
+            {
+                label: t("User Management"),
+                icon: Users,
+                items: [
+                    {
+                        label: t("Users"),
+                        path: "/users",
+                        icon: Users,
+                        permission: can("User access"),
+                    },
+                    {
+                        label: t("Roles"),
+                        path: "/roles",
+                        icon: ShieldCheck,
+                        permission: can("Role access"),
+                    },
+                    {
+                        label: t("Permissions"),
+                        path: "/permissions",
+                        icon: DoorOpen,
+                        permission: can("Permission access"),
                     },
                 ],
             },

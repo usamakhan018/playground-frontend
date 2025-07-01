@@ -387,36 +387,36 @@ export const SaleDashboard = () => {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t("Today's Sales")}</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("Average Product Revenue")}</CardTitle>
             <ShoppingCart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{todayStats.total_sales || 0}</div>
-            <p className="text-xs text-muted-foreground">{t("Total transactions")}</p>
+            <div className="text-2xl font-bold">{todayStats.average_product_revenue || 0}</div>
+            <p className="text-xs text-muted-foreground">{t("Average product revenue")}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t("Revenue")}</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("Total Revenue")}</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              OMR {parseFloat(todayStats.total_revenue || 0).toFixed(2)}
+              OMR {parseFloat(todayStats.total_product_revenue || 0).toFixed(2)}
             </div>
-            <p className="text-xs text-muted-foreground">{t("Today's earnings")}</p>
+            <p className="text-xs text-muted-foreground">{t("Total revenue")}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t("Products Sold")}</CardTitle>
+            <CardTitle className="text-sm font-medium">{t("Total Products Sold")}</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{todayStats.total_products_sold || 0}</div>
-            <p className="text-xs text-muted-foreground">{t("Items today")}</p>
+            <div className="text-2xl font-bold text-blue-600">{todayStats.total_product_sales || 0}</div>
+            <p className="text-xs text-muted-foreground">{t("Total products sold")}</p>
           </CardContent>
         </Card>
       </div>
