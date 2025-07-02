@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import PageTitle from "./Layouts/PageTitle";
 import { useTranslation } from "react-i18next";
-import {
-    Home,
-    RefreshCcw,
-    Users,
-    ShoppingCart,
+import { 
+    Home, 
+    RefreshCcw, 
+    Users, 
+    ShoppingCart, 
     GamepadIcon,
     Ticket,
     DollarSign,
@@ -58,7 +58,7 @@ const AdminDashboard = () => {
         }
     }
 
-    if (loading || !stats) {
+    if (loading || !stats) {  
         return <Loader />
     }
 
@@ -173,7 +173,7 @@ const AdminDashboard = () => {
             count: `OMR ${(stats.net_profit_this_month || 0).toLocaleString()}`,
             icon: stats.net_profit_this_month >= 0 ? TrendingUp : TrendingDown,
             bgColor: stats.net_profit_this_month >= 0 ? "bg-green-100 dark:bg-green-900" : "bg-red-100 dark:bg-red-900",
-            textColor: stats.net_profit_this_month >= 0 ? "text-green-800 dark:text-green-100" : "text-red-800 dark:text-red-100",
+            textColor: stats.net_profit_this_month >= 0 ? "text-green-800 dark:text-green-100" : "text-red-800 dark:text-red-100", 
             iconColor: stats.net_profit_this_month >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
         }
     ];
@@ -412,7 +412,7 @@ const AdminDashboard = () => {
                                             </div>
                                             <span className="font-medium">{product.product?.name || 'Unknown Product'}</span>
                                         </div>
-                                        <div className="text-right">
+                                <div className="text-right">
                                             <div className="text-sm font-medium">{product.sales_count} {t("sales")}</div>
                                             <div className="text-xs text-muted-foreground">OMR {parseFloat(product.total_revenue)?.toFixed(2)}</div>
                                         </div>
@@ -439,31 +439,31 @@ const AdminDashboard = () => {
                             <div className="text-right">
                                 <div className="text-sm font-medium">{stats.submitted_reports || 0} {t("submitted")}</div>
                                 <div className="text-xs text-muted-foreground">{stats.settled_reports || 0} {t("settled")}</div>
+                                </div>
                             </div>
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm">{t("Collections Status")}</span>
-                            <div className="text-right">
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm">{t("Collections Status")}</span>
+                                <div className="text-right">
                                 <div className="text-sm font-medium">{stats.pending_collections || 0} {t("pending")}</div>
                                 <div className="text-xs text-muted-foreground">{stats.settled_collections || 0} {t("settled")}</div>
+                                </div>
                             </div>
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm">{t("Salary Status")}</span>
-                            <div className="text-right">
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm">{t("Salary Status")}</span>
+                                <div className="text-right">
                                 <div className="text-sm font-medium">{stats.paid_salaries || 0} {t("paid")}</div>
                                 <div className="text-xs text-muted-foreground">{stats.pending_salaries || 0} {t("pending")}</div>
+                                </div>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm">{t("Active Accounts")}</span>
+                                <div className="text-right">
+                                    <div className="text-sm font-medium">{stats.accounts_count || 0}</div>
+                                </div>
                             </div>
                         </div>
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm">{t("Active Accounts")}</span>
-                            <div className="text-right">
-                                <div className="text-sm font-medium">{stats.accounts_count || 0}</div>
-                            </div>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
+                    </CardContent>
+                </Card>
         </div>
     );
 };

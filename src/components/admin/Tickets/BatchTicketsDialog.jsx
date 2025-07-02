@@ -70,18 +70,11 @@ const BatchTicketsDialog = ({ open, onClose, batch, onRefresh }) => {
   const handlePrintBatchTickets = async () => {
     setPrinting(true);
     try {
-      // Create a download link for the PDF
-      const downloadUrl = `${axiosClient.defaults.baseURL}tickets/batch/${batch.id}/print`;
+      // Open the printable view in a new tab
+      const viewUrl = `${axiosClient.defaults.baseURL}tickets/batch/${batch.id}/view`;
+      window.open(viewUrl, '_blank');
       
-      // Create a temporary link element to trigger download
-      const link = document.createElement('a');
-      link.href = downloadUrl;
-      link.download = `batch_${batch.id}_tickets.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      toast.success(t("PDF download started"));
+      toast.success(t("Printable view opened in new tab"));
     } catch (error) {
       handleError(error);
     } finally {
@@ -207,7 +200,7 @@ const BatchTicketsDialog = ({ open, onClose, batch, onRefresh }) => {
               className="gap-2"
             >
               <Printer className="h-4 w-4" />
-              {printing ? t("Downloading PDF...") : t("Download PDF")}
+              {printing ? t("Opening View...") : t("Open Print View")}
             </Button>
           </div>
 
@@ -306,7 +299,7 @@ const BatchTicketsDialog = ({ open, onClose, batch, onRefresh }) => {
             className="gap-2"
           >
             <Printer className="h-4 w-4" />
-            {printing ? t("Downloading PDF...") : t("Download PDF")}
+            {printing ? t("Opening View...") : t("Open Print View")}
           </Button>
         </DialogFooter>
       </DialogContent>

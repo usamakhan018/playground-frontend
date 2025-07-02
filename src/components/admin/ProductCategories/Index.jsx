@@ -93,7 +93,7 @@ const ProductCategoryIndex = () => {
     fetchProductCategories();
   };
 
-  
+
   return (
     <div className="space-y-3">
       <PageTitle title={t("Product Categories")} />
@@ -165,7 +165,7 @@ const ProductCategoryIndex = () => {
                   <TableCell>
                     {productCategory.image ? (
                       <ImagePreview
-                        src={`${import.meta.env.VITE_BASE_URL}${productCategory.image}`} 
+                        src={`${import.meta.env.VITE_BASE_URL}${productCategory.image}`}
                         alt={productCategory.name}
                         className="w-8 h-8 rounded object-cover"
                       />
