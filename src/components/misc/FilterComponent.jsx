@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,6 +31,8 @@ const FilterComponent = ({
   });
 
   const [showFilters, setShowFilters] = useState(false);
+  const fromDateRef = useRef(null);
+  const toDateRef = useRef(null);
 
   useEffect(() => {
     if (showUserFilter && !users) {
@@ -150,12 +152,13 @@ const FilterComponent = ({
                 <>
                   <div className="space-y-2">
                     <Label htmlFor="from-date-filter">{t("From Date")}</Label>
-                    <div className="relative">
+                    <div className="relative cursor-pointer" onClick={() => fromDateRef.current?.showPicker?.()}>
                       <Input
                         id="from-date-filter"
                         type="date"
                         value={filters.from_date}
                         onChange={(e) => handleFilterChange('from_date', e.target.value)}
+                        ref={fromDateRef}
                         className="cursor-pointer"
                       />
                       <CalendarIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
@@ -164,12 +167,13 @@ const FilterComponent = ({
 
                   <div className="space-y-2">
                     <Label htmlFor="to-date-filter">{t("To Date")}</Label>
-                    <div className="relative">
+                    <div className="relative cursor-pointer" onClick={() => toDateRef.current?.showPicker?.()}>
                       <Input
                         id="to-date-filter"
                         type="date"
                         value={filters.to_date}
                         onChange={(e) => handleFilterChange('to_date', e.target.value)}
+                        ref={toDateRef}
                         className="cursor-pointer"
                       />
                       <CalendarIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />

@@ -50,6 +50,7 @@ const ProcessSalaryDialog = ({
   open, 
   onOpenChange, 
   userId,
+  salaryId,
   onSalaryProcessed
 }) => {
   const { t } = useTranslation();
@@ -73,7 +74,7 @@ const ProcessSalaryDialog = ({
   const fetchSalaryData = async () => {
     try {
       setLoading(true);
-      const response = await axiosClient.get(`salaries/salary-data/${userId}`);
+      const response = await axiosClient.get(`salaries/salary-data/${userId}/${salaryId}`);
       setSalaryData(response.data.data);
     } catch (error) {
       handleError(error);
@@ -108,35 +109,21 @@ const ProcessSalaryDialog = ({
 
     try {
       setProcessing(true);
-      const response = await axiosClient.post('salaries/process', {
+      // Process salary on the server
+      await axiosClient.post('salaries/process', {
         user_id: userId,
         fixed_salary: parseFloat(fixedSalary),
         notes: notes.trim()
       });
 
-      if (response.data.success) {
-        toast.success(t("Salary processed successfully!"));
-        
-        // Auto-download slip if available
-        // if (response.data.data.slip && response.data.data.slip.file_path) {
-        //   setTimeout(() => {
-        //     toast.success(t("Salary slip generated - downloading..."));
-        //     // Auto-open slip
-        //     window.open(`/storage/${response.data.data.slip.file_path}`, '_blank');
-        //   }, 1000);
-        // }
+      // Close dialog and notify parent to refresh data
+      onOpenChange(false);
+      onSalaryProcessed();
 
-        // Callback to refresh parent data
-        onSalaryProcessed();
-        
-        // Close dialog
-        onOpenChange(false);
-        
-        // Reset form
-        setFixedSalary("");
-        setNotes("");
-        setErrors({});
-      }
+      // Reset form fields
+      setFixedSalary("");
+      setNotes("");
+      setErrors({});
     } catch (error) {
       handleError(error);
     } finally {

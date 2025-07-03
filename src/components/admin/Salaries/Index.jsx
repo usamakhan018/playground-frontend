@@ -50,6 +50,7 @@ import Loader from "@/components/Loader";
 import { useTranslation } from "react-i18next";
 import ProcessSalaryDialog from "../Users/ProcessSalaryDialog";
 import SalaryHistoryDialog from "./SalaryHistoryDialog";
+import FilterComponent from "@/components/misc/FilterComponent";
 
 const SalaryIndex = () => {
   const [loading, setLoading] = useState(true);
@@ -72,19 +73,38 @@ const SalaryIndex = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
+  // Status options for filtering
+  const statusOptions = [
+    { value: 'paid', label: 'Paid' },
+    { value: 'pending', label: 'Pending' },
+  ];
+  // Current filter state
+  const [currentFilters, setCurrentFilters] = useState({
+    status: 'pending',
+    user_id: '',
+    from_date: '',
+    to_date: '',
+    query: ''
+  });
+
   const accessAbility = can("Salary access");
   const processAbility = can("Salary create"); // Assuming salary processing requires create permission
 
   useEffect(() => {
     if (!accessAbility) navigate("/unauthorized");
     fetchSalaries(currentPage);
-  }, [currentPage]);
+  }, [currentPage, currentFilters]);
 
-  const fetchSalaries = async (page = 1, query = "") => {
+  const fetchSalaries = async (page = 1) => {
     setLoading(true);
     try {
       const params = new URLSearchParams({ page });
-      if (query) params.append("query", query);
+      // Append filter parameters
+      if (currentFilters.status) params.append("status", currentFilters.status.value);
+      if (currentFilters.user_id) params.append("user_id", currentFilters.user_id.value);
+      if (currentFilters.from_date) params.append("from_date", currentFilters.from_date);
+      if (currentFilters.to_date) params.append("to_date", currentFilters.to_date);
+      if (currentFilters.query) params.append("query", currentFilters.query);
       const response = await axiosClient.get(`salaries/index-data?${params}`);
       if (response.data) {
         setSalaries(response.data.data.data);
@@ -102,15 +122,19 @@ const SalaryIndex = () => {
 
   const handleSearch = async (e) => {
     e.preventDefault();
-    if (!search.trim()) return;
+    const term = search.trim();
+    if (!term) return;
+
     setShowRefresh(true);
-    fetchSalaries(1, search.trim());
+    setCurrentPage(1);
+    setCurrentFilters(prev => ({ ...prev, query: term }));
   };
 
   const handleRefresh = () => {
     setSearch("");
     setShowRefresh(false);
-    fetchSalaries();
+    setCurrentPage(1);
+    setCurrentFilters({ status: 'pending', user_id: '', from_date: '', to_date: '', query: '' });
   };
 
   const handleProcessSalary = (salary) => {
@@ -126,14 +150,16 @@ const SalaryIndex = () => {
   const handleSalaryProcessed = () => {
     fetchSalaries(currentPage);
     setShowProcessDialog(false);
-    toast.success(t("Salary processed successfully"));
+    toast.success(t("Salary settled successfully"));
   };
 
   const viewSlip = async (salaryId) => {
     try {
-      const resp = await axiosClient.get(`salaries/slip/${salaryId}`);
-      if (resp.data.success) {
-        window.open(resp.data.data.slip_url, "_blank");
+      const response = await axiosClient.get(`salaries/slip/${salaryId}`);
+      if (response.data && response.data.data && response.data.data.slip_url) {
+        window.open(response.data.data.slip_url, "_blank");
+      } else {
+        toast.error(t("Salary slip not found or not generated yet"));
       }
     } catch (error) {
       handleError(error);
@@ -213,6 +239,15 @@ const SalaryIndex = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Filters */}
+      <FilterComponent
+        onFilter={(filters) => { setCurrentFilters(filters); setCurrentPage(1); }}
+        onReset={() => { setCurrentFilters({ status: 'pending', user_id: '', from_date: '', to_date: '', query: '' }); setCurrentPage(1); setSearch(''); setShowRefresh(false); }}
+        statusOptions={statusOptions}
+        defaultStatus="pending"
+        loading={loading}
+      />
 
       {/* Search and Actions */}
       <div className="flex flex-col sm:flex-row justify-between gap-4">
@@ -374,6 +409,7 @@ const SalaryIndex = () => {
           open={showProcessDialog}
           onOpenChange={setShowProcessDialog}
           userId={selectedSalary.user?.id}
+          salaryId={selectedSalary.id}
           onSalaryProcessed={handleSalaryProcessed}
         />
       )}
@@ -383,6 +419,7 @@ const SalaryIndex = () => {
           open={showHistoryDialog}
           onOpenChange={setShowHistoryDialog}
           userId={selectedSalary.user?.id}
+          salaryId={selectedSalary.id}
         />
       )}
     </div>

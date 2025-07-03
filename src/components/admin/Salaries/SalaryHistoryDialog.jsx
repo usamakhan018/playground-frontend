@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -39,23 +40,24 @@ import NoRecordFound from "@/components/NoRecordFound";
 const SalaryHistoryDialog = ({ 
   open, 
   onOpenChange, 
-  userId
+  userId,
+  salaryId
 }) => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
-  const [salaryHistory, setSalaryHistory] = useState(null);
+  const [reportHistory, setReportHistory] = useState(null);
 
   useEffect(() => {
-    if (open && userId) {
-      fetchSalaryHistory();
+    if (open && userId && salaryId) {
+      fetchReportHistory();
     }
-  }, [open, userId]);
+  }, [open, userId, salaryId]);
 
-  const fetchSalaryHistory = async () => {
+  const fetchReportHistory = async () => {
     try {
       setLoading(true);
-      const response = await axiosClient.get(`salaries/user/${userId}/history`);
-      setSalaryHistory(response.data.data);
+      const response = await axiosClient.get(`salaries/user/${userId}/${salaryId}/history`);
+      setReportHistory(response.data.data);
     } catch (error) {
       handleError(error);
     } finally {
@@ -67,23 +69,29 @@ const SalaryHistoryDialog = ({
     return `OMR ${parseFloat(amount).toFixed(2)}`;
   };
 
-  const handleDownloadSlip = async (salaryId) => {
-    try {
-      const response = await axiosClient.get(`salaries/slip/${salaryId}`);
-      if (response.data.success && response.data.data.slip_url) {
-        window.open(response.data.data.slip_url, '_blank');
-      }
-    } catch (error) {
-      handleError(error);
-    }
+  const getStatusBadge = (status) => {
+    const statusConfig = {
+      pending: { className: "bg-orange-500 text-white", label: t("Pending") },
+      submitted: { className: "bg-blue-500 text-white", label: t("Submitted") },
+      settled: { className: "bg-green-500 text-white", label: t("Settled") },
+      completed: { className: "bg-gray-600 text-white", label: t("Completed") }
+    };
+
+    const config = statusConfig[status] || statusConfig.pending;
+    
+    return (
+      <Badge className={`${config.className} text-xs`}>
+        {config.label}
+      </Badge>
+    );
   };
 
-  if (!salaryHistory && !loading) {
+  if (!reportHistory && !loading) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{t("Salary History")}</DialogTitle>
+            <DialogTitle>{t("Daily Reports History")}</DialogTitle>
           </DialogHeader>
           <div className="flex justify-center items-center h-32">
             <div className="text-center">
@@ -97,14 +105,14 @@ const SalaryHistoryDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
-            {t("Salary History")} - {salaryHistory?.user?.name}
+            {t("Daily Reports History")} - {reportHistory?.user?.name}
           </DialogTitle>
           <DialogDescription>
-            {t("View all salary payments for this user")}
+            {t("View all daily reports for this salary cycle")}
           </DialogDescription>
         </DialogHeader>
 
@@ -122,85 +130,73 @@ const SalaryHistoryDialog = ({
               <CardContent className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">{t("Name")}</p>
-                  <p className="font-medium">{salaryHistory?.user?.name}</p>
+                  <p className="font-medium">{reportHistory?.user?.name}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">{t("Email")}</p>
-                  <p className="font-medium">{salaryHistory?.user?.email}</p>
+                  <p className="font-medium">{reportHistory?.user?.email}</p>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Salary History Table */}
+            {/* Daily Reports Table */}
             <Card>
               <CardHeader>
-                <CardTitle>{t("Salary Records")}</CardTitle>
+                <CardTitle>{t("Daily Reports")} ({reportHistory?.salaries?.length || 0})</CardTitle>
               </CardHeader>
               <CardContent>
-                {salaryHistory?.salaries?.length > 0 ? (
+                {reportHistory?.salaries?.length > 0 ? (
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>{t("Salary Date")}</TableHead>
-                        <TableHead>{t("Gross Amount")}</TableHead>
-                        <TableHead>{t("Total Expenses")}</TableHead>
-                        <TableHead>{t("Final Amount")}</TableHead>
-                        <TableHead>{t("Paid By")}</TableHead>
-                        <TableHead>{t("Paid At")}</TableHead>
-                        <TableHead className="text-right">{t("Actions")}</TableHead>
+                        <TableHead>{t("Report Date")}</TableHead>
+                        <TableHead>{t("Game Sales")}</TableHead>
+                        <TableHead>{t("Product Revenue")}</TableHead>
+                        <TableHead>{t("Total Amount")}</TableHead>
+                        <TableHead>{t("Status")}</TableHead>
+                        <TableHead>{t("Submitted At")}</TableHead>
+                        <TableHead>{t("Settled At")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {salaryHistory.salaries.map((salary) => (
-                        <TableRow key={salary.id}>
+                      {reportHistory.salaries.map((report) => (
+                        <TableRow key={report.id}>
                           <TableCell>
                             <div className="flex items-center gap-2">
                               <Calendar className="h-4 w-4 text-muted-foreground" />
-                              {new Date(salary.salary_date).toLocaleDateString()}
+                              {new Date(report.date).toLocaleDateString()}
                             </div>
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-1 text-green-600">
                               <TrendingUp className="h-3 w-3" />
-                              <span className="font-medium">{formatCurrency(salary.gross_amount)}</span>
+                              <span className="font-medium">{formatCurrency(report.total_sales)}</span>
                             </div>
                           </TableCell>
                           <TableCell>
-                            <div className="flex items-center gap-1 text-red-600">
-                              <TrendingDown className="h-3 w-3" />
-                              <span className="font-medium">{formatCurrency(salary.total_expenses)}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-1 font-bold text-blue-600">
+                            <div className="flex items-center gap-1 text-blue-600">
                               <DollarSign className="h-3 w-3" />
-                              <span>{formatCurrency(salary.final_amount)}</span>
+                              <span className="font-medium">{formatCurrency(report.total_revenue)}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1 font-bold text-purple-600">
+                              <DollarSign className="h-3 w-3" />
+                              <span>{formatCurrency(report.total_amount)}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {getStatusBadge(report.status)}
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm">
+                              {report.submitted_at ? new Date(report.submitted_at).toLocaleDateString() : t("Not submitted")}
                             </div>
                           </TableCell>
                           <TableCell>
                             <div className="text-sm">
-                              <div className="font-medium">{salary.paid_by_user?.name}</div>
-                              <div className="text-muted-foreground">{salary.paid_by_user?.email}</div>
+                              {report.settled_at ? new Date(report.settled_at).toLocaleDateString() : t("Not settled")}
                             </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="text-sm">
-                              {new Date(salary.paid_at).toLocaleDateString()}
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {salary.slip_path ? (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleDownloadSlip(salary.id)}
-                              >
-                                <Download className="mr-1 h-3 w-3" />
-                                {t("Slip")}
-                              </Button>
-                            ) : (
-                              <span className="text-xs text-muted-foreground">{t("No slip")}</span>
-                            )}
                           </TableCell>
                         </TableRow>
                       ))}
