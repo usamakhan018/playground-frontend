@@ -1,5 +1,6 @@
-import { createContext, useContext, useState } from "react";
-import { useSelector } from "react-redux";
+import { createContext, useContext, useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { getUser, setUser as setReduxUser } from "@/stores/features/authFeature";
 
 const AuthContext = createContext({
     user: null,
@@ -11,9 +12,17 @@ const AuthContext = createContext({
 })
 
 export const ContextProvider = ({ children }) => {
-    const [user, setUser] = useState(null)
+    const dispatch = useDispatch();
+    const user = useSelector((state) => state.auth.user);
     const [token, _setToken] = useState(localStorage.getItem('ACCESS_TOKEN'))
     const [schema, _setSchema] = useState(localStorage.getItem('SCHEMA'))
+
+    useEffect(() => {
+        if (token && !user) {
+            dispatch(getUser());
+        }
+    }, [token, user, dispatch]);
+
     function setToken(token) {
         _setToken(token)
         if (token) {
@@ -30,6 +39,10 @@ export const ContextProvider = ({ children }) => {
         } else {
             localStorage.removeItem('SCHEMA')
         }
+    }
+
+    function setUser(user) {
+        dispatch(setReduxUser(user));
     }
 
     return <>

@@ -4,7 +4,7 @@ import {
     CardHeader,
     CardTitle,
     CardDescription,
-    CardContent 
+    CardContent
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
@@ -19,7 +19,7 @@ import Loader from '../Loader';
 
 function Charts() {
     const { t } = useTranslation();
-    
+
     const [loading, setLoading] = useState(true);
     const [chartData, setChartData] = useState({
         salesOverview: [],
@@ -40,7 +40,7 @@ function Charts() {
         setLoading(true);
         try {
             const response = await axiosClient.get('/charts');
-            
+
             setChartData({
                 salesOverview: response.data.data.salesOverview || [],
                 revenueTrend: response.data.data.revenueTrend || [],
@@ -79,8 +79,8 @@ function Charts() {
                     <h2 className="text-2xl font-bold">{t('Charts')}</h2>
                     <p className="text-muted-foreground">{t('Real-time analytics and insights')}</p>
                 </div>
-                <Button 
-                    onClick={handleRefresh} 
+                <Button
+                    onClick={handleRefresh}
                     disabled={loading}
                     size="sm"
                     className="gap-2"
@@ -92,93 +92,93 @@ function Charts() {
 
             {/* Charts Grid */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {/* Sales Overview Chart - Playground vs Restaurant */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>{t('Sales Overview')}</CardTitle>
-                    <CardDescription>{t('Playground vs Restaurant sales comparison')}</CardDescription>
-                </CardHeader>
-                <CardContent className="h-[300px]">
-                    <BarChartComponent data={chartData.salesOverview} />
-                </CardContent>
-            </Card>
+                {/* Sales Overview Chart - Playground vs Restaurant */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>{t('Sales Overview')}</CardTitle>
+                        <CardDescription>{t('Playground vs Restaurant sales comparison')}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="h-[300px]">
+                        <BarChartComponent data={chartData.salesOverview} />
+                    </CardContent>
+                </Card>
 
-            {/* Revenue Trend Chart */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>{t('Revenue Trend')}</CardTitle>
-                    <CardDescription>{t('Daily revenue breakdown for the last week')}</CardDescription>
-                </CardHeader>
-                <CardContent className="h-[300px]">
-                    <LineChartComponent data={chartData.revenueTrend} />
-                </CardContent>
-            </Card>
+                {/* Revenue Trend Chart */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>{t('Revenue Trend')}</CardTitle>
+                        <CardDescription>{t('Daily revenue breakdown for the last week')}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="h-[300px]">
+                        <LineChartComponent data={chartData.revenueTrend} />
+                    </CardContent>
+                </Card>
 
-            {/* Business Split Chart */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>{t('Business Split')}</CardTitle>
-                    <CardDescription>{t('Revenue distribution between playground and restaurant')}</CardDescription>
-                </CardHeader>
-                <CardContent className="h-[300px]">
-                    <PieChartComponent data={chartData.businessSplit} />
-                </CardContent>
-            </Card>
+                {/* Business Split Chart */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>{t('Business Split')}</CardTitle>
+                        <CardDescription>{t('Revenue distribution between playground and restaurant')}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="h-[300px]">
+                        <PieChartComponent data={chartData.businessSplit} />
+                    </CardContent>
+                </Card>
 
-            {/* Game Popularity Chart */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>{t('Game Popularity')}</CardTitle>
-                    <CardDescription>{t('Most played games by session count')}</CardDescription>
-                </CardHeader>
-                <CardContent className="h-[300px]">
-                    <BarChartComponent data={chartData.gamePopularity} />
-                </CardContent>
-            </Card>
+                {/* Game Popularity Chart */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>{t('Game Popularity')}</CardTitle>
+                        <CardDescription>{t('Most played games by session count')}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="h-[300px]">
+                        <BarChartComponent data={chartData.gamePopularity} />
+                    </CardContent>
+                </Card>
 
-            {/* Product Popularity Chart */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>{t('Product Popularity')}</CardTitle>
-                    <CardDescription>{t('Best selling products by sales count')}</CardDescription>
-                </CardHeader>
-                <CardContent className="h-[300px]">
-                    <BarChartComponent data={chartData.productPopularity} />
-                </CardContent>
-            </Card>
+                {/* Product Popularity Chart */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>{t('Product Popularity')}</CardTitle>
+                        <CardDescription>{t('Best selling products by sales count')}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="h-[300px]">
+                        <BarChartComponent data={chartData.productPopularity} />
+                    </CardContent>
+                </Card>
 
-            {/* Expense Overview Chart */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>{t('Expense Overview')}</CardTitle>
-                    <CardDescription>{t('General vs Hotel expenses over time')}</CardDescription>
-                </CardHeader>
-                <CardContent className="h-[300px]">
-                    <LineChartComponent data={chartData.expenseOverview} />
-                </CardContent>
-            </Card>
+                {/* Expense Overview Chart */}
+                {/* <Card>
+                    <CardHeader>
+                        <CardTitle>{t('Expense Overview')}</CardTitle>
+                        <CardDescription>{t('General vs Hotel expenses over time')}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="h-[300px]">
+                        <LineChartComponent data={chartData.expenseOverview} />
+                    </CardContent>
+                </Card> */}
 
-            {/* Financial Overview Chart */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>{t('Financial Overview')}</CardTitle>
-                    <CardDescription>{t('Complete revenue and expense breakdown')}</CardDescription>
-                </CardHeader>
-                <CardContent className="h-[300px]">
-                    <LineChartComponent data={chartData.financialOverview} />
-                </CardContent>
-            </Card>
+                {/* Financial Overview Chart */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>{t('Financial Overview')}</CardTitle>
+                        <CardDescription>{t('Complete revenue and expense breakdown')}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="h-[300px]">
+                        <LineChartComponent data={chartData.financialOverview} />
+                    </CardContent>
+                </Card>
 
-            {/* System Status Chart */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>{t('System Status')}</CardTitle>
-                    <CardDescription>{t('Key system metrics and operational status')}</CardDescription>
-                </CardHeader>
-                <CardContent className="h-[300px]">
-                    <GaugeComponent data={chartData.systemStatus} />
-                </CardContent>
-            </Card>
+                {/* System Status Chart */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>{t('System Status')}</CardTitle>
+                        <CardDescription>{t('Key system metrics and operational status')}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="h-[300px]">
+                        <GaugeComponent data={chartData.systemStatus} />
+                    </CardContent>
+                </Card>
             </div>
         </div>
     );

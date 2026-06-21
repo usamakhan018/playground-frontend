@@ -22,8 +22,16 @@ import SalaryIndex from "@/components/admin/Salaries/Index"
 import { SaleDashboard } from "@/components/admin/SaleDashboard"
 import ProductSalesIndex from "@/components/admin/Sales/Index"
 import TicketBatchesIndex from "@/components/admin/Tickets/TicketBatches"
+import ViewReport from "@/components/admin/DailyReports/ViewReport"
+import BranchIndex from "@/components/admin/Branches/Index"
+import { Navigate } from "react-router-dom"
 
 const adminRoutes = [
+    {
+        name: 'Dashboard',
+        path: '/',
+        element: <Navigate to="/dashboard" />,
+    },
     {
         name: 'Dashboard',
         path: 'dashboard',
@@ -144,6 +152,16 @@ const adminRoutes = [
         name: 'productSales',
         path: 'product-sales',
         element: <ProductSalesIndex />
+    },
+    {
+        name: 'viewReport',
+        path: 'daily-reports/view/:id',
+        element: <ViewReport />
+    },
+    {
+        name: 'branches',
+        path: 'branches',
+        element: <BranchIndex />
     }
 ]
 

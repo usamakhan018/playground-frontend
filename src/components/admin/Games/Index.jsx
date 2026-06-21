@@ -238,7 +238,7 @@ const GameIndex = () => {
               <TableHead>{t("Game Name")}</TableHead>
               <TableHead>{t("Type")}</TableHead>
               <TableHead>{t("Pricing")}</TableHead>
-              <TableHead>{t("Duration")}</TableHead>
+              {/* <TableHead>{t("Duration")}</TableHead> */}
               <TableHead className="text-right">{t("Actions")}</TableHead>
             </TableRow>
           </TableHeader>
@@ -269,7 +269,7 @@ const GameIndex = () => {
                   <TableCell className="font-medium">{game.name}</TableCell>
                   <TableCell>{renderGameType(game)}</TableCell>
                   <TableCell>{renderPricing(game)}</TableCell>
-                  <TableCell>
+                  {/* <TableCell>
                     {game.type === 'unlimited' ? (
                       game.duration || t("N/A")
                     ) : (
@@ -278,7 +278,7 @@ const GameIndex = () => {
                         {t("Variable")}
                       </Badge>
                     )}
-                  </TableCell>
+                  </TableCell> */}
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -364,7 +364,7 @@ const GameIndex = () => {
             </DialogHeader>
             
             <div className="space-y-4">
-              <div className="flex justify-between items-center">
+              {/* <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold">{t("Assets for this game")}</h3>
                 {assetCreateAbility && (
                   <GameAssetCreate 
@@ -372,7 +372,7 @@ const GameIndex = () => {
                     selectedGame={selectedGameForAssets}
                   />
                 )}
-              </div>
+              </div> */}
 
               <div className="bg-background">
                 <Table>

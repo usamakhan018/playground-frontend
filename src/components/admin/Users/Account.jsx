@@ -24,7 +24,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import Pagination from "@/components/Pagination";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -46,7 +46,7 @@ import {
 import { can, handleError, humanizeText } from "@/utils/helpers";
 import Loader from "@/components/Loader";
 import { useTranslation } from "react-i18next";
-import ViewReportDialog from "../DailyReports/ViewReportDialog";
+import ViewReportDialog from "../DailyReports/ViewReport";
 import ConfirmPaymentDialog from "../DailyReports/ConfirmPaymentDialog";
 import ProcessSalaryDialog from "./ProcessSalaryDialog";
 
@@ -127,6 +127,7 @@ const UserAccount = () => {
       setTransactionLinks(response.data.data.links || []);
     } catch (error) {
       handleError(error);
+      setLoading(false);
     }
   };
 
@@ -144,6 +145,8 @@ const UserAccount = () => {
       setSalesLinks(response.data.data.links || []);
     } catch (error) {
       handleError(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -161,6 +164,8 @@ const UserAccount = () => {
       setProductSalesLinks(response.data.data.links || []);
     } catch (error) {
       handleError(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -178,6 +183,8 @@ const UserAccount = () => {
       setExpensesLinks(response.data.data.links || []);
     } catch (error) {
       handleError(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -448,7 +455,7 @@ const UserAccount = () => {
           </Button>
           <PageTitle title={`${accountData.user.name} - ${t("Account Details")}`} />
         </div>
-        <Button 
+        <Button
           onClick={() => {
             fetchAccountData();
             fetchDailyReports();
@@ -635,9 +642,9 @@ const UserAccount = () => {
       </div>
 
       {/* Tabs for Transactions, Sales, and Reports */}
-      <Tabs defaultValue="transactions" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="transactions" className="flex items-center gap-2">
+      <Tabs defaultValue="reports" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-2">
+          {/* <TabsTrigger value="transactions" className="flex items-center gap-2">
             <CreditCard className="h-4 w-4" />
             {t("Transactions")}
           </TabsTrigger>
@@ -652,14 +659,14 @@ const UserAccount = () => {
           <TabsTrigger value="expenses" className="flex items-center gap-2">
             <DollarSign className="h-4 w-4" />
             {t("Expenses")}
-          </TabsTrigger>
+          </TabsTrigger> */}
           {/* <TabsTrigger value="reports" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             {t("Daily Reports")}
           </TabsTrigger> */}
-          <TabsTrigger value="completed" className="flex items-center gap-2">
+          <TabsTrigger value="reports" className="flex items-center gap-2">
             <CheckCircle className="h-4 w-4" />
-            {t("Completed Reports")}
+            {t("Reports")}
           </TabsTrigger>
           <TabsTrigger value="salaries" className="flex items-center gap-2">
             <DollarSign className="h-4 w-4" />
@@ -667,7 +674,7 @@ const UserAccount = () => {
           </TabsTrigger>
         </TabsList>
 
-        {/* Transactions Tab */}
+        {/* Transactions Tab
         <TabsContent value="transactions" className="space-y-4">
           <Card>
             <CardHeader>
@@ -755,7 +762,6 @@ const UserAccount = () => {
           </Card>
         </TabsContent>
 
-        {/* Sales Tab */}
         <TabsContent value="sales" className="space-y-4">
           <Card>
             <CardHeader>
@@ -851,7 +857,6 @@ const UserAccount = () => {
           </Card>
         </TabsContent>
 
-        {/* Product Sales Tab */}
         <TabsContent value="product-sales" className="space-y-4">
           <Card>
             <CardHeader>
@@ -925,13 +930,13 @@ const UserAccount = () => {
                         <TableCell>
                           <Badge variant={
                             productSale.payment_method === 'cash' ? 'default' :
-                            productSale.payment_method === 'credit_card' ? 'secondary' :
-                            productSale.payment_method === 'bank_transfer' ? 'outline' : 'outline'
+                              productSale.payment_method === 'credit_card' ? 'secondary' :
+                                productSale.payment_method === 'bank_transfer' ? 'outline' : 'outline'
                           }>
                             {productSale.payment_method === 'cash' ? t("Cash") :
-                             productSale.payment_method === 'credit_card' ? t("Credit Card") :
-                             productSale.payment_method === 'bank_transfer' ? t("Bank Transfer") :
-                             productSale.payment_method || t("N/A")}
+                              productSale.payment_method === 'credit_card' ? t("Credit Card") :
+                                productSale.payment_method === 'bank_transfer' ? t("Bank Transfer") :
+                                  productSale.payment_method || t("N/A")}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -979,7 +984,6 @@ const UserAccount = () => {
           </Card>
         </TabsContent>
 
-        {/* Expenses Tab */}
         <TabsContent value="expenses" className="space-y-4">
           <Card>
             <CardHeader>
@@ -1103,7 +1107,7 @@ const UserAccount = () => {
               )}
             </CardContent>
           </Card>
-        </TabsContent>
+        </TabsContent> */}
 
         {/* Daily Reports Tab */}
         <TabsContent value="reports" className="space-y-4">
@@ -1116,13 +1120,13 @@ const UserAccount = () => {
                     {t("View all daily reports for this user")}
                   </CardDescription>
                 </div>
-                <Button
+                {/* <Button
                   onClick={() => setShowSalaryDialog(true)}
                   className="bg-green-600 hover:bg-green-700"
                 >
                   <DollarSign className="h-4 w-4 mr-2" />
                   {t("Process Salary")}
-                </Button>
+                </Button> */}
               </div>
             </CardHeader>
             <CardContent>
@@ -1155,14 +1159,16 @@ const UserAccount = () => {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleViewReport(report.id)}
-                            >
-                              <Eye className="h-4 w-4 mr-1" />
-                              {t("View")}
-                            </Button>
+                            <Link to={`/daily-reports/view/${report.id}`}>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleViewReport(report.id)}
+                              >
+                                <Eye className="h-4 w-4 mr-1" />
+                                {t("View")}
+                              </Button>
+                            </Link>
                             {report.status !== 'settled' && report.status !== 'submitted' && (
                               <Button
                                 variant="default"
@@ -1203,7 +1209,7 @@ const UserAccount = () => {
         </TabsContent>
 
         {/* Completed Reports Tab */}
-        <TabsContent value="completed" className="space-y-4">
+        <TabsContent value="Reports" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>{t("Completed Reports")}</CardTitle>
@@ -1322,8 +1328,8 @@ const UserAccount = () => {
                         <TableCell>
                           <div className="flex gap-2">
                             {salary.slip_path ? (
-                              <Button 
-                                variant="outline" 
+                              <Button
+                                variant="outline"
                                 size="sm"
                                 onClick={() => handleViewSalarySlip(salary.id)}
                               >
@@ -1331,8 +1337,8 @@ const UserAccount = () => {
                                 {t('View Slip')}
                               </Button>
                             ) : (
-                              <Button 
-                                variant="outline" 
+                              <Button
+                                variant="outline"
                                 size="sm"
                                 onClick={() => handleViewSalarySlip(salary.id)}
                                 className="text-orange-600 border-orange-600 hover:bg-orange-50"
@@ -1368,6 +1374,7 @@ const UserAccount = () => {
       </Tabs>
 
       {/* Dialogs */}
+      {showReportDialog && (
       <ViewReportDialog
         open={showReportDialog}
         onOpenChange={setShowReportDialog}
@@ -1377,7 +1384,7 @@ const UserAccount = () => {
           setShowConfirmDialog(true);
         }}
       />
-
+      )}
       <ConfirmPaymentDialog
         open={showConfirmDialog}
         onOpenChange={setShowConfirmDialog}

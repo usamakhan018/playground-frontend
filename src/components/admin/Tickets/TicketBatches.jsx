@@ -371,7 +371,7 @@ const TicketBatchesIndex = () => {
           onClose={setDeleteAlertOpen}
           onSubmitSuccess={fetchBatches}
           record={selectedRecord}
-          api="ticket-batches/delete"
+          api="tickets/delete-batch"
         />
       )}
     </div>

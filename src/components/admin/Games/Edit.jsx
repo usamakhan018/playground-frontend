@@ -162,7 +162,7 @@ function Edit({ onSubmitSuccess, record, onClose }) {
               />
             </div>
 
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <label htmlFor="price" className="block text-sm font-medium">
                 {gameType === 'unlimited' ? t("Base Price") : t("Base Price (Optional)")}
               </label>
@@ -181,7 +181,7 @@ function Edit({ onSubmitSuccess, record, onClose }) {
                   {t("This will be used as fallback price. Main pricing comes from duration options below.")}
                 </p>
               )}
-            </div>
+            </div> */}
 
             {gameType === 'unlimited' && (
               <div className="space-y-2">

@@ -24,7 +24,8 @@ import {
     Store,
     ClipboardList,
     UserCog,
-    FolderTree
+    FolderTree,
+    FileText
 } from "lucide-react";
 
 import {
@@ -64,22 +65,16 @@ export function AppSidebar({ ...props }) {
                         permission: can("Dashboard access"),
                     },
                     {
+                        label: t("Branches"),
+                        path: "/branches",
+                        icon: Store,
+                        permission: can("Branch access"),
+                    },
+                    {
                         label: t("Charts"),
                         path: "/charts",
                         icon: FileBarChart,
                         permission: can("Charts access"),
-                    },
-                    {
-                        label: t("Roles"),
-                        path: "/roles",
-                        icon: ShieldCheck,
-                        permission: can("Role access"),
-                    },
-                    {
-                        label: t("Permissions"),
-                        path: "/permissions",
-                        icon: DoorOpen,
-                        permission: can("Permission access"),
                     },
                     {
                         label: t("Profile"),
@@ -129,18 +124,18 @@ export function AppSidebar({ ...props }) {
                         icon: ReceiptIcon,
                         permission: can("Expense access"),
                     },
-                    {
-                        label: t("Hotel Expenses"),
-                        path: "/hotel-expenses",
-                        icon: Hotel,
-                        permission: can("Hotel Expense access"),
-                    },
+                    // {
+                    //     label: t("Hotel Expenses"),
+                    //     path: "/hotel-expenses",
+                    //     icon: Hotel,
+                    //     permission: can("Hotel Expense access"),
+                    // },
                     {
                         label: t("Expense Categories"),
                         path: "/expense/categories",
                         icon: FolderTree,
                         permission: can("Expense Category access"),
-                    },
+                    }
                 ],
             },
             {

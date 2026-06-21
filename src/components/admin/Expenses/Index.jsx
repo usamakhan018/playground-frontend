@@ -24,7 +24,7 @@ import { useNavigate } from "react-router-dom";
 import Pagination from "@/components/Pagination";
 import { Input } from "@/components/ui/input";
 import { toast } from 'react-hot-toast';
-import { EditIcon, MoreHorizontal, RefreshCw, Trash2Icon, SearchIcon, CheckCircle, XCircle } from "lucide-react";
+import { EditIcon, MoreHorizontal, RefreshCw, Trash2Icon, SearchIcon, CheckCircle, XCircle, Printer } from "lucide-react";
 import Edit from "./Edit";
 import Create from "./Create";
 import { can, handleError } from "@/utils/helpers";
@@ -117,11 +117,11 @@ const ExpenseIndex = () => {
 
       const response = await axiosClient.post('expenses/approve', formData);
       toast.success(t("Expense approved successfully"));
-      
+
       // Update the expense in the local state
-      setExpenses(prevExpenses => 
-        prevExpenses.map(exp => 
-          exp.id === expense.id 
+      setExpenses(prevExpenses =>
+        prevExpenses.map(exp =>
+          exp.id === expense.id
             ? { ...exp, status: 'approved' }
             : exp
         )
@@ -141,11 +141,11 @@ const ExpenseIndex = () => {
 
       const response = await axiosClient.post('expenses/reject', formData);
       toast.success(t("Expense rejected successfully"));
-      
+
       // Update the expense in the local state
-      setExpenses(prevExpenses => 
-        prevExpenses.map(exp => 
-          exp.id === expense.id 
+      setExpenses(prevExpenses =>
+        prevExpenses.map(exp =>
+          exp.id === expense.id
             ? { ...exp, status: 'rejected' }
             : exp
         )
@@ -246,6 +246,7 @@ const ExpenseIndex = () => {
               <TableHead>{t("Category")}</TableHead>
               <TableHead>{t("Description")}</TableHead>
               <TableHead>{t("Status")}</TableHead>
+              <TableHead>{t("Created By")}</TableHead>
               <TableHead>{t("Date")}</TableHead>
               <TableHead className="text-right">{t("Actions")}</TableHead>
             </TableRow>
@@ -275,18 +276,41 @@ const ExpenseIndex = () => {
                   <TableCell>{expense.category?.name}</TableCell>
                   <TableCell className="max-w-32 truncate">{expense.description}</TableCell>
                   <TableCell>
-                    <Badge variant={getStatusBadgeVariant(expense.status)}>
+                    <Badge className="mb-2" variant={getStatusBadgeVariant(expense.status)}>
                       {expense.status === 'pending' && t('Pending')}
                       {expense.status === 'approved' && t('Approved')}
                       {expense.status === 'rejected' && t('Rejected')}
                     </Badge>
+                    {expense.status == 'pending' && (
+                      <div className="flex flex-row gap-2">
+                        <Button
+                          variant="outline"
+                          size="xsm"
+                          onClick={() => handleApprove(expense)}
+                          className="flex items-center gap-2 text-green-600"
+                        >
+                          <CheckCircle className="mr-2 h-4 w-4" />
+                          {t("Approve")}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="xsm"
+                          onClick={() => handleReject(expense)}
+                          className="flex items-center gap-2 text-red-600"
+                        >
+                          <XCircle className="mr-2 h-4 w-4" />
+                          {t("Reject")}
+                        </Button>
+                      </div>
+                    )}
                   </TableCell>
+                  <TableCell>{expense.created_by?.name}</TableCell>
                   <TableCell>{new Date(expense.date).toLocaleDateString()}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           className="h-8 w-8 p-0"
                           disabled={processingApproval === expense.id}
                         >
@@ -301,18 +325,18 @@ const ExpenseIndex = () => {
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>{t("Actions")}</DropdownMenuLabel>
                         <DropdownMenuSeparator />
-                        
+
                         {/* Approval actions - only show for pending expenses */}
                         {updateAbility && expense.status === 'pending' && (
                           <>
-                            <DropdownMenuItem 
+                            <DropdownMenuItem
                               onClick={() => handleApprove(expense)}
                               className="text-green-600"
                             >
                               <CheckCircle className="mr-2 h-4 w-4" />
                               {t("Approve")}
                             </DropdownMenuItem>
-                            <DropdownMenuItem 
+                            <DropdownMenuItem
                               onClick={() => handleReject(expense)}
                               className="text-red-600"
                             >
@@ -322,7 +346,7 @@ const ExpenseIndex = () => {
                             <DropdownMenuSeparator />
                           </>
                         )}
-                        
+
                         {updateAbility && (
                           <DropdownMenuItem onClick={() => {
                             setSelectedRecord(expense);

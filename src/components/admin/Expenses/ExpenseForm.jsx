@@ -20,11 +20,11 @@ const ExpenseForm = ({ initialData = null, onSubmit, isLoading = false }) => {
   const [selectedExpenseType, setSelectedExpenseType] = useState(initialData?.expense_type || 'user');
   const [selectedAsset, setSelectedAsset] = useState(initialData?.game_asset_id || '');
   const [selectedStatus, setSelectedStatus] = useState(initialData?.status || 'pending');
-  
+
   // State for file preview (legacy single receipt)
   const [proofPreview, setProofPreview] = useState(null);
   const [proofFile, setProofFile] = useState(null);
-  
+
   // State for multiple images
   const [imageFiles, setImageFiles] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
@@ -44,12 +44,12 @@ const ExpenseForm = ({ initialData = null, onSubmit, isLoading = false }) => {
       setSelectedExpenseType(initialData.expense_type || 'user');
       setSelectedAsset(initialData.game_asset_id || '');
       setSelectedStatus(initialData.status || 'pending');
-      
+
       // Set existing receipt preview if available (legacy)
       if (initialData.receipt_path) {
         setProofPreview(`${import.meta.env.VITE_BASE_URL}${initialData.receipt_path}`);
       }
-      
+
       // Set existing images if available
       if (initialData.images && initialData.images.length > 0) {
         setExistingImages(initialData.images);
@@ -61,7 +61,7 @@ const ExpenseForm = ({ initialData = null, onSubmit, isLoading = false }) => {
     const file = e.target.files[0];
     if (file) {
       setProofFile(file);
-      
+
       // Create preview for images
       if (file.type.startsWith('image/')) {
         const reader = new FileReader();
@@ -93,7 +93,7 @@ const ExpenseForm = ({ initialData = null, onSubmit, isLoading = false }) => {
     files.forEach((file) => {
       if (file.type.startsWith('image/')) {
         newImageFiles.push(file);
-        
+
         const reader = new FileReader();
         reader.onload = (e) => {
           newImagePreviews.push({
@@ -102,7 +102,7 @@ const ExpenseForm = ({ initialData = null, onSubmit, isLoading = false }) => {
             name: file.name,
             isNew: true
           });
-          
+
           // Update state when all files are processed
           if (newImagePreviews.length === files.length) {
             setImageFiles(prev => [...prev, ...newImageFiles]);
@@ -112,7 +112,7 @@ const ExpenseForm = ({ initialData = null, onSubmit, isLoading = false }) => {
         reader.readAsDataURL(file);
       }
     });
-    
+
     // Reset file input
     e.target.value = '';
   };
@@ -130,26 +130,26 @@ const ExpenseForm = ({ initialData = null, onSubmit, isLoading = false }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const formData = new FormData(e.currentTarget);
-    
+
     // Add the proof file if selected (legacy support)
     if (proofFile) {
       formData.append('receipt', proofFile);
     }
-    
+
     // Add multiple images
     imageFiles.forEach((file, index) => {
       formData.append('images[]', file);
     });
-    
+
     // Add images to delete
     if (imagesToDelete.length > 0) {
       imagesToDelete.forEach((imageId) => {
         formData.append('delete_images[]', imageId);
       });
     }
-    
+
     if (initialData) {
       formData.append('id', initialData.id);
     }
@@ -165,12 +165,12 @@ const ExpenseForm = ({ initialData = null, onSubmit, isLoading = false }) => {
   const handleExpenseTypeChange = (selectedOption) => {
     const newType = selectedOption?.value || '';
     setSelectedExpenseType(newType);
-    
+
     // Clear user selection if not user expense
     if (newType !== 'user') {
       setSelectedUser('');
     }
-    
+
     // Clear asset selection if not asset expense
     if (newType !== 'asset') {
       setSelectedAsset('');
@@ -204,6 +204,7 @@ const ExpenseForm = ({ initialData = null, onSubmit, isLoading = false }) => {
     { value: 'approved', label: t('Approved') },
     { value: 'rejected', label: t('Rejected') }
   ];
+  console.log(initialData)
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -290,7 +291,7 @@ const ExpenseForm = ({ initialData = null, onSubmit, isLoading = false }) => {
             id="date"
             name="date"
             type="date"
-            defaultValue={new Date(initialData?.date).toISOString().split('T')[0] || ''}
+            defaultValue={initialData?.date ? new Date(initialData?.date).toISOString().split('T')[0] : ''}
             required
             className="w-full cursor-pointer"
             onClick={(e) => e.target.showPicker && e.target.showPicker()}
@@ -333,7 +334,7 @@ const ExpenseForm = ({ initialData = null, onSubmit, isLoading = false }) => {
             />
             <Upload className="h-4 w-4 text-gray-400" />
           </div>
-          
+
           {/* File Preview */}
           {proofPreview && (
             <div className="border rounded-lg p-3 bg-gray-50">
@@ -349,25 +350,25 @@ const ExpenseForm = ({ initialData = null, onSubmit, isLoading = false }) => {
                   <X className="h-4 w-4" />
                 </Button>
               </div>
-              
+
               {typeof proofPreview === 'string' && proofPreview.startsWith('data:image') ? (
                 // New image preview
-                <img 
-                  src={proofPreview} 
-                  alt="Receipt preview" 
+                <img
+                  src={proofPreview}
+                  alt="Receipt preview"
                   className="max-w-full h-32 object-contain rounded"
                 />
               ) : typeof proofPreview === 'string' && proofPreview.startsWith('http') ? (
                 // Existing image from server
                 <div className="flex items-center gap-2">
-                  <img 
-                    src={proofPreview} 
-                    alt="Receipt preview" 
+                  <img
+                    src={proofPreview}
+                    alt="Receipt preview"
                     className="max-w-full h-32 object-contain rounded"
                   />
                   <Button
                     type="button"
-                    variant="outline" 
+                    variant="outline"
                     size="sm"
                     onClick={() => window.open(proofPreview, '_blank')}
                   >
@@ -382,7 +383,7 @@ const ExpenseForm = ({ initialData = null, onSubmit, isLoading = false }) => {
                   {typeof proofPreview === 'string' && proofPreview.startsWith('http') && (
                     <Button
                       type="button"
-                      variant="outline" 
+                      variant="outline"
                       size="sm"
                       onClick={() => window.open(proofPreview, '_blank')}
                     >
@@ -394,7 +395,7 @@ const ExpenseForm = ({ initialData = null, onSubmit, isLoading = false }) => {
               )}
             </div>
           )}
-          
+
           <p className="text-xs text-gray-500">{t('Supported formats: JPG, PNG, PDF (Max 2MB)')}</p>
         </div>
       </div>
@@ -414,7 +415,7 @@ const ExpenseForm = ({ initialData = null, onSubmit, isLoading = false }) => {
             />
             <Plus className="h-4 w-4 text-gray-400" />
           </div>
-          
+
           {/* Existing Images */}
           {existingImages.length > 0 && (
             <div className="space-y-2">
@@ -452,7 +453,7 @@ const ExpenseForm = ({ initialData = null, onSubmit, isLoading = false }) => {
               </div>
             </div>
           )}
-          
+
           {/* New Images Preview */}
           {imagePreviews.length > 0 && (
             <div className="space-y-2">
@@ -484,7 +485,7 @@ const ExpenseForm = ({ initialData = null, onSubmit, isLoading = false }) => {
               </div>
             </div>
           )}
-          
+
           <p className="text-xs text-gray-500">{t('Supported formats: JPG, PNG (Max 2MB each)')}</p>
         </div>
       </div>

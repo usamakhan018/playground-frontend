@@ -190,6 +190,7 @@ const UserIndex = () => {
             <TableRow>
               <TableHead className="w-[100px]">#</TableHead>
               <TableHead>{t("Name")}</TableHead>
+              <TableHead>{t("Branch")}</TableHead>
               <TableHead>{t("Email")}</TableHead>
               <TableHead>{t("Phone")}</TableHead>
               <TableHead>{t("Role")}</TableHead>
@@ -210,6 +211,7 @@ const UserIndex = () => {
                 <TableRow key={index}>
                   <TableCell className="font-medium">{index + 1}</TableCell>
                   <TableCell>{user.name}</TableCell>
+                  <TableCell>{user.branch?.name}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.phone}</TableCell>
                   <TableCell>{user.roles[0]?.name}</TableCell>

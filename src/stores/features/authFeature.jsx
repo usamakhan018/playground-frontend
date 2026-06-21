@@ -36,6 +36,11 @@ const authFeature = createSlice({
         loading: false,
         error: false,
     },
+    reducers: {
+        setUser: (state, action) => {
+            state.user = action.payload;
+        },
+    },
     extraReducers: (builder) => {
         // login
         builder.addCase(login.pending, (state) => {
@@ -83,5 +88,7 @@ const authFeature = createSlice({
         });
     }
 });
+
+export const { setUser } = authFeature.actions;
 
 export default authFeature.reducer;

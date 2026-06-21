@@ -22,19 +22,20 @@ import {
 import { useNavigate } from "react-router-dom";
 import Pagination from "@/components/Pagination";
 import { Input } from "@/components/ui/input";
+import { toast } from 'react-hot-toast';
 import { EditIcon, MoreHorizontal, RefreshCw, Trash2Icon, SearchIcon } from "lucide-react";
 import Edit from "./Edit";
 import Create from "./Create";
-import { can, handleError, humanizeText } from "@/utils/helpers";
+import { can, handleError } from "@/utils/helpers";
 import Loader from "@/components/Loader";
 import DeleteAlert from "@/components/misc/DeleteAlert";
 import { useTranslation } from "react-i18next";
 
-const HotelExpenseIndex = () => {
+const BranchIndex = () => {
   const [loading, setLoading] = useState(true);
   const [links, setLinks] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [hotelExpenses, setHotelExpenses] = useState([]);
+  const [branches, setBranches] = useState([]);
   const [search, setSearch] = useState("");
   const [showRefresh, setShowRefresh] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState(null);
@@ -44,22 +45,22 @@ const HotelExpenseIndex = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  const accessAbility = can("Hotel Expense access");
-  const createAbility = can("Hotel Expense create");
-  const updateAbility = can("Hotel Expense update");
-  const deleteAbility = can("Hotel Expense delete");
+  const accessAbility = can("Branch access");
+  const createAbility = can("Branch create");
+  const updateAbility = can("Branch update");
+  const deleteAbility = can("Branch delete");
 
   useEffect(() => {
     if (!accessAbility) navigate("/unauthorized");
-    fetchHotelExpenses(currentPage);
+    fetchBranches(currentPage);
   }, [currentPage]);
 
-  const fetchHotelExpenses = async (page = 1) => {
+  const fetchBranches = async (page = 1) => {
     setLoading(true);
     try {
-      const response = await axiosClient.get(`hotel_expenses?page=${page}`);
+      const response = await axiosClient.get(`branches?page=${page}`);
       setLinks(response.data.data.links);
-      setHotelExpenses(response.data.data.data);
+      setBranches(response.data.data.data);
     } catch (error) {
       handleError(error);
     } finally {
@@ -74,8 +75,8 @@ const HotelExpenseIndex = () => {
     setLoading(true);
     setShowRefresh(true);
     try {
-      const response = await axiosClient.get(`hotel_expenses?query=${search.trim()}`);
-      setHotelExpenses(response.data.data);
+      const response = await axiosClient.get(`branches?query=${search.trim()}`);
+      setBranches(response.data.data);
       setLinks([]);
     } catch (error) {
       handleError(error);
@@ -87,16 +88,16 @@ const HotelExpenseIndex = () => {
   const handleRefresh = () => {
     setSearch("");
     setShowRefresh(false);
-    fetchHotelExpenses();
+    fetchBranches();
   };
 
   return (
     <div className="space-y-3">
-      <PageTitle title={t("Hotel Expenses")} />
+      <PageTitle title={t("Branches")} />
 
       <div className="flex flex-col sm:flex-row justify-between gap-4">
         <div>
-          {createAbility && <Create onSubmitSuccess={fetchHotelExpenses} />}
+          {createAbility && <Create onSubmitSuccess={fetchBranches} />}
         </div>
 
         <form onSubmit={handleSearch} className="flex gap-2">
@@ -131,30 +132,24 @@ const HotelExpenseIndex = () => {
           <TableHeader>
             <TableRow>
               <TableHead className="w-[50px]">#</TableHead>
-              {/* <TableHead>{t("User")}</TableHead> */}
-              <TableHead>{t("Category")}</TableHead>
-              <TableHead>{t("Amount")}</TableHead>
-              <TableHead>{t("Description")}</TableHead>
-              <TableHead>{t("Payment Method")}</TableHead>
+              <TableHead>{t("Branch")}</TableHead>
+              <TableHead>{t("Address")}</TableHead>
               <TableHead className="text-right">{t("Actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center h-24">
+                <TableCell colSpan={4} className="text-center h-24">
                   <Loader />
                 </TableCell>
               </TableRow>
-            ) : hotelExpenses.length > 0 ? (
-              hotelExpenses.map((hotelExpense, index) => (
-                <TableRow key={hotelExpense.id}>
+            ) : branches.length > 0 ? (
+              branches.map((branch, index) => (
+                <TableRow key={branch.id}>
                   <TableCell className="font-medium">{index + 1}</TableCell>
-                  {/* <TableCell>{hotelExpense.user?.name || '-'}</TableCell> */}
-                  <TableCell>{hotelExpense.expense_category?.name || '-'}</TableCell>
-                  <TableCell>${hotelExpense.amount}</TableCell>
-                  <TableCell>{hotelExpense.description || '-'}</TableCell>
-                  <TableCell>{humanizeText(hotelExpense.payment_method) || '-'}</TableCell>
+                  <TableCell>{branch.name}</TableCell>
+                  <TableCell>{branch.address}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -168,7 +163,7 @@ const HotelExpenseIndex = () => {
                         <DropdownMenuSeparator />
                         {updateAbility && (
                           <DropdownMenuItem onClick={() => {
-                            setSelectedRecord(hotelExpense);
+                            setSelectedRecord(branch);
                             setEditDialogOpen(true);
                           }}>
                             <EditIcon className="mr-2 h-4 w-4" />
@@ -177,7 +172,7 @@ const HotelExpenseIndex = () => {
                         )}
                         {deleteAbility && (
                           <DropdownMenuItem onClick={() => {
-                            setSelectedRecord(hotelExpense);
+                            setSelectedRecord(branch);
                             setDeleteAlertOpen(true);
                           }}>
                             <Trash2Icon className="mr-2 h-4 w-4" />
@@ -191,7 +186,7 @@ const HotelExpenseIndex = () => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={7} className="text-center h-24">
+                <TableCell colSpan={4} className="text-center h-24">
                   <NoRecordFound />
                 </TableCell>
               </TableRow>
@@ -212,9 +207,9 @@ const HotelExpenseIndex = () => {
         <DeleteAlert
           open={deleteAlertOpen}
           onClose={setDeleteAlertOpen}
-          onSubmitSuccess={fetchHotelExpenses}
+          onSubmitSuccess={fetchBranches}
           record={selectedRecord}
-          api="hotel_expenses/delete"
+          api="branches/delete"
         />
       )}
 
@@ -222,7 +217,7 @@ const HotelExpenseIndex = () => {
         <Edit
           open={editDialogOpen}
           onClose={() => setEditDialogOpen(false)}
-          onSubmitSuccess={fetchHotelExpenses}
+          onSubmitSuccess={fetchBranches}
           record={selectedRecord}
         />
       )}
@@ -230,4 +225,4 @@ const HotelExpenseIndex = () => {
   );
 };
 
-export default HotelExpenseIndex;
+export default BranchIndex;

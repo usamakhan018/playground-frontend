@@ -22,24 +22,23 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { 
-  DollarSign, 
-  FileText,
+import {
+  DollarSign,
   User,
   Calendar,
   TrendingUp,
-  TrendingDown,
-  Download
+  Eye
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import axiosClient from "@/axios";
 import { handleError } from "@/utils/helpers";
 import Loader from "@/components/Loader";
 import NoRecordFound from "@/components/NoRecordFound";
+import { Link } from "react-router-dom";
 
-const SalaryHistoryDialog = ({ 
-  open, 
-  onOpenChange, 
+const SalaryHistoryDialog = ({
+  open,
+  onOpenChange,
   userId,
   salaryId
 }) => {
@@ -78,7 +77,7 @@ const SalaryHistoryDialog = ({
     };
 
     const config = statusConfig[status] || statusConfig.pending;
-    
+
     return (
       <Badge className={`${config.className} text-xs`}>
         {config.label}
@@ -156,6 +155,7 @@ const SalaryHistoryDialog = ({
                         <TableHead>{t("Status")}</TableHead>
                         <TableHead>{t("Submitted At")}</TableHead>
                         <TableHead>{t("Settled At")}</TableHead>
+                        <TableHead>{t("Actions")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -197,6 +197,13 @@ const SalaryHistoryDialog = ({
                             <div className="text-sm">
                               {report.settled_at ? new Date(report.settled_at).toLocaleDateString() : t("Not settled")}
                             </div>
+                          </TableCell>
+                          <TableCell>
+                            <Link to={`/daily-reports/view/${report.id}`}>
+                              <Button variant="outline" size="icon">
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </Link>
                           </TableCell>
                         </TableRow>
                       ))}

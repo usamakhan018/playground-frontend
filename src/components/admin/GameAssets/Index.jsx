@@ -23,7 +23,7 @@ import { useNavigate } from "react-router-dom";
 import Pagination from "@/components/Pagination";
 import { Input } from "@/components/ui/input";
 import { toast } from 'react-hot-toast';
-import { EditIcon, MoreHorizontal, RefreshCw, Trash2Icon, SearchIcon, Eye, Printer, Receipt, DollarSign, Clock, CheckCircle, AlertTriangle, FileText, Filter, Calendar } from "lucide-react";
+import { EditIcon, MoreHorizontal, RefreshCw, Trash2Icon, SearchIcon, Eye, Printer, Receipt, DollarSign, Clock, CheckCircle, AlertTriangle, FileText, Filter, Calendar, Hash } from "lucide-react";
 import Edit from "./Edit";
 import Create from "./Create";
 import { can, handleError } from "@/utils/helpers";
@@ -54,7 +54,7 @@ const GameAssetIndex = () => {
     const [deleteAlertOpen, setDeleteAlertOpen] = useState(false);
     const [barcodeDialogOpen, setBarcodeDialogOpen] = useState(false);
     const [selectedAssetForBarcode, setSelectedAssetForBarcode] = useState(null);
-    
+
     // Expenses dialog states
     const [expensesDialogOpen, setExpensesDialogOpen] = useState(false);
     const [selectedAssetForExpenses, setSelectedAssetForExpenses] = useState(null);
@@ -121,14 +121,14 @@ const GameAssetIndex = () => {
         try {
             // Build query parameters
             const params = new URLSearchParams({ page: page.toString() });
-            
+
             // Add filters to params
             Object.entries(filters).forEach(([key, value]) => {
                 if (value && value !== '') {
                     params.append(key, value);
                 }
             });
-            
+
             const response = await axiosClient.get(`expenses/by-asset/${assetId}?${params}`);
             setAssetExpenses(response.data.data.data || response.data.data);
             setExpensesLinks(response.data.data.links || []);
@@ -272,7 +272,7 @@ const GameAssetIndex = () => {
                     <TableBody>
                         {loading ? (
                             <TableRow>
-                                <TableCell colSpan={5} className="text-center h-24">
+                                <TableCell colSpan={12} className="text-center h-24">
                                     <Loader />
                                 </TableCell>
                             </TableRow>
@@ -293,7 +293,25 @@ const GameAssetIndex = () => {
                                             </div>
                                         )}
                                     </TableCell>
-                                    <TableCell>{gameAsset.barcode}</TableCell>
+                                    <TableCell className="">
+                                        <div className="flex flex-col items-center gap-2">
+                                            <Badge variant="outline" className="gap-1">
+                                                {gameAsset.barcode || 0}
+                                            </Badge>
+                                            <Button
+                                                variant="outline"
+                                                size="xsm"
+                                                onClick={() => {
+                                                    setSelectedAssetForBarcode(gameAsset);
+                                                    setBarcodeDialogOpen(true);
+                                                }}
+                                                className="flex items-center gap-2"
+                                            >
+                                                <Printer className="h-2 w-2" />
+                                                {t("Print")}
+                                            </Button>
+                                        </div>
+                                    </TableCell>
                                     <TableCell>{gameAsset.name}</TableCell>
                                     <TableCell>{gameAsset.game?.name || t("N/A")}</TableCell>
                                     <TableCell className="text-right">
@@ -312,13 +330,13 @@ const GameAssetIndex = () => {
                                                     {t("View Expenses")}
                                                 </DropdownMenuItem>
                                                 <DropdownMenuSeparator />
-                                                <DropdownMenuItem onClick={() => {
+                                                {/* <DropdownMenuItem onClick={() => {
                                                     setSelectedAssetForBarcode(gameAsset);
                                                     setBarcodeDialogOpen(true);
                                                 }}>
                                                     <Printer className="mr-2 h-4 w-4" />
                                                     {t("Print Barcode")}
-                                                </DropdownMenuItem>
+                                                </DropdownMenuItem> */}
                                                 {updateAbility && (
                                                     <DropdownMenuItem onClick={() => {
                                                         setSelectedRecord(gameAsset);
@@ -392,7 +410,7 @@ const GameAssetIndex = () => {
                                 {t("Generate and print barcode for")} {selectedAssetForBarcode.name}
                             </DialogDescription>
                         </DialogHeader>
-                        
+
                         <div className="py-4">
                             <BarcodeGenerator
                                 value={selectedAssetForBarcode.barcode}
@@ -414,11 +432,11 @@ const GameAssetIndex = () => {
                                 {t("Asset Expenses")} - {selectedAssetForExpenses.name}
                             </DialogTitle>
                             <DialogDescription>
-                                {t("View and manage expenses for")} {selectedAssetForExpenses.name} 
+                                {t("View and manage expenses for")} {selectedAssetForExpenses.name}
                                 {selectedAssetForExpenses.game && ` (${selectedAssetForExpenses.game.name})`}
                             </DialogDescription>
                         </DialogHeader>
-                        
+
                         <div className="space-y-4">
                             {/* Filters */}
                             <FilterComponent
@@ -445,7 +463,7 @@ const GameAssetIndex = () => {
                                 <div className="text-sm text-muted-foreground">
                                     {t("Expenses for this asset")}
                                 </div>
-                                
+
                                 <form onSubmit={handleExpensesSearch} className="flex gap-2">
                                     <div className="flex gap-2">
                                         <Input
@@ -493,7 +511,7 @@ const GameAssetIndex = () => {
                                     <TableBody>
                                         {expensesLoading ? (
                                             <TableRow>
-                                                <TableCell colSpan={9} className="text-center h-24">
+                                                <TableCell colSpan={12} className="text-center h-24">
                                                     <Loader />
                                                 </TableCell>
                                             </TableRow>
@@ -546,7 +564,7 @@ const GameAssetIndex = () => {
                                                                     {t("Receipt")}
                                                                 </Button>
                                                             )}
-                                                            
+
                                                             {/* Multiple images */}
                                                             {expense.images && expense.images.length > 0 ? (
                                                                 <div className="flex items-center gap-1">

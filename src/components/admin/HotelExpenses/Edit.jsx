@@ -41,7 +41,7 @@ function Edit({ onSubmitSuccess, record, onClose }) {
     if (expenseCategories.length === 0) {
       dispatch(getExpenseCategories());
     }
-    
+
     // Set initial values
     if (record) {
       if (record.user) {
@@ -74,7 +74,7 @@ function Edit({ onSubmitSuccess, record, onClose }) {
       if (selectedUser) formData.append('user_id', selectedUser.value);
       if (selectedCategory) formData.append('expense_category_id', selectedCategory.value);
       if (selectedPaymentMethod) formData.append('payment_method', selectedPaymentMethod.value);
-      
+
       const response = await axiosClient.post("hotel_expenses/update", formData);
       toast.success(response.data.message);
       onSubmitSuccess?.();
@@ -95,7 +95,7 @@ function Edit({ onSubmitSuccess, record, onClose }) {
 
         <form id="edit-form" onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <label htmlFor="user" className="block text-sm font-medium">
                 {t("User")} *
               </label>
@@ -106,7 +106,7 @@ function Edit({ onSubmitSuccess, record, onClose }) {
                 placeholder={t("Select User")}
                 isClearable
               />
-            </div>
+            </div> */}
 
             <div className="space-y-2">
               <label htmlFor="category" className="block text-sm font-medium">
@@ -181,9 +181,9 @@ function Edit({ onSubmitSuccess, record, onClose }) {
               )}
             </div>
           </div>
-          
+
           <input type="hidden" name="id" defaultValue={record?.id} />
-          
+
           <div className="flex justify-end gap-3">
             <DialogClose asChild>
               <Button type="button" variant="outline">

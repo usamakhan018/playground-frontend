@@ -40,7 +40,7 @@ function Edit({ onSubmitSuccess, record, onClose }) {
   }, [gamesFromStore, dispatch]);
 
   useEffect(() => {
-    if (games.length > 0 && record.game_id) {
+    if (games.length > 0 && record.game_id && selectedGame == null) {
       const gameOption = games.find(game => game.value === record.game_id);
       setSelectedGame(gameOption || null);
     }

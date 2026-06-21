@@ -14,7 +14,7 @@ import axiosClient from "@/axios";
 import { toast } from 'react-hot-toast';
 import { Loader, Plus } from "lucide-react";
 import { handleError } from "@/utils/helpers";
-import { useTranslation } from "react-i18next"; 
+import { useTranslation } from "react-i18next";
 import { getExpenseCategories } from "@/stores/features/ajaxFeature";
 import { useDispatch, useSelector } from "react-redux";
 import Select from "@/components/misc/Select";
@@ -53,7 +53,7 @@ function Create({ onSubmitSuccess }) {
     { value: 'bank_transfer', label: t('Bank Transfer') },
     { value: 'credit_card', label: t('Credit Card') }
   ];
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -63,7 +63,7 @@ function Create({ onSubmitSuccess }) {
       if (selectedUser) form.append('user_id', selectedUser.value);
       if (selectedCategory) form.append('expense_category_id', selectedCategory.value);
       if (selectedPaymentMethod) form.append('payment_method', selectedPaymentMethod.value);
-      
+
       const response = await axiosClient.post("hotel_expenses/store", form);
       toast.success(response.data.message);
       onSubmitSuccess?.();
@@ -98,7 +98,7 @@ function Create({ onSubmitSuccess }) {
 
         <form id="create-form" onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <label htmlFor="user" className="block text-sm font-medium">
                 {t("User")} *
               </label>
@@ -109,7 +109,7 @@ function Create({ onSubmitSuccess }) {
                 placeholder={t("Select User")}
                 isClearable
               />
-            </div>
+            </div> */}
 
             <div className="space-y-2">
               <label htmlFor="category" className="block text-sm font-medium">

@@ -27,7 +27,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Pagination from "@/components/Pagination";
 import { Input } from "@/components/ui/input";
 import {
@@ -43,10 +43,9 @@ import {
   AlertCircle,
   Settings
 } from "lucide-react";
-import { can, handleError } from "@/utils/helpers";
+import { can, handleError, humanizeText } from "@/utils/helpers";
 import Loader from "@/components/Loader";
 import { useTranslation } from "react-i18next";
-import ViewReportDialog from "./ViewReportDialog";
 import ConfirmPaymentDialog from "./ConfirmPaymentDialog";
 import MarkAsSettledDialog from "./MarkAsSettledDialog";
 import FilterComponent from "@/components/misc/FilterComponent";
@@ -59,7 +58,6 @@ const DailyReportsIndex = () => {
   const [search, setSearch] = useState("");
   const [showRefresh, setShowRefresh] = useState(false);
   const [selectedReport, setSelectedReport] = useState(null);
-  const [showReportDialog, setShowReportDialog] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showSettleDialog, setShowSettleDialog] = useState(false);
   const [confirmAmount, setConfirmAmount] = useState("");
@@ -67,6 +65,7 @@ const DailyReportsIndex = () => {
   const [settleNotes, setSettleNotes] = useState("");
   const [settleLoading, setSettleLoading] = useState(false);
   const [currentFilters, setCurrentFilters] = useState();
+  const [refreshing, setRefreshing] = useState(false);
   const [stats, setStats] = useState({
     total_reports: 0,
     pending_reports: 0,
@@ -181,16 +180,6 @@ const DailyReportsIndex = () => {
     setCurrentPage(1);
   };
 
-  const handleViewReport = async (reportId) => {
-    try {
-      const response = await axiosClient.get(`daily-reports/show/${reportId}`);
-      setSelectedReport(response.data.data);
-      setShowReportDialog(true);
-    } catch (error) {
-      handleError(error);
-    }
-  };
-
   const handleConfirmPayment = async () => {
     if (!selectedReport || !confirmAmount) return;
 
@@ -206,7 +195,6 @@ const DailyReportsIndex = () => {
 
       // Close dialogs and reset form
       setShowConfirmDialog(false);
-      setShowReportDialog(false);
       setConfirmAmount("");
       setConfirmNotes("");
       setSelectedReport(null);
@@ -231,7 +219,6 @@ const DailyReportsIndex = () => {
 
       // Close dialogs and reset form
       setShowSettleDialog(false);
-      setShowReportDialog(false);
       setSettleNotes("");
       setSelectedReport(null);
 
@@ -242,22 +229,22 @@ const DailyReportsIndex = () => {
     }
   };
 
-  const getStatusBadge = (status) => {
-    const variants = {
-      pending: 'pending',
-      submitted: 'submitted',
-      settled: 'settled'
-    };
+  // const getStatusBadge = (status) => {
+  //   const variants = {
+  //     pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+  //     submitted: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+  //     settled: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+  //   };
 
-    return (
-      <Badge variant={variants[status]}>
-        {status === 'pending' && <Clock className="h-3 w-3 mr-1" />}
-        {status === 'submitted' && <AlertCircle className="h-3 w-3 mr-1" />}
-        {status === 'settled' && <CheckCircle className="h-3 w-3 mr-1" />}
-        {t(status?.charAt(0).toUpperCase() + status?.slice(1) || 'Unknown')}
-      </Badge>
-    );
-  };
+  //   return (
+  //     <Badge className={variants[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'}>
+  //       {status === 'pending' && <Clock className="h-3 w-3 mr-1" />}
+  //       {status === 'submitted' && <AlertCircle className="h-3 w-3 mr-1" />}
+  //       {status === 'settled' && <CheckCircle className="h-3 w-3 mr-1" />}
+  //       {t(status?.charAt(0).toUpperCase() + status?.slice(1) || 'Unknown')}
+  //     </Badge>
+  //   );
+  // };
 
   const renderCollectionInfo = (report) => {
     if (report.status === 'pending') {
@@ -276,7 +263,7 @@ const DailyReportsIndex = () => {
             {new Date(report.submitted_at).toLocaleDateString()}
           </div>
           {report.money_collection && (
-            <div className="text-green-600 font-medium">
+            <div className="text-green-600 dark:text-green-400 font-medium">
               OMR {parseFloat(report.money_collection.amount).toFixed(2)}
             </div>
           )}
@@ -287,7 +274,7 @@ const DailyReportsIndex = () => {
     if (report.status === 'settled') {
       return (
         <div className="text-sm">
-          <div className="font-medium text-green-600">{t("Settled")}</div>
+          <div className="font-medium text-green-600 dark:text-green-400">{t("Settled")}</div>
           <div className="text-muted-foreground">
             {report.settled_at ? new Date(report.settled_at).toLocaleDateString() : 'N/A'}
           </div>
@@ -309,11 +296,23 @@ const DailyReportsIndex = () => {
 
   return (
     <div className="space-y-6">
-      <PageTitle title={t("Daily Reports")} />
-
+      <div className="flex items-center justify-between">
+        <PageTitle title={t("Daily Reports")} />
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => fetchReports(currentPage, currentFilters)}
+          disabled={refreshing}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+          {refreshing ? t("Refreshing...") : t("Refresh")}
+        </Button>
+      </div>
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        {/*   
+        <Card className="border dark:border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{t("Total Reports")}</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
@@ -324,45 +323,61 @@ const DailyReportsIndex = () => {
               {t("All daily reports")}
             </p>
           </CardContent>
-        </Card>
+        </Card> */}
 
-        <Card>
+        <Card className="border dark:border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{t("Pending Reports")}</CardTitle>
-            <Clock className="h-4 w-4 text-yellow-600" />
+            <Clock className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{stats.pending_reports}</div>
+            <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{stats.pending_reports}</div>
             <p className="text-xs text-muted-foreground">
               {t("Awaiting collection")}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border dark:border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{t("Submitted Reports")}</CardTitle>
-            <CheckCircle className="h-4 w-4 text-blue-600" />
+            <CheckCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{stats.submitted_reports}</div>
+            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.submitted_reports}</div>
             <p className="text-xs text-muted-foreground">
               {t("Money collected")}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border dark:border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{t("Pending Amount")}</CardTitle>
-            <DollarSign className="h-4 w-4 text-red-600" />
+            <DollarSign className="h-4 w-4 text-red-600 dark:text-red-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
+            <div className="text-2xl font-bold text-red-600 dark:text-red-400">
               OMR {parseFloat(stats.total_pending_amount).toFixed(2)}
             </div>
             <p className="text-xs text-muted-foreground">
               {t("To be collected")}
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* Collected Amount Card */}
+        <Card className="border dark:border-gray-700">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{t("Collected Amount")}</CardTitle>
+            <DollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+              OMR {parseFloat(stats.total_collected_amount ? stats.total_collected_amount : 0).toFixed(2)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {t("Collected from customers")}
             </p>
           </CardContent>
         </Card>
@@ -411,7 +426,7 @@ const DailyReportsIndex = () => {
       </div>
 
       {/* Reports Table */}
-      <div className="bg-background">
+      <div className="bg-background border rounded-lg dark:border-gray-700">
         <Table>
           <TableHeader>
             <TableRow>
@@ -419,7 +434,7 @@ const DailyReportsIndex = () => {
               <TableHead>{t("Date")}</TableHead>
               <TableHead>{t("Sales Manager")}</TableHead>
               <TableHead>{t("Total Sales")}</TableHead>
-              <TableHead>{t("Total Revenue")}</TableHead>
+              <TableHead>{t("Total Revenue / Expenses")}</TableHead>
               <TableHead>{t("Status")}</TableHead>
               <TableHead>{t("Collection Info")}</TableHead>
               <TableHead className="text-right w-[200px]">{t("Actions")}</TableHead>
@@ -467,12 +482,12 @@ const DailyReportsIndex = () => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-1 font-bold text-green-600">
-                      <DollarSign className="h-3 w-3" />
-                      <span>OMR {parseFloat(report.total_revenue).toFixed(2)}</span>
+                    {console.log("report", report)}
+                    <div className="flex items-center gap-1 font-bold">
+                      <span>OMR <span className="text-green-600 dark:text-green-400">{parseFloat(report.total_revenue).toFixed(2)}</span> / <span className="text-red-600 dark:text-red-400">{parseFloat(report.expenses.filter(expense => expense.status === 'approved').reduce((sum, expense) => sum + expense.amount, 0)).toFixed(2)}</span></span>
                     </div>
                   </TableCell>
-                  <TableCell>{getStatusBadge(report.status)}</TableCell>
+                  <TableCell><Badge variant={report.status}>{humanizeText(report.status)}</Badge></TableCell>
                   <TableCell>{renderCollectionInfo(report)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
@@ -485,7 +500,7 @@ const DailyReportsIndex = () => {
                             setConfirmAmount(report.total_revenue.toString());
                             setShowConfirmDialog(true);
                           }}
-                          className="bg-green-600 hover:bg-green-700"
+                          className="bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700"
                         >
                           <DollarSign className="mr-1 h-3 w-3" />
                           {t("Collect")}
@@ -500,7 +515,7 @@ const DailyReportsIndex = () => {
                             setSelectedReport({ report });
                             setShowSettleDialog(true);
                           }}
-                          className="border-blue-200 text-blue-600 hover:bg-blue-50"
+                          className="border-blue-200 text-blue-600 hover:bg-blue-50 dark:border-blue-700 dark:text-blue-400 dark:hover:bg-blue-950"
                         >
                           <Settings className="mr-1 h-3 w-3" />
                           {t("Settle")}
@@ -508,7 +523,7 @@ const DailyReportsIndex = () => {
                       )}
 
                       {report.status === 'settled' && (
-                        <div className="flex items-center text-sm text-green-600 font-medium">
+                        <div className="flex items-center text-sm text-green-600 dark:text-green-400 font-medium">
                           <CheckCircle className="mr-1 h-3 w-3" />
                           {t("Completed")}
                         </div>
@@ -525,10 +540,12 @@ const DailyReportsIndex = () => {
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>{t("Actions")}</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => handleViewReport(report.id)}>
-                            <Eye className="mr-2 h-4 w-4" />
-                            {t("View Details")}
-                          </DropdownMenuItem>
+                          <Link to={`/daily-reports/view/${report.id}`}>
+                            <DropdownMenuItem>
+                              <Eye className="mr-2 h-4 w-4" />
+                              {t("View Details")}
+                            </DropdownMenuItem>
+                          </Link>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
@@ -555,16 +572,6 @@ const DailyReportsIndex = () => {
       </div>
 
       {/* Dialogs */}
-      <ViewReportDialog
-        open={showReportDialog}
-        onOpenChange={setShowReportDialog}
-        reportData={selectedReport}
-        onConfirmPayment={() => {
-          setShowReportDialog(false);
-          setShowConfirmDialog(true);
-        }}
-      />
-
       <ConfirmPaymentDialog
         open={showConfirmDialog}
         onOpenChange={setShowConfirmDialog}

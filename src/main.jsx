@@ -14,8 +14,8 @@ import { LanguageProvider } from "./contexts/LanguageProvider.jsx";
 function MainLayout() {
   return (
     <React.StrictMode>
-      <ContextProvider>
-        <Provider store={store}>
+      <Provider store={store}>
+        <ContextProvider>
           <LanguageProvider>
             <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
               <RouterProvider router={router} />
@@ -37,8 +37,8 @@ function MainLayout() {
               },
             }}
           />
-        </Provider>
-      </ContextProvider>
+        </ContextProvider>
+      </Provider>
     </React.StrictMode>
   );
 }

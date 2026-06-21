@@ -10,26 +10,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import axiosClient from "@/axios";
 import { toast } from 'react-hot-toast';
-import { Loader } from "lucide-react";
+import { Loader, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { handleError } from "@/utils/helpers";
-import Select from "@/components/misc/Select"
-import { useDispatch, useSelector } from "react-redux";
-import { getRoles } from "@/stores/features/ajaxFeature";
-import { useParams } from "react-router-dom";
+import { Textarea } from "@/components/ui/textarea";
 
 function Edit({ onSubmitSuccess, record, onClose }) {
   const [isLoading, setIsLoading] = useState(false);
-  const [user, setUser] = useState(false);
-  const [roleValue, setRoleValue] = useState([{ label: record?.roles[0]?.name, value: record?.roles[0]?.id }]);
-  const dispatch = useDispatch();
-  const params = useParams();
   const { t } = useTranslation();
-  const roles = useSelector(store => store.ajax.roles)
-console.log(record)
-  useEffect(() => {
-    if (!roles) dispatch(getRoles())
-  }, [])
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -37,7 +25,7 @@ console.log(record)
 
     try {
       const formData = new FormData(event.currentTarget);
-      const response = await axiosClient.post("users/update", formData);
+      const response = await axiosClient.post("branches/update", formData);
       toast.success(response.data.message);
       onSubmitSuccess?.();
       onClose();
@@ -50,51 +38,41 @@ console.log(record)
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{t("Update User")}</DialogTitle>
+          <DialogTitle>{t("Update Branch")}</DialogTitle>
         </DialogHeader>
 
         <form id="edit-form" onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-2 gap-4 mt-2">
-            <div>
-              <label htmlFor="name">{t("Name")}</label>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="name" className="block text-sm font-medium">
+                {t("Branch")}
+              </label>
               <Input
                 id="name"
                 name="name"
                 type="text"
-                defaultValue={record?.name}
+                defaultValue={record.name}
+                required
+                autoComplete="off"
               />
             </div>
-            <div>
-              <label htmlFor="email">{t("Email")}</label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                defaultValue={record?.email}
-              />
-            </div>
-            <div>
-              <label htmlFor="phone">{t("Phone")}</label>
-              <Input
-                id="phone"
-                name="phone"
+            <div className="space-y-2">
+              <label htmlFor="address" className="block text-sm font-medium">
+                {t("Address")}
+              </label>
+              <Textarea
+                id="address"
+                name="address"
                 type="text"
-                defaultValue={record?.phone}
-              />
-            </div>
-            <div>
-              <label htmlFor="role">{t("Role")}</label>
-              <Select
-                name="role"
-                options={roles?.map(role => ({ value: role.id, label: role.name }))}
-                value={roleValue}
-                onChange={e => setRoleValue(e)}
+                defaultValue={record.address}
+                required
+                autoComplete="off"
               />
             </div>
           </div>
-          <input type="hidden" name="id" value={record.id} />
+          <input type="hidden" name="id" defaultValue={record.id} />
           <div className="flex justify-end gap-3">
             <DialogClose asChild>
               <Button type="button" variant="outline">

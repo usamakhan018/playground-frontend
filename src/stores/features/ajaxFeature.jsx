@@ -46,6 +46,11 @@ export const getProducts = createAsyncThunk("getProducts", async () => {
     return res.data.data;
 });
 
+export const getBranches = createAsyncThunk("getBranches", async () => {
+    const res = await axiosClient.get("branches/all");
+    return res.data.data;
+});
+
 const ajaxFeature = createSlice({
     name: 'Ajax',
     initialState: {
@@ -58,6 +63,7 @@ const ajaxFeature = createSlice({
         salaries: null,
         productCategories: null,
         products: null,
+        branches: null,
         loading: false,
         error: false,
     },
@@ -184,6 +190,20 @@ const ajaxFeature = createSlice({
         });
 
         builder.addCase(getProducts.rejected, (state) => {
+            state.loading = false;
+        });
+
+        // BRANCHES
+        builder.addCase(getBranches.pending, (state) => {
+            state.loading = true;
+        });
+
+        builder.addCase(getBranches.fulfilled, (state, action) => {
+            state.loading = false;
+            state.branches = action.payload;
+        });
+
+        builder.addCase(getBranches.rejected, (state) => {
             state.loading = false;
         });
     }

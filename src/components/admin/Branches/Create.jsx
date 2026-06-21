@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogClose,
@@ -14,31 +14,25 @@ import { toast } from 'react-hot-toast';
 import { Loader, Plus } from "lucide-react";
 import { handleError } from "@/utils/helpers";
 import { useTranslation } from "react-i18next";
-import Select from "@/components/misc/Select"
-import { useDispatch, useSelector } from "react-redux";
-import { getBranches, getRoles } from "@/stores/features/ajaxFeature";
+import { getBranches } from "@/stores/features/ajaxFeature";
+import { useDispatch } from "react-redux";
+import { Textarea } from "@/components/ui/textarea";
+
 function Create({ onSubmitSuccess }) {
   const [showDialog, setShowDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { t } = useTranslation();
   const dispatch = useDispatch()
-
-  const roles = useSelector(store => store.ajax.roles)
-  const branches = useSelector(store => store.ajax.branches)
-  useEffect(() => {
-    if (!roles) dispatch(getRoles())
-    if (!branches) dispatch(getBranches())
-  }, [])
-
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
       const form = new FormData(e.currentTarget);
-      const response = await axiosClient.post("users/store", form);
+      const response = await axiosClient.post("branches/store", form);
       toast.success(response.data.message);
-      dispatch(getRoles())
+      dispatch(getBranches())
       onSubmitSuccess?.();
       setShowDialog(false);
     } catch (error) {
@@ -53,65 +47,39 @@ function Create({ onSubmitSuccess }) {
       <DialogTrigger asChild>
         <Button variant="default" className="gap-2">
           <Plus className="w-4 h-4" />
-          <span>{t("Create User")}</span>
+          <span>{t("Create Branch")}</span>
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{t("Create User")}</DialogTitle>
+          <DialogTitle>{t("Create Branch")}</DialogTitle>
         </DialogHeader>
 
         <form id="create-form" onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-2 gap-4 mt-2">
-            <div>
-              <label htmlFor="name">{t("Name")}</label>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="name" className="block text-sm font-medium">
+                {t("Branch")}
+              </label>
               <Input
                 id="name"
                 name="name"
                 type="text"
+                required
+                autoComplete="off"
               />
             </div>
-            <div>
-              <label htmlFor="phone">{t("Phone")}</label>
-              <Input
-                id="phone"
-                name="phone"
-                type="phone"
-              />
-            </div>
-            <div>
-              <label htmlFor="email">{t("Email")}</label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-              />
-            </div>
-            <div>
-              <label htmlFor="password">{t("Password")}</label>
-              <Input
-                id="password"
-                name="password"
+            <div className="space-y-2">
+              <label htmlFor="address" className="block text-sm font-medium">
+                {t("Address")}
+              </label>
+              <Textarea
+                id="address"
+                name="address"
                 type="text"
-              />
-            </div>
-            <div>
-              <label htmlFor="role">{t("Role")}</label>
-              <Select
-                name="role"
-                options={roles?.map(role => ({ value: role.id, label: role.name }))}
-                className="basic-multi-select"
-                classNamePrefix="select"
-              />
-            </div>
-            <div>
-              <label htmlFor="branch">{t("Branch")}</label>
-              <Select
-                name="branch"
-                options={branches?.map(branch => ({ value: branch.id, label: branch.name }))}
-                className="basic-multi-select"
-                classNamePrefix="select"
+                required
+                autoComplete="off"
               />
             </div>
           </div>

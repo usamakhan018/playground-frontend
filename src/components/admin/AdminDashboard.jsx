@@ -122,15 +122,15 @@ const AdminDashboard = () => {
             iconColor: "text-cyan-600 dark:text-cyan-400",
             description: t("Product revenue generated today")
         },
-        {
-            title: t("Hotel Expenses Today"),
-            count: `OMR ${(stats.hotel_expenses_today || 0).toLocaleString()}`,
-            icon: Hotel,
-            bgColor: "bg-rose-100 dark:bg-rose-900",
-            textColor: "text-rose-800 dark:text-rose-100",
-            iconColor: "text-rose-600 dark:text-rose-400",
-            description: t("Hotel related expenses today")
-        },
+        // {
+        //     title: t("Hotel Expenses Today"),
+        //     count: `OMR ${(stats.hotel_expenses_today || 0).toLocaleString()}`,
+        //     icon: Hotel,
+        //     bgColor: "bg-rose-100 dark:bg-rose-900",
+        //     textColor: "text-rose-800 dark:text-rose-100",
+        //     iconColor: "text-rose-600 dark:text-rose-400",
+        //     description: t("Hotel related expenses today")
+        // },
         {
             title: t("Restaurant Profit Today"),
             count: `OMR ${(stats.restaurant_profit_today || 0).toLocaleString()}`,

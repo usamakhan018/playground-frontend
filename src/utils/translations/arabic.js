@@ -873,6 +873,7 @@ const arabicTranslations = {
   "Category": "الفئة",
   "Payment Method": "طريقة الدفع",
   "Expense Type": "نوع المصروف",
+  "Game Sales Details": "تفاصيل مبيعات الألعاب",
 };
 
 export default arabicTranslations;

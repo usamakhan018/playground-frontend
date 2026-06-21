@@ -307,7 +307,6 @@ const englishTranslations = {
     "Salary Date": "Salary Date",
     "Final Amount": "Final Amount",
     "Gross Amount": "Gross Amount",
-    "Total Expenses": "Total Expenses",
     "Paid By": "Paid By",
     "Paid At": "Paid At",
     "Review and process salary for submitted reports": "Review and process salary for submitted reports",
@@ -893,6 +892,7 @@ const englishTranslations = {
     "Category": "Category",
     "Payment Method": "Payment Method",
     "Expense Type": "Expense Type",
+    "Game Sales Details": "Game Sales Details",
 };
 
 export default englishTranslations;
