@@ -65,6 +65,7 @@ const SubmitReportDialog = ({
     setBtnLoading(true)
     if (validateForm()) {
       onSubmit();
+      setBtnLoading(false);
     }
   };
 

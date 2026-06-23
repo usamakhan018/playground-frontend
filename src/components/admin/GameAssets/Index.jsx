@@ -294,22 +294,26 @@ const GameAssetIndex = () => {
                                         )}
                                     </TableCell>
                                     <TableCell className="">
-                                        <div className="flex flex-col items-center gap-2">
-                                            <Badge variant="outline" className="gap-1">
-                                                {gameAsset.barcode || 0}
-                                            </Badge>
-                                            <Button
-                                                variant="outline"
-                                                size="xsm"
-                                                onClick={() => {
-                                                    setSelectedAssetForBarcode(gameAsset);
-                                                    setBarcodeDialogOpen(true);
-                                                }}
-                                                className="flex items-center gap-2"
-                                            >
-                                                <Printer className="h-2 w-2" />
-                                                {t("Print")}
-                                            </Button>
+                                        <div className="flex flex-col gap-2">
+                                            <div>
+                                                <Badge variant="outline" className="gap-1">
+                                                    {gameAsset.barcode || 0}
+                                                </Badge>
+                                            </div>
+                                            <div>
+                                                <Button
+                                                    variant="outline"
+                                                    size="xsm"
+                                                    onClick={() => {
+                                                        setSelectedAssetForBarcode(gameAsset);
+                                                        setBarcodeDialogOpen(true);
+                                                    }}
+                                                    className="flex items-center gap-2"
+                                                >
+                                                    <Printer className="h-2 w-2" />
+                                                    {t("Print")}
+                                                </Button>
+                                            </div>
                                         </div>
                                     </TableCell>
                                     <TableCell>{gameAsset.name}</TableCell>

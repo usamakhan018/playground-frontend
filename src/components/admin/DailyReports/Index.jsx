@@ -41,7 +41,8 @@ import {
   User,
   CheckCircle,
   AlertCircle,
-  Settings
+  Settings,
+  Check
 } from "lucide-react";
 import { can, handleError, humanizeText } from "@/utils/helpers";
 import Loader from "@/components/Loader";
@@ -49,6 +50,8 @@ import { useTranslation } from "react-i18next";
 import ConfirmPaymentDialog from "./ConfirmPaymentDialog";
 import MarkAsSettledDialog from "./MarkAsSettledDialog";
 import FilterComponent from "@/components/misc/FilterComponent";
+import { Checkbox } from "@/components/ui/checkbox";
+import MarkAsSettledDialogMultiple from "./MarkAsSettledDialogMultiple";
 
 const DailyReportsIndex = () => {
   const [loading, setLoading] = useState(true);
@@ -66,6 +69,10 @@ const DailyReportsIndex = () => {
   const [settleLoading, setSettleLoading] = useState(false);
   const [currentFilters, setCurrentFilters] = useState();
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedReports, setSelectedReports] = useState([]);
+  const [totalAmountToSettle, setTotalAmountToSettle] = useState(0);
+  const [selectAll, setSelectAll] = useState(false);
+  const [showSettleDialogMultiple, setShowSettleDialogMultiple] = useState(false);
   const [stats, setStats] = useState({
     total_reports: 0,
     pending_reports: 0,
@@ -92,7 +99,8 @@ const DailyReportsIndex = () => {
   }, [currentPage, currentFilters]);
 
   const fetchReports = async (page = 1, filters = {}) => {
-    setLoading(true);
+    setLoading(true)
+    setSelectAll(false);
     try {
       // Build query parameters
       const params = new URLSearchParams({ page: page.toString() });
@@ -112,7 +120,7 @@ const DailyReportsIndex = () => {
         }
       });
 
-      const response = await axiosClient.get(`daily-reports/all-reports?${params}`);
+      const response = await axiosClient.get(`daily-reports/all-reports?${params}&num_of_items=100`);
 
       setLinks(response.data.data.links);
       setReports(response.data.data.data);
@@ -124,8 +132,13 @@ const DailyReportsIndex = () => {
         submitted_reports: response.data.data.data.filter(r => r.status === 'submitted').length,
         total_pending_amount: response.data.data.data
           .filter(r => r.status === 'pending')
-          .reduce((sum, r) => sum + (r.total_revenue || 0), 0)
+          .reduce((sum, r) => sum + (parseFloat(r.total_revenue) || 0), 0),
+        total_collected_amount: response.data.data.data
+          .filter(r => r.status === 'submitted')
+          .reduce((sum, r) => sum + (parseFloat(r.total_revenue) || 0), 0)
       };
+      console.log("filters", apiStats, "here", "here");
+
       setStats(apiStats);
 
     } catch (error) {
@@ -153,6 +166,9 @@ const DailyReportsIndex = () => {
         submitted_reports: response.data.data.data.filter(r => r.status === 'submitted').length,
         total_pending_amount: response.data.data.data
           .filter(r => r.status === 'pending')
+          .reduce((sum, r) => sum + (r.total_revenue || 0), 0),
+        total_collected_amount: response.data.data.data
+          .filter(r => r.status === 'submitted')
           .reduce((sum, r) => sum + (r.total_revenue || 0), 0)
       };
       setStats(searchStats);
@@ -164,7 +180,11 @@ const DailyReportsIndex = () => {
   };
 
   const handleRefresh = () => {
+    console.log("handleRefresh", totalAmountToSettle);
+    setTotalAmountToSettle(0);
+    console.log("handleRefresh2", totalAmountToSettle);
     setSearch("");
+    setSelectedReports([]);
     setShowRefresh(false);
     setCurrentFilters({});
     fetchReports(1, {});
@@ -201,6 +221,8 @@ const DailyReportsIndex = () => {
 
     } catch (error) {
       handleError(error);
+    } finally {
+      setConfirmLoading(false);
     }
   };
 
@@ -219,6 +241,7 @@ const DailyReportsIndex = () => {
 
       // Close dialogs and reset form
       setShowSettleDialog(false);
+      setShowSettleDialogMultiple(false);
       setSettleNotes("");
       setSelectedReport(null);
 
@@ -228,6 +251,84 @@ const DailyReportsIndex = () => {
       setSettleLoading(false);
     }
   };
+
+  const handleMarkAsSettledMultiple = async () => {
+    if (!selectedReports?.length) return;
+
+    setSettleLoading(true);
+    try {
+      const response = await axiosClient.post('daily-reports/mark-as-settled-multiple', {
+        report_ids: selectedReports.map((report) => report.id),
+        notes: settleNotes
+      });
+
+      // Refresh the reports list
+      fetchReports(currentPage, currentFilters);
+
+      // Close dialogs and reset form
+      setShowSettleDialogMultiple(false);
+      setSettleNotes("");
+      setSelectedReports([]);
+      setTotalAmountToSettle(0);
+      setSelectAll(false);
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setSettleLoading(false);
+    }
+  };
+
+
+  // see here I have checkboxes in front of each table row these checkboxes are used to select the reports to be settled.
+  // only those reprots can be settled which are submitted. to the manager at the end of the day manager will select each and every submitted report and 
+  // collect it's money and make it ready so that he can submit it to the company owner you understand me. that is the goal now I want to show the total amount of all those rows which the manager has selected so that he can see how much is the total of the submitted reports which he has selected. 
+  // and when he will click on the settle button at once to settle down all the selected reprots at once.
+  const handleCheckboxChange = (report) => {
+    // 1. Toggle the checked state in the main reports list
+    const updatedReports = reports.map((r) =>
+      r.id === report.id ? { ...r, checked: !r.checked } : r
+    );
+
+    // 2. Filter for only the checked/selected reports
+    const newlySelected = updatedReports.filter((r) => r.checked);
+
+    // 3. Calculate total revenue and format to 2 decimal places
+    const newTotal = newlySelected.reduce((sum, r) => sum + parseFloat(r.total_revenue || 0), 0);
+
+    // 4. Update states
+    setReports(updatedReports);
+    setSelectedReports(newlySelected);
+    setTotalAmountToSettle(parseFloat(newTotal).toFixed(2));
+  };
+
+  const handleSelectAll = () => {
+    const newSelectAll = !selectAll;
+    setSelectAll(newSelectAll);
+
+    const updatedReports = reports.map((report) => ({
+      ...report,
+      checked: report.status === 'submitted' ? newSelectAll : report.checked,
+    }));
+
+    const newlySelected = updatedReports.filter((r) => r.checked);
+    const newTotal = newlySelected.reduce((sum, r) => sum + parseFloat(r.total_revenue || 0), 0);
+
+    setReports(updatedReports);
+    setSelectedReports(newlySelected);
+    setTotalAmountToSettle(parseFloat(newTotal).toFixed(2));
+  };
+
+  // const handleCheckboxChange = (report) => {
+  //   const updatedReports = reports.map((r) => {
+  //     if (r.id === report.id) {
+  //       return { ...r, checked: !r.checked };
+  //     }
+  //     return r;
+  //   });
+
+  //   setTotalAmountToSettle(parseFloat(updatedReports.reduce((sum, r) => r.checked ? sum + parseFloat(r.total_revenue) : sum, 0)).toFixed(2));
+  //   setSelectedReports(updatedReports);
+  // };
 
   // const getStatusBadge = (status) => {
   //   const variants = {
@@ -245,6 +346,7 @@ const DailyReportsIndex = () => {
   //     </Badge>
   //   );
   // };
+  console.log("showSettleDialogMultiple", showSettleDialogMultiple);
 
   const renderCollectionInfo = (report) => {
     if (report.status === 'pending') {
@@ -301,7 +403,10 @@ const DailyReportsIndex = () => {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => fetchReports(currentPage, currentFilters)}
+          onClick={() => {
+            fetchReports(currentPage, currentFilters);
+            setTotalAmountToSettle(0);
+          }}
           disabled={refreshing}
           className="flex items-center gap-2"
         >
@@ -398,31 +503,49 @@ const DailyReportsIndex = () => {
           {t("Daily reports management with filtering options")}
         </div>
 
-        <form onSubmit={handleSearch} className="flex gap-2">
-          <div className="flex gap-2">
-            <Input
-              id="search"
-              name="search"
-              value={search}
-              placeholder={t("Search reports")}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-48"
-            />
-            <Button type="submit" aria-label={t("Search")}>
-              <SearchIcon className="h-4 w-4" />
-            </Button>
-            {showRefresh && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleRefresh}
-                aria-label={t("Refresh")}
-              >
-                <RefreshCw className="h-4 w-4" />
-              </Button>
-            )}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
+            {t("Total amount to settle")}: OMR {parseFloat(totalAmountToSettle).toFixed(2)}
           </div>
-        </form>
+          {settleAbility && (
+            <Button
+              type="button"
+              variant="outline"
+              aria-label={t("Settle selected reports")}
+              disabled={selectedReports.length === 0}
+              onClick={() => setShowSettleDialogMultiple(true)}
+            >
+              <Check className="h-4 w-4" />
+            </Button>
+          )}
+
+          <form onSubmit={handleSearch} className="flex gap-2">
+            <div className="flex gap-2">
+              <Input
+                id="search"
+                name="search"
+                value={search}
+                placeholder={t("Search reports")}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-48"
+              />
+              <Button type="submit" aria-label={t("Search")}>
+                <SearchIcon className="h-4 w-4" />
+              </Button>
+              {showRefresh && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleRefresh}
+                  aria-label={t("Refresh")}
+                >
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </form>
+        </div>
+
       </div>
 
       {/* Reports Table */}
@@ -430,7 +553,12 @@ const DailyReportsIndex = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[50px]">#</TableHead>
+              <TableHead className="w-[50px]">
+                <Checkbox id="select-all" checked={selectAll} onCheckedChange={handleSelectAll} />
+                {/* <label htmlFor="select-all" className="text-sm font-medium">
+                    {t("Select All")}
+                  </label> */}
+              </TableHead>
               <TableHead>{t("Date")}</TableHead>
               <TableHead>{t("Sales Manager")}</TableHead>
               <TableHead>{t("Total Sales")}</TableHead>
@@ -450,7 +578,16 @@ const DailyReportsIndex = () => {
             ) : reports.length > 0 ? (
               reports.map((report, index) => (
                 <TableRow key={report.id}>
-                  <TableCell className="font-medium">{index + 1}</TableCell>
+                  <TableCell className="font-medium">
+                    <Checkbox
+                      id={report.id}
+                      name="reports[]"
+                      value={report.id}
+                      checked={report.checked}
+                      disabled={report.status !== 'submitted'}
+                      onCheckedChange={() => handleCheckboxChange(report)}
+                    />
+                  </TableCell>
                   <TableCell>
                     <div className="font-medium">
                       {new Date(report.date).toLocaleDateString()}
@@ -482,7 +619,6 @@ const DailyReportsIndex = () => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    {console.log("report", report)}
                     <div className="flex items-center gap-1 font-bold">
                       <span>OMR <span className="text-green-600 dark:text-green-400">{parseFloat(report.total_revenue).toFixed(2)}</span> / <span className="text-red-600 dark:text-red-400">{parseFloat(report.expenses.filter(expense => expense.status === 'approved').reduce((sum, expense) => sum + expense.amount, 0)).toFixed(2)}</span></span>
                     </div>
@@ -590,6 +726,16 @@ const DailyReportsIndex = () => {
         notes={settleNotes}
         setNotes={setSettleNotes}
         onMarkAsSettled={handleMarkAsSettled}
+        loading={settleLoading}
+      />
+
+      <MarkAsSettledDialogMultiple
+        open={showSettleDialogMultiple}
+        onOpenChange={setShowSettleDialogMultiple}
+        reports={selectedReports}
+        notes={settleNotes}
+        setNotes={setSettleNotes}
+        onMarkAsSettled={handleMarkAsSettledMultiple}
         loading={settleLoading}
       />
     </div>

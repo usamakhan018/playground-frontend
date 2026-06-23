@@ -117,7 +117,7 @@ const ViewReport = () => {
   const fetchReportExpenses = async () => {
     setLoading(true);
     try {
-      const response = await axiosClient.get(`daily-report-d  ata/expenses/${id}`);
+      const response = await axiosClient.get(`daily-report-data/expenses/${id}`);
       setReportExpenses(response.data.data);
       // setReportExpensesLinks(response.data.data.links);
     } catch (error) {
