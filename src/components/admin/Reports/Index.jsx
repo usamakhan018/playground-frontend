@@ -23,7 +23,7 @@ import { useNavigate } from "react-router-dom";
 import Pagination from "@/components/Pagination";
 import { Input } from "@/components/ui/input";
 import { toast } from 'react-hot-toast';
-import { EditIcon, MoreHorizontal, RefreshCw, Trash2Icon, SearchIcon, Clock, CheckCircle, DollarSign, Gamepad, Gamepad2, CreditCard, TrendingUp, Building } from "lucide-react";
+import { EditIcon, MoreHorizontal, RefreshCw, Trash2Icon, SearchIcon, Clock, CheckCircle, DollarSign, Gamepad, Gamepad2, CreditCard, TrendingUp, Building, Download } from "lucide-react";
 import Edit from "./Edit";
 import Create from "./Create";
 import { can, handleError } from "@/utils/helpers";
@@ -32,14 +32,18 @@ import DeleteAlert from "@/components/misc/DeleteAlert";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import StatCard from "../StatCard";
-import FilterComponent from "@/components/misc/FilterComponent";
 import ReportFilterComponent from "@/components/misc/ReportFilterComponent";
+
+const REPORT_TYPES = {
+  games: { endpoint: 'reports/get-games-data', dataKey: 'games' },
+  assets: { endpoint: 'reports/get-assets-data', dataKey: 'assets' },
+  products: { endpoint: 'reports/get-products-data', dataKey: 'products' },
+  branches: { endpoint: 'reports/get-branches-data', dataKey: 'branches' },
+};
 
 const ReportsIndex = () => {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
   const [links, setLinks] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [reports, setReports] = useState([]);
@@ -53,6 +57,8 @@ const ReportsIndex = () => {
   const [assetSelected, setAssetSelected] = useState(false);
   const [productSelected, setProductSelected] = useState(false);
   const [branchSelected, setBranchSelected] = useState(false);
+  const [activeReportType, setActiveReportType] = useState(null);
+  const [currentFilters, setCurrentFilters] = useState({});
   const navigate = useNavigate();
   const { t } = useTranslation();
 
@@ -65,6 +71,49 @@ const ReportsIndex = () => {
     if (!accessAbility) navigate("/unauthorized");
     fetchReports(currentPage);
   }, [currentPage]);
+
+  useEffect(() => {
+    if (activeReportType) {
+      fetchReportData(activeReportType, currentFilters);
+    }
+  }, [currentFilters, activeReportType]);
+
+  const buildParams = (filters = {}) => {
+    const params = {};
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) {
+        params[key] = value;
+      }
+    });
+    return params;
+  };
+
+  const fetchReportData = async (type, filters = {}) => {
+    const config = REPORT_TYPES[type];
+    if (!config) return;
+
+    setLoading(true);
+    try {
+      const response = await axiosClient.get(config.endpoint, { params: buildParams(filters) });
+      setStats(response.data.data.stats);
+      setReports(response.data.data[config.dataKey] || []);
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const selectReportType = (type) => {
+    setGameSelected(type === 'games');
+    setAssetSelected(type === 'assets');
+    setProductSelected(type === 'products');
+    setBranchSelected(type === 'branches');
+    setSearch("");
+    setShowRefresh(false);
+    setCurrentFilters({});
+    setActiveReportType(type);
+  };
 
   const fetchReports = async (page = 1) => {
     try {
@@ -79,77 +128,42 @@ const ReportsIndex = () => {
     setRefreshing(true);
     setSearch("");
     setShowRefresh(false);
+
+    if (activeReportType) {
+      fetchReportData(activeReportType, currentFilters);
+    } else {
+      fetchReports(currentPage);
+    }
+
     setRefreshing(false);
-    setGameSelected(false);
-    setAssetSelected(false);
-    setProductSelected(false);
-    setBranchSelected(false);
-    setReports([]);
   };
 
-  const getGamesData = async () => {
-    handleRefresh();
-    setGameSelected(true);
-    setLoading(true);
+  // export pdf of the current report
+  const exportReport = async () => {
     try {
-      const response = await axiosClient.get(`reports/get-games-data`);
-      setStats(response.data.data.stats);
-      setReports(response.data.data.games);
+      setLoading({ ...loading, export: true });
+      const response = await axiosClient.get(`reports/export`, { params: buildParams(currentFilters) });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      const filename = `report_${activeReportType}_${new Date().toISOString().split('T')[0]}.pdf`;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success(t("Report exported successfully") + " " + filename);
     } catch (error) {
       handleError(error);
     } finally {
-      setLoading(false);
+      setLoading({ ...loading, export: false });
     }
-  };
+  }
 
-
-  const getAssetsData = async () => {
-    handleRefresh();
-    setAssetSelected(true);
-    setLoading(true);
-    try {
-      const response = await axiosClient.get(`reports/get-assets-data`);
-      setStats(response.data.data.stats);
-      setReports(response.data.data.assets);
-    } catch (error) {
-      handleError(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getProductsData = async () => {
-    await handleRefresh();
-    setProductSelected(true);
-    setLoading(true);
-    try {
-      const response = await axiosClient.get(`reports/get-products-data`);
-      setStats(response.data.data.stats);
-      setReports(response.data.data.products);
-    } catch (error) {
-      handleError(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-
-  const getBranchesData = async () => {
-    await handleRefresh();
-    setBranchSelected(true);
-    setLoading(true);
-    try {
-      const response = await axiosClient.get(`reports/get-branches-data`);
-      setStats(response.data.data.stats);
-      setReports(response.data.data.branches);
-    } catch (error) {
-      handleError(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  console.log(reports)
+  const getGamesData = () => selectReportType('games');
+  const getAssetsData = () => selectReportType('assets');
+  const getProductsData = () => selectReportType('products');
+  const getBranchesData = () => selectReportType('branches');
 
 
 
@@ -317,7 +331,7 @@ const ReportsIndex = () => {
     },
   ];
 
-
+  
 
 
   // =====================
@@ -334,25 +348,36 @@ const ReportsIndex = () => {
     setCurrentPage(1);
   };
 
-  const statusOptions = [
-    { value: 'pending', label: t('Pending') },
-    { value: 'submitted', label: t('Submitted') },
-  ];
+  const hasActiveReport = gameSelected || assetSelected || productSelected || branchSelected;
+  const salesColumnLabel = gameSelected ? t("Total Tickets") : t("Total Sales");
+  const tableColSpan = hasActiveReport ? (assetSelected ? 8 : 7) : 6;
 
   return (
     <div className="space-y-3">
       <div className="flex flex-row justify-between">
         <PageTitle title={t("Reports")} />
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => handleRefresh()}
-          disabled={refreshing}
-          className="flex items-center gap-2"
-        >
-          <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-          {refreshing ? t("Refreshing...") : t("Refresh")}
-        </Button>
+        <div className="flex flex-row items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => exportReport()}
+            disabled={loading?.export}
+            className="flex items-center gap-2 mr-2"
+          >
+            {loading?.export ? <Loader /> : <Download className={`h-4 w-4 ${loading?.export ? 'animate-spin' : ''}`} />}
+            {t("Export")}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleRefresh()}
+            disabled={refreshing}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+            {refreshing ? t("Refreshing...") : t("Refresh")}
+          </Button>
+        </div>
       </div>
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -450,37 +475,36 @@ const ReportsIndex = () => {
         </div>
       )}
 
-      <div className="mt-4 flex justify-between">
-        <div className="flex justify-between items-center">
-          <ReportFilterComponent
-            onFilter={handleFilter}
-            onReset={handleResetFilters}
-            statusOptions={statusOptions}
-            defaultStatus="pending"
-            loading={loading}
-          />
-        </div>
-        <div>
-          
-        </div>
-      </div>
+      {hasActiveReport && (
+        <ReportFilterComponent
+          onFilter={handleFilter}
+          onReset={handleResetFilters}
+          showGameFilter={gameSelected || assetSelected}
+          showAssetFilter={assetSelected}
+          showProductFilter={productSelected}
+          showBranchFilter={branchSelected}
+          loading={loading}
+        />
+      )}
+
       <div className="bg-background">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead className="w-[50px]">#</TableHead>
               <TableHead>{gameSelected ? t("Game") : assetSelected ? t("Asset") : productSelected ? t("Product") : branchSelected ? t("Branch") : t("Report")}</TableHead>
-              {productSelected && <TableHead>{t("Total Sales")}</TableHead>}
+              {assetSelected && <TableHead>{t("Game")}</TableHead>}
+              {hasActiveReport && <TableHead>{salesColumnLabel}</TableHead>}
               <TableHead>{t("Total Revenue")}</TableHead>
-              {!productSelected && <TableHead>{t("Total Expenses")}</TableHead>}
-              {!productSelected && <TableHead>{t("Net Profit")}</TableHead>}
+              <TableHead>{t("Total Expenses")}</TableHead>
+              <TableHead>{t("Net Profit")}</TableHead>
               <TableHead className="text-right">{t("Actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center h-24">
+                <TableCell colSpan={tableColSpan} className="text-center h-24">
                   <Loader />
                 </TableCell>
               </TableRow>
@@ -489,47 +513,28 @@ const ReportsIndex = () => {
                 <TableRow key={report.id}>
                   <TableCell className="font-medium">{index + 1}</TableCell>
                   <TableCell>{report.name}</TableCell>
-                  {productSelected && <TableCell>{report.total_sales}</TableCell>}
-                  <TableCell>OMR {parseFloat(report.total_game_revenue || 0).toFixed(2)}</TableCell>
-                  {!productSelected && <TableCell>OMR {parseFloat(report.total_asset_expenses || 0).toFixed(2)}</TableCell>}
-                  {!productSelected && <TableCell>OMR {parseFloat(report.net_game_profit || 0).toFixed(2)}</TableCell>}
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="h-8 w-8 p-0">
-                          <span className="sr-only">{t("Open menu")}</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>{t("Actions")}</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        {updateAbility && (
-                          <DropdownMenuItem onClick={() => {
-                            setSelectedRecord(report);
-                            setEditDialogOpen(true);
-                          }}>
-                            <EditIcon className="mr-2 h-4 w-4" />
-                            {t("Edit")}
-                          </DropdownMenuItem>
-                        )}
-                        {deleteAbility && (
-                          <DropdownMenuItem onClick={() => {
-                            setSelectedRecord(report);
-                            setDeleteAlertOpen(true);
-                          }}>
-                            <Trash2Icon className="mr-2 h-4 w-4" />
-                            {t("Delete")}
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                  {assetSelected && <TableCell>{report.game_name || '-'}</TableCell>}
+                  {hasActiveReport && <TableCell>{report.total_sales ?? 0}</TableCell>}
+                  <TableCell>OMR {parseFloat(report.total_revenue ?? 0).toFixed(2)}</TableCell>
+                  <TableCell>OMR {parseFloat(report.total_expenses ?? 0).toFixed(2)}</TableCell>
+                  <TableCell>OMR {parseFloat(report.net_profit ?? 0).toFixed(2)}</TableCell>
+                  <TableCell className="flex justify-end">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      // onClick={() => exportReport()}
+                      // disabled={loading?.export}
+                      className="flex items-center gap-2 mr-2"
+                    >
+                      {loading?.export ? <Loader /> : <Download className={`h-4 w-4 ${loading?.export ? 'animate-spin' : ''}`} />}
+                      {t("Export")}
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="text-center h-24">
+                <TableCell colSpan={tableColSpan} className="text-center h-24">
                   <NoRecordFound />
                 </TableCell>
               </TableRow>
@@ -546,25 +551,29 @@ const ReportsIndex = () => {
         )}
       </div>
 
-      {deleteAlertOpen && (
-        <DeleteAlert
-          open={deleteAlertOpen}
-          onClose={setDeleteAlertOpen}
-          onSubmitSuccess={fetchReports}
-          record={selectedRecord}
-          api="reports/delete"
-        />
-      )}
+      {
+        deleteAlertOpen && (
+          <DeleteAlert
+            open={deleteAlertOpen}
+            onClose={setDeleteAlertOpen}
+            onSubmitSuccess={fetchReports}
+            record={selectedRecord}
+            api="reports/delete"
+          />
+        )
+      }
 
-      {editDialogOpen && (
-        <Edit
-          open={editDialogOpen}
-          onClose={() => setEditDialogOpen(false)}
-          onSubmitSuccess={fetchReports}
-          record={selectedRecord}
-        />
-      )}
-    </div>
+      {
+        editDialogOpen && (
+          <Edit
+            open={editDialogOpen}
+            onClose={() => setEditDialogOpen(false)}
+            onSubmitSuccess={fetchReports}
+            record={selectedRecord}
+          />
+        )
+      }
+    </div >
   );
 };
 

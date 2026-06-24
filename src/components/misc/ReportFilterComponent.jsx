@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,34 +6,29 @@ import { Label } from "@/components/ui/label";
 import { CalendarIcon, FilterIcon, RefreshCw, XIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useSelector, useDispatch } from "react-redux";
-import { getUsers } from "@/stores/features/ajaxFeature";
+import { getUsers, getGames, getGameAssets, getProducts, getBranches } from "@/stores/features/ajaxFeature";
 import Select from "./Select";
 
 const ReportFilterComponent = ({
   onFilter,
   onReset,
-  statusOptions = [],
-  gameOptions = [],
-  assetOptions = [],
-  productOptions = [],
   showUserFilter = true,
   showDateFilter = true,
-  showStatusFilter = true,
-  defaultStatus = null,
-  defaultGame = null,
-  defaultAsset = null,
-  defaultProduct = null,
+  showGameFilter = false,
+  showAssetFilter = false,
+  showProductFilter = false,
+  showBranchFilter = false,
   loading = false
 }) => {
   const { t } = useTranslation();
   const dispatch = useDispatch();
-  const { users } = useSelector((state) => state.ajax);
+  const { users, games, gameAssets, products, branches } = useSelector((state) => state.ajax);
 
   const [filters, setFilters] = useState({
-    status: defaultStatus || '',
-    game: defaultGame || '',
-    asset: defaultAsset || '',
-    product: defaultProduct || '',
+    game: '',
+    asset: '',
+    product: '',
+    branch: '',
     user_id: '',
     from_date: '',
     to_date: '',
@@ -47,22 +42,49 @@ const ReportFilterComponent = ({
     if (showUserFilter && !users) {
       dispatch(getUsers());
     }
-  }, [dispatch, showUserFilter, users]);
+    if (showGameFilter && !games) {
+      dispatch(getGames());
+    }
+    if (showAssetFilter && !gameAssets) {
+      dispatch(getGameAssets());
+    }
+    if (showProductFilter && !products) {
+      dispatch(getProducts());
+    }
+    if (showBranchFilter && !branches) {
+      dispatch(getBranches());
+    }
+  }, [
+    dispatch,
+    showUserFilter,
+    showGameFilter,
+    showAssetFilter,
+    showProductFilter,
+    showBranchFilter,
+    users,
+    games,
+    gameAssets,
+    products,
+    branches,
+  ]);
 
   const handleFilterChange = (key, value) => {
     const newFilters = { ...filters, [key]: value };
-    setFilters(newFilters);
 
-    // Auto-apply filters when they change
+    if (key === 'game') {
+      newFilters.asset = '';
+    }
+
+    setFilters(newFilters);
     onFilter(newFilters);
   };
 
   const handleReset = () => {
     const resetFilters = {
-      game: defaultGame || '',
-      asset: defaultAsset || '',
-      product: defaultProduct || '',
-      status: defaultStatus || '',
+      game: '',
+      asset: '',
+      product: '',
+      branch: '',
       user_id: '',
       from_date: '',
       to_date: '',
@@ -76,13 +98,38 @@ const ReportFilterComponent = ({
     label: `${user.name} (${user.email})`
   })) : [];
 
-  const hasActiveFilters = Object.values(filters).some(value =>
-    value && value !== defaultStatus
-  );
+  const gameOptions = games ? games.map(game => ({
+    value: game.id,
+    label: game.name
+  })) : [];
+
+  const assetOptions = useMemo(() => {
+    if (!gameAssets) return [];
+
+    const filteredAssets = filters.game
+      ? gameAssets.filter(asset => String(asset.game_id) === String(filters.game))
+      : gameAssets;
+
+    return filteredAssets.map(asset => ({
+      value: asset.id,
+      label: asset.name
+    }));
+  }, [gameAssets, filters.game]);
+
+  const productOptionsList = products ? products.map(product => ({
+    value: product.id,
+    label: product.name
+  })) : [];
+
+  const branchOptionsList = branches ? branches.map(branch => ({
+    value: branch.id,
+    label: branch.name
+  })) : [];
+
+  const hasActiveFilters = Object.values(filters).some(value => Boolean(value));
 
   return (
     <div className="space-y-4">
-      {/* Filter Toggle Button */}
       <div className="flex justify-between items-center">
         <Button
           variant="outline"
@@ -93,7 +140,7 @@ const ReportFilterComponent = ({
           {t("Filters")}
           {hasActiveFilters && (
             <span className="bg-blue-500 text-white rounded-full text-xs px-2 py-0.5 ml-1">
-              {Object.values(filters).filter(v => v && v !== defaultStatus).length}
+              {Object.values(filters).filter(Boolean).length}
             </span>
           )}
         </Button>
@@ -111,7 +158,6 @@ const ReportFilterComponent = ({
         )}
       </div>
 
-      {/* Filter Panel */}
       {showFilters && (
         <Card>
           <CardHeader className="pb-3">
@@ -122,27 +168,7 @@ const ReportFilterComponent = ({
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* Status Filter */}
-              {showStatusFilter && statusOptions.length > 0 && (
-                <div className="space-y-2">
-                  <Label htmlFor="status-filter">{t("Status")}</Label>
-                  <Select
-                    id="status-filter"
-                    value={filters.status}
-                    onChange={(value) => handleFilterChange('status', value)}
-                    options={[
-                      ...statusOptions.map(option => ({
-                        value: option.value,
-                        label: t(option.label)
-                      }))
-                    ]}
-                    placeholder={t("Select status")}
-                  />
-                </div>
-              )}
-
-              {/* Game Filter */}
-              {showGameFilter && gameOptions.length > 0 && (
+              {showGameFilter && (
                 <div className="space-y-2">
                   <Label htmlFor="game-filter">{t("Game")}</Label>
                   <Select
@@ -150,19 +176,16 @@ const ReportFilterComponent = ({
                     value={filters.game}
                     onChange={(value) => handleFilterChange('game', value)}
                     options={[
-                      ...gameOptions.map(option => ({
-                        value: option.value,
-                        label: option.label
-                      }))
+                      { value: '', label: t('All Games') },
+                      ...gameOptions
                     ]}
                     placeholder={t("Select game")}
+                    loading={!games}
                   />
                 </div>
               )}
 
-
-              {/* Asset Filter */}
-              {showAssetFilter && assetOptions.length > 0 && (
+              {showAssetFilter && (
                 <div className="space-y-2">
                   <Label htmlFor="asset-filter">{t("Asset")}</Label>
                   <Select
@@ -170,19 +193,16 @@ const ReportFilterComponent = ({
                     value={filters.asset}
                     onChange={(value) => handleFilterChange('asset', value)}
                     options={[
-                      ...assetOptions.map(option => ({
-                        value: option.value,
-                        label: option.name
-                      }))
+                      { value: '', label: t('All Assets') },
+                      ...assetOptions
                     ]}
                     placeholder={t("Select asset")}
+                    loading={!gameAssets}
                   />
                 </div>
               )}
 
-
-              {/* Product Filter */}
-              {showProductFilter && productOptions.length > 0 && (
+              {showProductFilter && (
                 <div className="space-y-2">
                   <Label htmlFor="product-filter">{t("Product")}</Label>
                   <Select
@@ -190,17 +210,32 @@ const ReportFilterComponent = ({
                     value={filters.product}
                     onChange={(value) => handleFilterChange('product', value)}
                     options={[
-                      ...productOptions.map(option => ({
-                        value: option.value,
-                        label: option.name
-                      }))
+                      { value: '', label: t('All Products') },
+                      ...productOptionsList
                     ]}
                     placeholder={t("Select product")}
+                    loading={!products}
                   />
                 </div>
               )}
 
-              {/* User Filter */}
+              {showBranchFilter && (
+                <div className="space-y-2">
+                  <Label htmlFor="branch-filter">{t("Branch")}</Label>
+                  <Select
+                    id="branch-filter"
+                    value={filters.branch}
+                    onChange={(value) => handleFilterChange('branch', value)}
+                    options={[
+                      { value: '', label: t('All Branches') },
+                      ...branchOptionsList
+                    ]}
+                    placeholder={t("Select branch")}
+                    loading={!branches}
+                  />
+                </div>
+              )}
+
               {showUserFilter && (
                 <div className="space-y-2">
                   <Label htmlFor="user-filter">{t("User")}</Label>
@@ -218,7 +253,6 @@ const ReportFilterComponent = ({
                 </div>
               )}
 
-              {/* Date Range Filters */}
               {showDateFilter && (
                 <>
                   <div className="space-y-2">
@@ -254,7 +288,6 @@ const ReportFilterComponent = ({
               )}
             </div>
 
-            {/* Action Buttons */}
             <div className="flex justify-end gap-2 pt-4 border-t">
               <Button
                 variant="outline"
@@ -273,4 +306,4 @@ const ReportFilterComponent = ({
   );
 };
 
-export default ReportFilterComponent; 
+export default ReportFilterComponent;
