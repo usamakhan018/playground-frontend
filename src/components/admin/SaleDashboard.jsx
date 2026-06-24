@@ -10,7 +10,7 @@ import axiosClient from "@/axios";
 import { toast } from 'react-hot-toast';
 import { handleError } from "@/utils/helpers";
 import { getProductCategories, getProducts } from "@/stores/features/ajaxFeature";
-import { 
+import {
   ShoppingCart,
   Package,
   DollarSign,
@@ -36,26 +36,26 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 export const SaleDashboard = () => {
   const { t } = useTranslation();
   const dispatch = useDispatch();
-  
+
   // Redux state
   const productCategories = useSelector(state => state.ajax.productCategories);
   const products = useSelector(state => state.ajax.products);
   const loading = useSelector(state => state.ajax.loading);
-  
+
   // State management
   const [processing, setProcessing] = useState(false);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  
+
   // Shopping cart state
   const [cartItems, setCartItems] = useState([]);
   const [paymentMethod, setPaymentMethod] = useState('cash');
-  
+
   // Sale form state - for quick add
   const [quantity, setQuantity] = useState(1);
   const [totalAmount, setTotalAmount] = useState(0);
-  
+
   // Proof upload state
   const [proofImage, setProofImage] = useState(null);
   const [isCapturingProof, setIsCapturingProof] = useState(false);
@@ -63,7 +63,7 @@ export const SaleDashboard = () => {
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
   const fileInputRef = useRef(null);
-  
+
   // Today's stats
   const [todayStats, setTodayStats] = useState({
     total_sales: 0,
@@ -118,7 +118,7 @@ export const SaleDashboard = () => {
       if (!products) {
         dispatch(getProducts());
       }
-      
+
       await fetchTodayStats();
     } catch (error) {
       handleError(error);
@@ -222,10 +222,10 @@ export const SaleDashboard = () => {
   // Camera and proof upload functionality
   const startCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment' } 
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' }
       });
-      
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         streamRef.current = stream;
@@ -242,11 +242,11 @@ export const SaleDashboard = () => {
       const canvas = canvasRef.current;
       const video = videoRef.current;
       const context = canvas.getContext('2d');
-      
+
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       context.drawImage(video, 0, 0);
-      
+
       // Convert to blob for upload
       canvas.toBlob((blob) => {
         const file = new File([blob], 'camera-capture.jpg', { type: 'image/jpeg' });
@@ -292,7 +292,7 @@ export const SaleDashboard = () => {
       if (proofImage) {
         // Use FormData when we have a proof image
         const formData = new FormData();
-        
+
         // Append items array in FormData format that Laravel can understand
         cartItems.forEach((item, index) => {
           formData.append(`items[${index}][product_id]`, item.product_id);
@@ -300,7 +300,7 @@ export const SaleDashboard = () => {
           formData.append(`items[${index}][price]`, item.price);
           formData.append(`items[${index}][total_amount]`, item.total_amount);
         });
-        
+
         formData.append('payment_method', paymentMethod);
         formData.append('proof', proofImage);
 
@@ -312,23 +312,23 @@ export const SaleDashboard = () => {
       } else {
         // Use regular JSON when no proof image
         response = await axiosClient.post('product-sales/store', {
-        items: cartItems,
-        payment_method: paymentMethod
-      });
+          items: cartItems,
+          payment_method: paymentMethod
+        });
       }
-      
+
       toast.success(response.data.message);
-      
+
       // Reset cart and form
       setCartItems([]);
       setSelectedProduct(null);
       setQuantity(1);
       setPaymentMethod('cash');
       setProofImage(null);
-      
+
       // Update stats
       await fetchTodayStats();
-      
+
     } catch (error) {
       handleError(error);
     } finally {
@@ -423,7 +423,7 @@ export const SaleDashboard = () => {
 
       {/* Main Content Area */}
       <div className="grid gap-6 lg:grid-cols-3">
-        
+
         {/* Categories/Products Selection */}
         <div className="lg:col-span-2">
           <Card>
@@ -492,7 +492,7 @@ export const SaleDashboard = () => {
                               {category.description}
                             </p>
                           )}
-                          <Badge 
+                          <Badge
                             variant={category.status === 'available' ? 'available' : 'unavailable'}
                             className="absolute top-2 right-2"
                           >
@@ -521,11 +521,10 @@ export const SaleDashboard = () => {
                         <div
                           key={product.id}
                           onClick={() => handleProductSelect(product)}
-                          className={`group relative cursor-pointer rounded-lg border-2 transition-all duration-200 p-4 bg-white hover:shadow-md ${
-                            selectedProduct?.id === product.id 
-                              ? 'border-green-500 bg-green-50' 
+                          className={`group relative cursor-pointer rounded-lg border-2 transition-all duration-200 p-4 bg-white hover:shadow-md ${selectedProduct?.id === product.id
+                              ? 'border-green-500 bg-green-50'
                               : 'border-gray-200 hover:border-blue-400'
-                          }`}
+                            }`}
                         >
                           <div className="flex gap-4">
                             <div className="w-20 h-20 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
@@ -745,11 +744,10 @@ export const SaleDashboard = () => {
                           <button
                             key={method.value}
                             type="button"
-                            className={`flex items-center justify-center p-3 border rounded-lg transition-colors ${
-                              paymentMethod === method.value 
-                                ? 'bg-primary text-primary-foreground border-primary' 
+                            className={`flex items-center justify-center p-3 border rounded-lg transition-colors ${paymentMethod === method.value
+                                ? 'bg-primary text-primary-foreground border-primary'
                                 : 'border-input hover:bg-accent'
-                            }`}
+                              }`}
                             onClick={() => setPaymentMethod(method.value)}
                           >
                             <IconComponent className="h-4 w-4 mr-2" />
@@ -765,18 +763,18 @@ export const SaleDashboard = () => {
                     <div className="space-y-2">
                       <label className="text-sm font-medium">{t("Payment Proof")} *</label>
                       <div className="flex gap-2">
-                        <Button 
-                          type="button" 
-                          variant="outline" 
+                        <Button
+                          type="button"
+                          variant="outline"
                           onClick={startCamera}
                           className="flex-1"
                         >
                           <Camera className="h-4 w-4 mr-2" />
                           {t("Take Photo")}
                         </Button>
-                        <Button 
-                          type="button" 
-                          variant="outline" 
+                        <Button
+                          type="button"
+                          variant="outline"
                           onClick={() => fileInputRef.current?.click()}
                           className="flex-1"
                         >

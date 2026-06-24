@@ -172,6 +172,12 @@ export function AppSidebar({ ...props }) {
                         icon: FileBarChart,
                         permission: can("Daily Report access"),
                     },
+                    {
+                        label: t("Reports"),
+                        path: "/reports",
+                        icon: ClipboardList,
+                        permission: can("Report access"),
+                    },
                 ],
             },
             {

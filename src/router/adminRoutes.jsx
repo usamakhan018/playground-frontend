@@ -25,6 +25,7 @@ import TicketBatchesIndex from "@/components/admin/Tickets/TicketBatches"
 import ViewReport from "@/components/admin/DailyReports/ViewReport"
 import BranchIndex from "@/components/admin/Branches/Index"
 import { Navigate } from "react-router-dom"
+import ReportsIndex from "@/components/admin/Reports/Index"
 
 const adminRoutes = [
     {
@@ -157,6 +158,11 @@ const adminRoutes = [
         name: 'viewReport',
         path: 'daily-reports/view/:id',
         element: <ViewReport />
+    },
+    {
+        name: 'reports',
+        path: 'reports',
+        element: <ReportsIndex />
     },
     {
         name: 'branches',
