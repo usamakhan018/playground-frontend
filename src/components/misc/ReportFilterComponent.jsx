@@ -12,7 +12,7 @@ import Select from "./Select";
 const ReportFilterComponent = ({
   onFilter,
   onReset,
-  showUserFilter = true,
+  showUserFilter = false,
   showDateFilter = true,
   showGameFilter = false,
   showAssetFilter = false,

@@ -25,9 +25,9 @@ import { useNavigate } from "react-router-dom";
 import Pagination from "@/components/Pagination";
 import { Input } from "@/components/ui/input";
 import { toast } from 'react-hot-toast';
-import { EditIcon, MoreHorizontal, RefreshCw, Trash2Icon, SearchIcon, Clock, CheckCircle, DollarSign, Gamepad, Gamepad2, CreditCard, TrendingUp, Building, Download, Users } from "lucide-react";
+import { EditIcon, MoreHorizontal, RefreshCw, Trash2Icon, SearchIcon, Clock, CheckCircle, DollarSign, Gamepad, Gamepad2, CreditCard, TrendingUp, Building, Download, Users, Sheet, File } from "lucide-react";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import Edit from "./Edit";
-import Create from "./Create";
 import { can, handleError } from "@/utils/helpers";
 import Loader from "@/components/Loader";
 import DeleteAlert from "@/components/misc/DeleteAlert";
@@ -135,7 +135,7 @@ const ReportsIndex = () => {
     }
   };
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     setRefreshing(true);
     setSearch("");
     setShowRefresh(false);
@@ -143,10 +143,11 @@ const ReportsIndex = () => {
     setAssetSelected(false);
     setProductSelected(false);
     setBranchSelected(false);
+
     if (activeReportType) {
-      fetchReportData(activeReportType, currentFilters);
+      await fetchReportData(activeReportType, currentFilters);
     } else {
-      fetchMainStats();
+      await fetchMainStats();
     }
 
     setRefreshing(false);
@@ -174,6 +175,27 @@ const ReportsIndex = () => {
     }
   }
 
+  const exportDetailedReport = async () => {
+    try {
+      setLoading(true);
+      const response = await axiosClient.post(`reports/export-detailed`, buildParams({ ...currentFilters, report_type: activeReportType, report_format: reportFormat }));
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      const filename = `report_detailed_${activeReportType}_${new Date().toISOString().split('T')[0]}.${reportFormat === 'pdf' ? 'pdf' : 'xlsx'}`;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success(t("Report detailed exported successfully") + " " + filename);
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   const getGamesData = () => selectReportType('games');
   const getAssetsData = () => selectReportType('assets');
   const getProductsData = () => selectReportType('products');
@@ -181,7 +203,7 @@ const ReportsIndex = () => {
   const getEmployeesData = () => selectReportType('employees');
 
 
-
+  console.log(refreshing)
 
 
 
@@ -209,17 +231,14 @@ const ReportsIndex = () => {
         <PageTitle title={t("Reports")} />
         <div className="flex flex-row items-center gap-2">
 
-          <RadioGroup defaultValue={reportFormat} onValueChange={setReportFormat} className="flex flex-row items-center gap-4 w-fit">
-            <div className="flex items-center gap-1">
-              <RadioGroupItem value="pdf" id="r1" />
-              <Label htmlFor="r1">{t("PDF")}</Label>
-            </div>
-            <div className="flex items-center gap-1">
-              <RadioGroupItem value="excel" id="r2" />
-              <Label htmlFor="r2">{t("Excel")}</Label>
-            </div>
-          </RadioGroup>
-
+          <ToggleGroup variant="outline" type="single" value={reportFormat} onValueChange={setReportFormat}>
+            <ToggleGroupItem value="pdf" title={t("PDF")}>
+              <File />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="excel" title={t("Excel")}>
+              <Sheet />
+            </ToggleGroupItem>
+          </ToggleGroup>
 
           <Button
             variant="outline"
@@ -410,12 +429,12 @@ const ReportsIndex = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      // onClick={() => exportReport()}
-                      // disabled={loading?.export}
+                      onClick={() => exportDetailedReport()}
+                      disabled={loading?.export}
                       className="flex items-center gap-2 mr-2"
                     >
-                      {loading?.export ? <Loader /> : <Download className={`h-4 w-4 ${loading?.export ? 'animate-spin' : ''}`} />}
-                      {t("Export")}
+                      {loading?.export ? <Loader /> : <File className={`h-4 w-4 ${loading?.export ? 'animate-spin' : ''}`} />}
+                      {t("Export Details")}
                     </Button>
                   </TableCell>
                 </TableRow>
